@@ -1,0 +1,16 @@
+[app]
+page = "app/page.html"
+main = "app/main.vue"
+
+[target]
+path = "dist/index.html"
+
+[check]
+# pelite.d.ts includes the optional Symbol.dispose API.
+target = "esnext"
+typescript = "node_modules/.bin/tsc"
+no_implicit_any = true
+no_implicit_this = true
+
+[serve]
+watch = "app/**/*"

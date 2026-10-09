@@ -1,0 +1,16 @@
+{
+  "name": "vue-script",
+  "private": true,
+  "devDependencies": {
+    "typescript": "7.0.2"
+  },
+  "scripts": {
+    "postinstall": "npm run update:pelite",
+    "update:pelite": "node scripts/update-pelite.mjs",
+    "build": "vue-script build",
+    "check": "vue-script check"
+  },
+  "dependencies": {
+    "pelite-js": "https://github.com/CasualX/pelite/releases/download/pelite-js-v0.1.0/pelite-js-0.1.0.tgz"
+  }
+}
