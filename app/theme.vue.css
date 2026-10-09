@@ -1,0 +1,27 @@
+/* Shared vocabulary: canvas, surface, text, borders, actions, and feedback.
+   Follow the system by default; data-theme on <html> can override it later.
+
+   When updating or adding colors:
+   - Prefer existing semantic tokens; add a token only for a distinct shared role.
+   - Define and update the light and dark values together, keeping their roles in sync.
+   - Check both themes in the rendered UI, including text contrast, borders,
+     interactive states, and status colors. */
+:root {
+	color-scheme: light dark;
+	--color-background: light-dark(#faf9f6, #171818);
+	--color-surface: light-dark(#f0eeea, #242626);
+	--color-text: light-dark(#252a2c, #eeece6);
+	--color-muted: light-dark(#6f6d67, #b4b2ab);
+	--color-border: light-dark(#d8d5ce, #404441);
+	/* Blue for actions; teal for supporting visual accents. */
+	--color-secondary: light-dark(#18817b, #76c9ba);
+	--color-accent: light-dark(#1672e8, #75aaff);
+	--color-accent-hover: light-dark(#0962cf, #9ac1ff);
+	--color-on-accent: light-dark(#ffffff, #171818);
+	--color-success: light-dark(#198754, #55d69b);
+	--color-warning: light-dark(#9a6700, #e9bb62);
+	--color-danger: light-dark(#b42318, #ff8b82);
+}
+
+:root[data-theme="light"] { color-scheme: light; }
+:root[data-theme="dark"] { color-scheme: dark; }
