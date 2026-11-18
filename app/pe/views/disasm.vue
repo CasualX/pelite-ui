@@ -2,7 +2,7 @@
 
 <script>
 /** @typedef {{ rva: number, section: string, bytes: string, instruction: string }} DisasmRow */
-/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { rows: DisasmRow[], cursor: number, address: string, error: string | undefined } }} DisasmViewData */
+/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { rows: DisasmRow[], requestedRva: number, cursor: number, address: string, error: string | undefined } }} DisasmViewData */
 
 /** @param {PeDocument} context @returns {boolean} */
 function isDisasmAvailable(context) {
@@ -37,9 +37,9 @@ function prepareDisasmView(context, data) {
 	const options = /** @type {{ rva?: number, address?: WorkspaceAddressValue } | undefined} */ (data);
 	const rva = options?.address ? workspaceAddressToRva(context, options.address) : options?.rva ?? headers.NtHeaders.OptionalHeader.AddressOfEntryPoint;
 	const rows = readDisasmWindow(context, headers, rva);
-	const state = { rows, cursor: rva, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
+	const state = { rows, requestedRva: rva, cursor: rva, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
 	return { component: 'view-disasm', data: { document: context, headers, state },
-		get titleSuffix() { const data = /** @type {DisasmViewData} */ (/** @type {unknown} */ (this.data)); return `0x${data.state.cursor.toString(16)}`; },
+		get titleSuffix() { const data = /** @type {DisasmViewData} */ (/** @type {unknown} */ (this.data)); return `0x${data.state.requestedRva.toString(16)}`; },
 	};
 }
 
@@ -54,16 +54,26 @@ const ViewDisasm = Vue.defineComponent({
 		/** @param {number} rva */
 		hex(rva) { return `0x${rva.toString(16).padStart(8, '0')}`; },
 		go() {
+			const text = this.state.address.trim();
+			if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) {
+				this.state.error = 'Enter an RVA in decimal or 0xhex.';
+				return;
+			}
+			if (this.loadWindow(Number(text))) this.$nextTick(() => this.scrollToCursor());
+		},
+		/** @param {number} rva */
+		loadWindow(rva) {
 			try {
-				const text = this.state.address.trim();
-				if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) throw new Error('Enter an RVA in decimal or 0xhex.');
-				const rva = Number(text);
 				const rows = readDisasmWindow(this.disasmData.document, this.disasmData.headers, rva);
 				this.state.rows = rows;
+				this.state.requestedRva = rva;
 				this.state.cursor = rva;
 				this.state.error = undefined;
-				this.$nextTick(() => { this.$refs.dump.scrollTop = 0; });
-			} catch (error) { this.state.error = error instanceof Error ? error.message : String(error); }
+				return true;
+			} catch (error) {
+				this.state.error = error instanceof Error ? error.message : String(error);
+				return false;
+			}
 		},
 		selectionChanged() {
 			if (!this.$refs.dump.contains(document.activeElement)) return;
@@ -73,7 +83,6 @@ const ViewDisasm = Vue.defineComponent({
 			const row = element?.closest('[data-rva]');
 			if (!row || !this.$refs.dump.contains(row)) return;
 			this.state.cursor = Number(row.getAttribute('data-rva'));
-			this.state.address = `0x${this.state.cursor.toString(16)}`;
 		},
 		recenter() {
 			const selection = document.getSelection();
@@ -82,27 +91,33 @@ const ViewDisasm = Vue.defineComponent({
 			const capture = (node, offset) => {
 				const element = node instanceof Element ? node : node?.parentElement;
 				const column = element?.closest('.view-disasm__bytes, .view-disasm__instruction');
-				if (!node || !column || !this.$refs.dump.contains(column)) return;
+				const row = column?.parentElement;
+				if (!node || !column || !row || !this.$refs.dump.contains(row)) return;
 				const range = document.createRange();
 				range.selectNodeContents(column);
 				range.setEnd(node, offset);
-				return { rva: column.parentElement?.getAttribute('data-rva'), column: column.className, offset: range.toString().length };
+				return { rva: Number(row.dataset.rva), column: column.className, offset: range.toString().length };
 			};
 			const anchor = capture(selection.anchorNode, selection.anchorOffset), focus = capture(selection.focusNode, selection.focusOffset);
-			if (!focus) return;
-			this.selectionChanged();
-			this.go();
+			if (!focus || !this.loadWindow(focus.rva)) return;
+			this.state.address = `0x${focus.rva.toString(16)}`;
 			this.$nextTick(() => {
 				/** @param {ReturnType<typeof capture>} point @returns {[Node, number] | undefined} */
 				const restore = point => {
 					if (!point) return;
 					const column = this.$refs.dump.querySelector(`[data-rva="${point.rva}"] .${point.column}`);
-					if (column?.firstChild) return [column.firstChild, point.offset];
+					const text = column?.firstChild;
+					if (text) return [text, Math.min(point.offset, text.textContent?.length ?? 0)];
 				};
 				const end = restore(focus), start = restore(anchor) ?? end;
 				if (start && end) selection.setBaseAndExtent(...start, ...end);
-				this.$refs.dump.scrollTop = 0;
+				this.scrollToCursor(focus.column);
 			});
+		},
+		/** @param {string} [column] */
+		scrollToCursor(column = 'view-disasm__rva') {
+			this.$refs.dump.querySelector(`[data-rva="${this.state.cursor}"] .${column}`)
+				?.scrollIntoView({ block: 'start', inline: 'nearest' });
 		},
 	},
 	mounted() { document.addEventListener('selectionchange', this.selectionChanged); },
@@ -112,20 +127,22 @@ const ViewDisasm = Vue.defineComponent({
 
 <template id="view-disasm">
 	<section class="view-disasm">
-		<form class="view-disasm__toolbar" @submit.prevent="go">
-			<label>RVA <input v-model="state.address" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
-		</form>
-		<p v-if="state.error" class="view-disasm__error" role="alert">{{ state.error }}</p>
-		<p class="view-disasm__help">Place the cursor in an instruction and press Enter to start decoding there.</p>
-		<div class="view-disasm__grid">
-			<div class="view-disasm__columns"><span>Section</span><span>RVA</span><span>Bytes</span><span>Instruction</span></div>
-			<div ref="dump" class="view-disasm__dump" contenteditable="true" role="textbox" aria-label="Disassembly" aria-readonly="true" aria-multiline="true" spellcheck="false"
-				@keydown.enter.prevent="recenter" @beforeinput.prevent @paste.prevent @drop.prevent>
-				<div v-for="row in state.rows" :key="row.rva" :data-rva="row.rva" class="view-disasm__row">
-					<span class="view-disasm__section" contenteditable="false" :title="row.section">{{ row.section }}</span>
-					<span class="view-disasm__rva" data-kind="rva" contenteditable="false" :class="{ 'view-disasm__cursor': row.rva === state.cursor }">{{ hex(row.rva) }}</span>
-					<span class="view-disasm__bytes">{{ row.bytes }}</span>
-					<span class="view-disasm__instruction">{{ row.instruction }}</span>
+		<div class="view-disasm__body">
+			<form class="view-disasm__toolbar" @submit.prevent="go">
+				<label>RVA <input v-model="state.address" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
+			</form>
+			<p v-if="state.error" class="view-disasm__error" role="alert">{{ state.error }}</p>
+			<p class="view-disasm__help">Place the cursor in an instruction and press Enter to start decoding there.</p>
+			<div class="view-disasm__grid">
+				<div class="view-disasm__columns"><span>Section</span><span>RVA</span><span>Bytes</span><span>Instruction</span></div>
+				<div ref="dump" class="view-disasm__dump" contenteditable="true" role="textbox" aria-label="Disassembly" aria-readonly="true" aria-multiline="true" spellcheck="false"
+					@keydown.enter.prevent="recenter" @beforeinput.prevent @paste.prevent @drop.prevent>
+					<div v-for="row in state.rows" :key="row.rva" :data-rva="row.rva" class="view-disasm__row">
+						<span class="view-disasm__section" contenteditable="false" :title="row.section">{{ row.section }}</span>
+						<span class="view-disasm__rva" data-kind="rva" contenteditable="false" :class="{ 'view-disasm__cursor': row.rva === state.cursor }">{{ hex(row.rva) }}</span>
+						<span class="view-disasm__bytes">{{ row.bytes }}</span>
+						<span class="view-disasm__instruction">{{ row.instruction }}</span>
+					</div>
 				</div>
 			</div>
 		</div>
@@ -133,21 +150,33 @@ const ViewDisasm = Vue.defineComponent({
 </template>
 
 <style>
-.view-disasm__toolbar { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; font-size: 12px; }
-.view-disasm__toolbar label { display: flex; align-items: center; gap: 8px; }
-.view-disasm__toolbar input { width: 140px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, monospace; }
+.workspace-area__view:has(> .view-disasm) { --workspace-view-padding: 0; }
+.view-disasm { --disasm-toolbar-height: 44px; container-type: inline-size; }
+.view-disasm__body { --disasm-gutter: clamp(12px, 4cqi, 32px); min-inline-size: min-content; }
+.view-disasm__toolbar { position: sticky; inset-block-start: 0; inset-inline-start: 0; z-index: 2; display: flex; align-items: center; gap: 12px; inline-size: 100cqi; height: var(--disasm-toolbar-height); padding-inline: var(--disasm-gutter); background: var(--color-background); font-size: 12px; }
+.view-disasm__toolbar label { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.view-disasm__toolbar input { width: 140px; min-width: 0; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, monospace; }
 .view-disasm__toolbar button { padding: 7px 14px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .view-disasm__toolbar button:hover { background: var(--color-border); }
-.view-disasm__help { margin: 0 0 20px; color: var(--color-muted); font-size: 12px; }
-.view-disasm__error { color: var(--color-danger); font-size: 12px; }
-.view-disasm__grid { border: 1px solid var(--color-border); font: 12px/22px ui-monospace, SFMono-Regular, Consolas, monospace; overflow-x: auto; }
-.view-disasm__columns, .view-disasm__row { display: grid; grid-template-columns: 10ch 11ch 44ch minmax(50ch, 1fr); gap: 12px; padding: 0 12px; min-width: max-content; }
-.view-disasm__columns { padding-top: 6px; padding-bottom: 6px; background: var(--color-surface); color: var(--color-muted); }
+.view-disasm__toolbar input:focus-visible, .view-disasm__toolbar button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.view-disasm__help, .view-disasm__error { max-inline-size: calc(100cqi - 2 * var(--disasm-gutter)); margin: 0 var(--disasm-gutter) 12px; font-size: 12px; }
+.view-disasm__help { color: var(--color-muted); }
+.view-disasm__error { color: var(--color-danger); }
+.view-disasm__grid { margin: 0 var(--disasm-gutter) 16px; border: 1px solid var(--color-border); font: 12px/22px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.view-disasm__columns, .view-disasm__row { display: grid; grid-template-columns: 8ch 10ch minmax(24ch, 44ch) minmax(30ch, 1fr); gap: 12px; padding-inline: 12px; }
+.view-disasm__columns { position: sticky; top: var(--disasm-toolbar-height); z-index: 1; padding-block: 4px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); white-space: pre; }
+.view-disasm__row > span { scroll-margin-block-start: calc(var(--disasm-toolbar-height) + 31px); }
 .view-disasm__dump:focus { outline: none; }
-.view-disasm__dump { height: 704px; overflow-y: auto; cursor: text; white-space: pre; caret-color: var(--color-text); }
+.view-disasm__dump { white-space: pre; cursor: text; caret-color: var(--color-text); }
 .view-disasm__section { overflow: hidden; text-overflow: ellipsis; color: var(--color-muted); }
 .view-disasm__rva, .view-disasm__bytes { color: var(--color-muted); }
+.view-disasm__bytes, .view-disasm__instruction { white-space: pre-wrap; }
+.view-disasm__instruction { overflow-wrap: anywhere; }
 .view-disasm__cursor { position: relative; }
 .view-disasm__cursor::before { content: ''; position: absolute; left: -3px; top: 4px; width: 1px; height: 14px; background: var(--color-accent); pointer-events: none; }
-.view-disasm__toolbar input:focus-visible, .view-disasm__toolbar button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+
+@container (width < 42rem) {
+	.view-disasm__grid { font-size: 11px; }
+	.view-disasm__columns, .view-disasm__row { gap: 8px; padding-inline: 8px; }
+}
 </style>
