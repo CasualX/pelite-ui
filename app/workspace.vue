@@ -1,30 +1,31 @@
-<link rel="component" href="workspace/sidebar.vue">
-<link rel="component" href="workspace/window.vue">
-<link rel="component" href="workspace/context-menu.vue">
-<link rel="component" href="workspace/views/summary.vue" dynamic>
-<link rel="component" href="workspace/views/dos-header.vue" dynamic>
-<link rel="component" href="workspace/views/nt-headers.vue" dynamic>
-<link rel="component" href="workspace/views/section-headers.vue" dynamic>
-<link rel="component" href="workspace/views/rich-structure.vue" dynamic>
-<link rel="component" href="workspace/views/exports.vue" dynamic>
-<link rel="component" href="workspace/views/imports.vue" dynamic>
-<link rel="component" href="workspace/views/manifest.vue" dynamic>
-<link rel="component" href="workspace/views/version-info.vue" dynamic>
-<link rel="component" href="workspace/views/resources.vue" dynamic>
-<link rel="component" href="workspace/views/icons-cursors.vue" dynamic>
-<link rel="component" href="workspace/views/scanner.vue" dynamic>
-<link rel="component" href="workspace/views/facts.vue" dynamic>
-<link rel="component" href="workspace/views/hex-dump.vue" dynamic>
-<link rel="component" href="workspace/views/disasm.vue" dynamic>
-<link rel="component" href="workspace/browser.vue.js">
-<link rel="component" href="workspace/model.vue.js">
-<link rel="component" href="workspace/document.vue.js">
-<link rel="component" href="workspace/facts.vue.js">
+<link rel="component" href="pe/sidebar.vue">
+<link rel="component" href="workspace/area.vue">
+<link rel="component" href="pe/context-menu.vue">
+<link rel="component" href="pe/views/summary.vue" dynamic>
+<link rel="component" href="pe/views/dos-header.vue" dynamic>
+<link rel="component" href="pe/views/nt-headers.vue" dynamic>
+<link rel="component" href="pe/views/section-headers.vue" dynamic>
+<link rel="component" href="pe/views/rich-structure.vue" dynamic>
+<link rel="component" href="pe/views/exports.vue" dynamic>
+<link rel="component" href="pe/views/imports.vue" dynamic>
+<link rel="component" href="pe/views/manifest.vue" dynamic>
+<link rel="component" href="pe/views/version-info.vue" dynamic>
+<link rel="component" href="pe/views/resources.vue" dynamic>
+<link rel="component" href="pe/views/icons-cursors.vue" dynamic>
+<link rel="component" href="pe/views/scanner.vue" dynamic>
+<link rel="component" href="pe/views/facts.vue" dynamic>
+<link rel="component" href="pe/views/hex-dump.vue" dynamic>
+<link rel="component" href="pe/views/disasm.vue" dynamic>
+<link rel="component" href="pe/browser.vue.js">
+<link rel="component" href="pe/model.vue.js">
+<link rel="component" href="pe/document.vue.js">
+<link rel="component" href="pe/facts.vue.js">
 <link rel="component" href="status.vue.js">
 
 <script>
 const AppWorkspace = Vue.defineComponent({
 	template: '#app-workspace',
+	components: { WorkspaceArea, WorkspaceSidebar, PeAddressMenu },
 	props: {
 		document: { type: Object, required: true },
 	},
@@ -32,16 +33,15 @@ const AppWorkspace = Vue.defineComponent({
 	data() {
 		const openedDocument = /** @type {PeDocument} */ (/** @type {unknown} */ (this.document));
 		return {
-			model: new WorkspaceModel(),
+			model: new PeWorkspaceModel(),
 			viewGroups: createWorkspaceViewGroups(openedDocument),
 			viewError: '',
 		};
 	},
 	computed: {
 		peDocument() { return /** @type {PeDocument} */ (/** @type {unknown} */ (this.document)); },
-		activeView() {
-			return this.model.views.find(view => view.id === this.model.activeViewId);
-		},
+		viewTitles() { return this.model.views.map(view => ({ id: view.id, title: view.displayTitle })); },
+		viewContent() { return new Map(this.model.views.map(view => [view.id, view.content])); },
 	},
 	methods: {
 		/** @param {string} kind @param {unknown} [data] */
@@ -54,10 +54,8 @@ const AppWorkspace = Vue.defineComponent({
 					this.activateView(existing.id);
 					return;
 				}
-				const view = this.model.createView(definition, this.peDocument, data);
-				this.model.activateView(view.id);
+				this.model.createView(definition, this.peDocument, data);
 				this.clearViewError();
-				// TODO: create and attach a window for view.id.
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				this.viewError = `Unable to open ${definition.title}: ${message}`;
@@ -74,13 +72,11 @@ const AppWorkspace = Vue.defineComponent({
 		},
 		/** @param {number} id */
 		activateView(id) {
-			if (this.model.activateView(id)) this.clearViewError();
-			// TODO: focus the window associated with id.
+			if (this.model.layout.activate(id)) this.clearViewError();
 		},
 		/** @param {number} id */
 		closeView(id) {
 			if (this.model.closeView(id)) this.clearViewError();
-			// TODO: close the window associated with id.
 		},
 		canClose() { return !this.peDocument.dirty || window.confirm('Facts have unsaved changes. Close the file and discard them? Export individual factmaps to keep your work.'); },
 		/** @param {BeforeUnloadEvent} event */
@@ -100,21 +96,32 @@ const AppWorkspace = Vue.defineComponent({
 
 <template id="app-workspace">
 	<div class="app-workspace">
-		<app-sidebar :open-views="model.views" :view-groups="viewGroups" :active-view-id="model.activeViewId"
-			@open-view="openView" @activate-view="activateView" @close-view="closeView"></app-sidebar>
-		<div class="app-workspace__windows" aria-label="Workspace" @contextmenu="addressMenu">
+		<workspace-sidebar :open-views="model.views" :view-groups="viewGroups" :active-view-id="model.activeViewId"
+			@open-view="openView" @activate-view="activateView" @close-view="closeView"></workspace-sidebar>
+		<div class="app-workspace__content">
 			<p v-if="viewError" class="app-workspace__error" role="alert">{{ viewError }}</p>
-			<workspace-window v-if="activeView" :title="activeView.displayTitle" @close="closeView(activeView.id)">
-				<component :is="activeView.content.component" :key="activeView.id" :data="activeView.content.data" @context-action="contextAction"></component>
-			</workspace-window>
-			<workspace-context-menu ref="contextMenu" @context-action="contextAction"></workspace-context-menu>
-			<!-- TODO: replace the active-view outlet with the window manager. -->
+			<workspace-area class="app-workspace__area" :layout="model.layout" :views="viewTitles"
+				@close-view="closeView" @contextmenu="addressMenu">
+				<template #view="{ id }">
+					<component :is="viewContent.get(id).component" :data="viewContent.get(id).data" @context-action="contextAction"></component>
+				</template>
+			</workspace-area>
+			<pe-address-menu ref="contextMenu" @context-action="contextAction"></pe-address-menu>
 		</div>
 	</div>
 </template>
 
 <style>
 .app-workspace { flex: 1; display: flex; min-width: 0; min-height: 0; }
-.app-workspace__windows { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; background: var(--color-background); }
+.app-workspace__content { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
+.app-workspace__area {
+	--workspace-background: var(--color-background);
+	--workspace-surface: var(--color-surface);
+	--workspace-text: var(--color-text);
+	--workspace-muted: var(--color-muted);
+	--workspace-border: var(--color-border);
+	--workspace-accent: var(--color-accent);
+	--workspace-view-padding: 24px clamp(12px, 4cqi, 32px);
+}
 .app-workspace__error { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-danger); background: var(--color-surface); font-size: 13px; overflow-wrap: anywhere; }
 </style>

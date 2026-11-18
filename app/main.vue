@@ -5,8 +5,8 @@
 <link rel="component" href="splash.vue" dynamic>
 <link rel="component" href="input.vue" dynamic>
 <link rel="component" href="workspace.vue" dynamic>
-<link rel="component" href="workspace/document.vue.js">
-<link rel="component" href="workspace/facts.vue.js">
+<link rel="component" href="pe/document.vue.js">
+<link rel="component" href="pe/facts.vue.js">
 
 <script>
 "use strict";
@@ -73,8 +73,6 @@ app.component('app-status', AppStatus);
 app.component('app-splash', AppSplash);
 app.component('app-input', AppInput);
 app.component('app-workspace', AppWorkspace);
-app.component('workspace-window', WorkspaceWindow);
-app.component('workspace-context-menu', WorkspaceContextMenu);
 app.component('view-summary', ViewSummary);
 app.component('view-dos-header', ViewDosHeader);
 app.component('view-nt-headers', ViewNtHeaders);
@@ -90,7 +88,6 @@ app.component('view-scanner', ViewScanner);
 app.component('view-facts', ViewFacts);
 app.component('view-hex-dump', ViewHexDump);
 app.component('view-disasm', ViewDisasm);
-app.component('app-sidebar', AppSidebar);
 app.component('app-main', AppMain);
 app.mount('#app');
 </script>

@@ -3,8 +3,8 @@
 <script>
 /** @typedef {{ title: string, request: WorkspaceContextAction }} WorkspaceMenuItem */
 
-const WorkspaceContextMenu = Vue.defineComponent({
-	template: '#workspace-context-menu',
+const PeAddressMenu = Vue.defineComponent({
+	template: '#pe-address-menu',
 	emits: ['context-action'],
 	data() { return { items: /** @type {WorkspaceMenuItem[]} */ ([]) }; },
 	methods: {
@@ -103,15 +103,15 @@ const WorkspaceContextMenu = Vue.defineComponent({
 });
 </script>
 
-<template id="workspace-context-menu">
-	<div ref="menu" class="workspace-context-menu" popover="manual" role="menu" aria-label="Address actions"
+<template id="pe-address-menu">
+	<div ref="menu" class="pe-address-menu" popover="manual" role="menu" aria-label="Address actions"
 		@keydown.down.prevent="navigate" @keydown.up.prevent="navigate" @keydown.home.prevent="navigate" @keydown.end.prevent="navigate">
 		<button v-for="(item, index) in items" :key="index" type="button" role="menuitem" @click="choose(item)">{{ item.title }}</button>
 	</div>
 </template>
 
 <style>
-.workspace-context-menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); }
-.workspace-context-menu button { display: block; width: 100%; padding: 7px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; text-align: left; font: 12px system-ui, sans-serif; cursor: pointer; }
-.workspace-context-menu button:hover, .workspace-context-menu button:focus-visible { background: var(--color-accent); color: var(--color-on-accent); outline: none; }
+.pe-address-menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); }
+.pe-address-menu button { display: block; width: 100%; padding: 7px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; text-align: left; font: 12px system-ui, sans-serif; cursor: pointer; }
+.pe-address-menu button:hover, .pe-address-menu button:focus-visible { background: var(--color-accent); color: var(--color-on-accent); outline: none; }
 </style>

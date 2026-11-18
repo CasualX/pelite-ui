@@ -1,5 +1,5 @@
-<link rel="component" href="workspace/document.vue.js">
-<link rel="component" href="workspace/facts.vue.js">
+<link rel="component" href="pe/document.vue.js">
+<link rel="component" href="pe/facts.vue.js">
 <link rel="component" href="status.vue.js">
 
 <script>

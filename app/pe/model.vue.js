@@ -19,14 +19,15 @@ class ViewModel {
 }
 
 /** Owns the live views for one workspace; IDs are never reused within it. */
-class WorkspaceModel {
+class PeWorkspaceModel {
 	constructor() {
 		/** @type {ViewModel[]} */
 		this.views = [];
-		/** @type {number | undefined} */
-		this.activeViewId = undefined;
+		this.layout = new WorkspaceLayout();
 		this.nextViewId = 1;
 	}
+
+	get activeViewId() { return this.layout.activeViewId; }
 
 	/** Fetches data before allocating an ID or adding the instance. Throws on failure.
 	 * @param {ViewDefinition} definition @param {PeDocument} context @param {unknown} [data] @returns {ViewModel}
@@ -36,24 +37,16 @@ class WorkspaceModel {
 		const content = definition.prepare(context, data);
 		const view = new ViewModel(this.nextViewId++, definition, content);
 		this.views.push(view);
+		this.layout.open(view.id);
 		return view;
-	}
-
-	/** Also used when the window manager reports focus. @param {number} id @returns {boolean} */
-	activateView(id) {
-		if (!this.views.some(view => view.id === id)) return false;
-		this.activeViewId = id;
-		return true;
 	}
 
 	/** @param {number} id @returns {boolean} */
 	closeView(id) {
 		const index = this.views.findIndex(view => view.id === id);
 		if (index < 0) return false;
+		this.layout.close(id);
 		this.views.splice(index, 1);
-		if (this.activeViewId === id) {
-			this.activeViewId = this.views[Math.min(index, this.views.length - 1)]?.id;
-		}
 		return true;
 	}
 }
