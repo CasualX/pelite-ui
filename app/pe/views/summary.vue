@@ -229,14 +229,15 @@ const ViewSummary = Vue.defineComponent({
 </template>
 
 <style>
+.view-summary { container-type: inline-size; }
 .view-summary__identity { margin: 0 0 20px; font-size: 15px; font-weight: 600; }
 .view-summary h2 { margin: 26px 0 12px; font-size: 13px; font-weight: 600; }
 .view-summary h2 span { margin-left: 12px; font-size: 12px; font-weight: 400; }
 .view-summary__image { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; max-width: 1120px; margin: 0; }
-.view-summary__image div { display: grid; grid-template-columns: 180px minmax(0, 1fr); gap: 12px; font-size: 12px; }
+.view-summary__image div { display: grid; grid-template-columns: min(42%, 180px) minmax(0, 1fr); gap: 12px; font-size: 12px; }
 .view-summary dt { color: var(--color-muted); }
 .view-summary dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-.view-summary__mitigations { display: flex; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.view-summary__mitigations { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
 .view-summary__mitigations li { padding: 7px 10px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
 .view-summary__mitigations span { margin-left: 12px; font-weight: 600; }
 .view-summary__mitigation--enabled span { color: var(--color-secondary); }
@@ -259,4 +260,12 @@ const ViewSummary = Vue.defineComponent({
 .view-summary__findings li > span { flex: 0 0 56px; color: var(--color-muted); }
 .view-summary__findings .view-summary__warning { color: var(--color-warning); }
 .view-summary__muted { color: var(--color-muted); font-size: 12px; line-height: 1.6; }
+
+@container (width < 42rem) {
+	.view-summary__image { grid-template-columns: minmax(0, 1fr); }
+}
+
+@container (width < 20rem) {
+	.view-summary__image div { grid-template-columns: minmax(0, 1fr); gap: 3px; }
+}
 </style>
