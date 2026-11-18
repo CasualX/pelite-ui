@@ -1,7 +1,7 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareDosHeaderView(context) {
 	const header = context.peFile.dosHeader();
 	if (header instanceof Error) throw header;

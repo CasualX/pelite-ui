@@ -2,13 +2,13 @@
 /** @typedef {{ kind: 'icons' | 'cursors', name: string | number, bytes: Uint8Array }} IconCursorData */
 /** @typedef {{ entries: IconCursorData[] }} IconsCursorsViewData */
 
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isIconsCursorsAvailable(context) {
 	return [context.peFile.resourcesListIcons(), context.peFile.resourcesListCursors()]
 		.some(names => names !== null && !(names instanceof Error) && names.length > 0);
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareIconsCursorsView(context) {
 	/** @type {IconCursorData[]} */
 	const entries = [];

@@ -3,7 +3,7 @@
 <script>
 /** @typedef {{ descriptors: import('./deps/pelite.js').PeImportDescriptor[], state: { query: string } }} ImportsViewData */
 
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isImportsAvailable(context) {
 	return !(context.peFile.imports() instanceof Error);
 }
@@ -13,7 +13,7 @@ function formatImportHex(value) {
 	return value === 0 ? '0' : `0x${value.toString(16)}`;
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareImportsView(context) {
 	const result = context.peFile.imports();
 	if (result instanceof Error) throw result;

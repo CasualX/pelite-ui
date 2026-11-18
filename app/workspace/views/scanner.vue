@@ -3,9 +3,9 @@
 <script>
 /** @typedef {{ matches: import('./deps/pelite.js').ScannerMatch[], limit: number }} ScannerResults */
 /** @typedef {{ pattern: string, section: number | undefined, requestedLimit: number | string, error: string | undefined, results: ScannerResults | undefined }} ScannerState */
-/** @typedef {{ peFile: import('./deps/pelite.js').PeFile, sections: import('./deps/pelite.js').PeSectionHeader[], state: ScannerState }} ScannerData */
+/** @typedef {{ document: PeDocument, sections: import('./deps/pelite.js').PeSectionHeader[], state: ScannerState }} ScannerData */
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareScannerView(context) {
 	const sections = context.peFile.sectionHeaders();
 	if (sections instanceof Error) throw sections;
@@ -16,7 +16,7 @@ function prepareScannerView(context) {
 			return data.state.pattern.trim();
 		},
 		data: {
-			peFile: context.peFile,
+			document: context,
 			sections,
 			// Owned by this view instance, so switching the component preserves the query.
 			state: {
@@ -68,7 +68,7 @@ const ViewScanner = Vue.defineComponent({
 				return;
 			}
 			try {
-				const matches = this.scannerData.peFile.scannerMatches(pattern, this.state.section, { limit });
+				const matches = this.scannerData.document.peFile.scannerMatches(pattern, this.state.section, { limit });
 				if (matches instanceof Error) throw matches;
 				this.state.results = { matches, limit };
 			} catch (error) {

@@ -33,7 +33,7 @@ jobs:
       - name: Install Vue-Script
         run: cargo install --git https://github.com/CasualX/Vue-Script vue-script
 
-      # Skip postinstall so the committed dist/deps package stays intact.
+      # The committed JS/WASM pair is the application dependency.
       - name: Install dependencies and check vendored app
         run: |
           npm ci --ignore-scripts

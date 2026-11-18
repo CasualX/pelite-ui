@@ -1,11 +1,11 @@
 <script>
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isManifestAvailable(context) {
 	const manifest = context.peFile.resourcesManifest();
 	return manifest !== null && !(manifest instanceof Error);
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareManifestView(context) {
 	const manifest = context.peFile.resourcesManifest();
 	if (manifest instanceof Error) throw manifest;

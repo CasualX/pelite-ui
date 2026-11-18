@@ -2,7 +2,7 @@
 <script>
 /** @typedef {{ headers: import('./deps/pelite.js').PeSectionHeader[], characteristics: string[][], entropy: import('./deps/pelite.js').SectionEntropy[] }} SectionHeadersViewData */
 
-/** @param {ViewContext} context @param {import('./deps/pelite.js').PeHeaders} [existingHeaders] @returns {ViewContent} */
+/** @param {PeDocument} context @param {import('./deps/pelite.js').PeHeaders} [existingHeaders] @returns {ViewContent} */
 function prepareSectionHeadersView(context, existingHeaders) {
 	const headers = existingHeaders ?? context.peFile.headers();
 	if (headers instanceof Error) throw headers;

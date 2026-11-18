@@ -44,7 +44,7 @@ function summarizeImports(result, present) {
 	return summary;
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareSummaryView(context) {
 	const hashes = context.peFile.hashes();
 	if (hashes instanceof Error) throw hashes;

@@ -13,29 +13,32 @@
 <link rel="component" href="workspace/views/resources.vue" dynamic>
 <link rel="component" href="workspace/views/icons-cursors.vue" dynamic>
 <link rel="component" href="workspace/views/scanner.vue" dynamic>
+<link rel="component" href="workspace/views/facts.vue" dynamic>
 <link rel="component" href="workspace/views/hex-dump.vue" dynamic>
 <link rel="component" href="workspace/views/disasm.vue" dynamic>
 <link rel="component" href="workspace/browser.vue.js">
 <link rel="component" href="workspace/model.vue.js">
+<link rel="component" href="workspace/document.vue.js">
+<link rel="component" href="workspace/facts.vue.js">
 <link rel="component" href="status.vue.js">
 
 <script>
 const AppWorkspace = Vue.defineComponent({
 	template: '#app-workspace',
 	props: {
-		file: { type: File, required: true },
-		peFile: { type: Object, required: true },
+		document: { type: Object, required: true },
 	},
 	emits: ['status'],
 	data() {
-		const peFile = /** @type {import('./deps/pelite.js').PeFile} */ (/** @type {unknown} */ (this.peFile));
+		const openedDocument = /** @type {PeDocument} */ (/** @type {unknown} */ (this.document));
 		return {
 			model: new WorkspaceModel(),
-			viewGroups: createWorkspaceViewGroups({ file: this.file, peFile }),
+			viewGroups: createWorkspaceViewGroups(openedDocument),
 			viewError: '',
 		};
 	},
 	computed: {
+		peDocument() { return /** @type {PeDocument} */ (/** @type {unknown} */ (this.document)); },
 		activeView() {
 			return this.model.views.find(view => view.id === this.model.activeViewId);
 		},
@@ -51,8 +54,7 @@ const AppWorkspace = Vue.defineComponent({
 					this.activateView(existing.id);
 					return;
 				}
-				const peFile = /** @type {import('./deps/pelite.js').PeFile} */ (/** @type {unknown} */ (this.peFile));
-				const view = this.model.createView(definition, { file: this.file, peFile }, data);
+				const view = this.model.createView(definition, this.peDocument, data);
 				this.model.activateView(view.id);
 				this.clearViewError();
 				// TODO: create and attach a window for view.id.
@@ -64,8 +66,7 @@ const AppWorkspace = Vue.defineComponent({
 		},
 		/** @param {MouseEvent} event */
 		addressMenu(event) {
-			const peFile = /** @type {import('./deps/pelite.js').PeFile} */ (/** @type {unknown} */ (this.peFile));
-			this.$refs.contextMenu.open(event, peFile);
+			this.$refs.contextMenu.open(event, this.peDocument);
 		},
 		/** @param {WorkspaceContextAction} request */
 		contextAction(request) {
@@ -81,14 +82,19 @@ const AppWorkspace = Vue.defineComponent({
 			if (this.model.closeView(id)) this.clearViewError();
 			// TODO: close the window associated with id.
 		},
+		canClose() { return !this.peDocument.dirty || window.confirm('Facts have unsaved changes. Close the file and discard them? Export individual factmaps to keep your work.'); },
+		/** @param {BeforeUnloadEvent} event */
+		beforeUnload(event) { if (this.peDocument.dirty) { event.preventDefault(); event.returnValue = ''; } },
 		clearViewError() {
 			this.viewError = '';
-			this.$emit('status', new StatusModel('var(--color-success)', 'Ready', this.file.name));
+			this.$emit('status', new StatusModel('var(--color-success)', 'Ready', this.peDocument.file.name));
 		},
 	},
 	mounted() {
 		this.openView('summary');
+		window.addEventListener('beforeunload', this.beforeUnload);
 	},
+	beforeUnmount() { window.removeEventListener('beforeunload', this.beforeUnload); },
 });
 </script>
 

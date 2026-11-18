@@ -2,12 +2,12 @@
 
 <script>
 
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isRichStructureAvailable(context) {
 	return !(context.peFile.richStructure() instanceof Error);
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareRichStructureView(context) {
 	const rich = context.peFile.richStructure();
 	if (rich instanceof Error) throw rich;

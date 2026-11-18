@@ -1,10 +1,10 @@
-/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, isAvailable?: (context: ViewContext) => boolean, prepare?: (context: ViewContext, data?: unknown) => ViewContent }} ViewDefinition */
+/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, isAvailable?: (context: PeDocument) => boolean, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
 /** @typedef {{ id: string, title: string | undefined, views: ViewDefinition[] }} ViewGroup */
 /** @typedef {ViewDefinition & { available: boolean }} ViewMenuEntry */
 /** @typedef {{ id: string, title: string | undefined, views: ViewMenuEntry[] }} ViewMenuGroup */
 
 /** Evaluate once per workspace. Implemented views without a check are available.
- * @param {ViewContext} context @returns {ViewMenuGroup[]}
+ * @param {PeDocument} context @returns {ViewMenuGroup[]}
  */
 function createWorkspaceViewGroups(context) {
 	return workspaceViewGroups.map(group => ({
@@ -47,6 +47,7 @@ const workspaceViewGroups = [
 		{ id: 'icons-cursors', title: 'Icons & Cursors', singleton: true, icon: workspaceIcons.resources, isAvailable: isIconsCursorsAvailable, prepare: prepareIconsCursorsView },
 	] },
 	{ id: 'analysis', title: 'Analysis', views: [
+		{ id: 'facts', title: 'Facts', singleton: true, icon: workspaceIcons.resources, prepare: prepareFactsView },
 		{ id: 'hex-dump', title: 'Hex Dump', singleton: false, icon: workspaceIcons.sections, prepare: prepareHexDumpView },
 		{ id: 'disasm', title: 'Disassembly', singleton: false, icon: workspaceIcons.document, isAvailable: isDisasmAvailable, prepare: prepareDisasmView },
 		{ id: 'scanner', title: 'Scanner', singleton: false, icon: workspaceIcons.scanner, prepare: prepareScannerView },

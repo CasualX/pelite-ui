@@ -5,6 +5,8 @@
 <link rel="component" href="splash.vue" dynamic>
 <link rel="component" href="input.vue" dynamic>
 <link rel="component" href="workspace.vue" dynamic>
+<link rel="component" href="workspace/document.vue.js">
+<link rel="component" href="workspace/facts.vue.js">
 
 <script>
 "use strict";
@@ -15,24 +17,23 @@ const AppMain = Vue.defineComponent({
 		return {
 			content: 'app-splash',
 			contentKey: 0,
-			selectedFile: /** @type {File | null} */ (null),
-			peFile: /** @type {import('./deps/pelite.js').PeFile | null} */ (null),
+			document: /** @type {PeDocument | null} */ (null),
 			pelite: /** @type {typeof import('./deps/pelite.js') | null} */ (null),
 			status: new StatusModel('var(--color-warning)', 'Loading', 'Initializing pelite…'),
 		};
 	},
 	beforeUnmount() {
-		this.peFile?.dispose();
+		this.document?.dispose();
 	},
 	watch: {
-		/** @param {File | null} file */
-		selectedFile(file) {
-			document.title = `pelite — ${file?.name || 'Windows PE inspector'}`;
+		/** @param {PeDocument | null} openedDocument */
+		document(openedDocument) {
+			document.title = `pelite — ${openedDocument?.file.name || 'Windows PE inspector'}`;
 		},
 	},
 	computed: {
 		contentProps() {
-			if (this.content === 'app-workspace') return { file: this.selectedFile, peFile: this.peFile };
+			if (this.content === 'app-workspace') return { document: this.document };
 			if (this.content === 'app-input') return { pelite: this.pelite };
 			return {};
 		},
@@ -47,17 +48,16 @@ const AppMain = Vue.defineComponent({
 		setStatus(status) {
 			this.status = status;
 		},
-		/** @param {File} file @param {import('./deps/pelite.js').PeFile} peFile */
-		launchWorkspace(file, peFile) {
-			this.peFile?.dispose();
-			this.peFile = Vue.markRaw(peFile);
-			this.selectedFile = file;
+		/** @param {PeDocument} openedDocument */
+		launchWorkspace(openedDocument) {
+			this.document?.dispose();
+			this.document = openedDocument;
 			this.content = 'app-workspace';
 		},
 		closeFile() {
-			this.peFile?.dispose();
-			this.peFile = null;
-			this.selectedFile = null;
+			if (this.content === 'app-workspace' && !this.$refs.content?.canClose()) return;
+			this.document?.dispose();
+			this.document = null;
 			this.content = 'app-input';
 			this.contentKey++;
 			this.status = new StatusModel('var(--color-success)', 'Ready', 'Choose a file to get started.');
@@ -87,6 +87,7 @@ app.component('view-version-info', ViewVersionInfo);
 app.component('view-resources', ViewResources);
 app.component('view-icons-cursors', ViewIconsCursors);
 app.component('view-scanner', ViewScanner);
+app.component('view-facts', ViewFacts);
 app.component('view-hex-dump', ViewHexDump);
 app.component('view-disasm', ViewDisasm);
 app.component('app-sidebar', AppSidebar);
@@ -96,7 +97,7 @@ app.mount('#app');
 
 <template id="app-main">
 	<div class="app-main" @dragover.prevent @drop.prevent>
-		<app-header :filename="selectedFile?.name" @close="closeFile"></app-header>
+		<app-header :filename="document?.file.name" @close="closeFile"></app-header>
 		<main class="app-main__content">
 			<component ref="content" :is="content" :key="contentKey" v-bind="contentProps" @ready="onReady" @status="setStatus" @selected="launchWorkspace"></component>
 		</main>

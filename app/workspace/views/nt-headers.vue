@@ -26,7 +26,7 @@ function ntHeaderInterpretations(table, details) {
 	];
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareNtHeadersView(context) {
 	const result = context.peFile.headers();
 	if (result instanceof Error) throw result;

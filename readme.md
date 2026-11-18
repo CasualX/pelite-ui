@@ -12,54 +12,75 @@ npm run check
 npm run build
 ```
 
-`npm ci` installs the prebuilt `pelite-js` package from the published
-[pelite-js-v0.1.0 release](https://github.com/CasualX/pelite/releases/tag/pelite-js-v0.1.0).
-Its postinstall step copies the JavaScript, wasm, type declarations, and license
-into `dist/deps`. No local pelite checkout or Rust wasm build is required.
-Serve `dist` over HTTP to use the inspector.
+The matching JavaScript, WASM, type declarations, and license are vendored in
+`dist/deps`. Ordinary `npm ci`, checks, and builds preserve this copy; no pelite
+checkout or Rust build is needed. Serve `dist` over HTTP to use the inspector.
+GitHub Pages deploys the same committed assets.
 
-GitHub Pages runs `npm ci --ignore-scripts`, then checks and builds using the
-committed files in `dist/deps`. This skips the postinstall copy, so CI can deploy
-a development build of pelite before a new package release is published.
+## Facts analysis
 
-## Updating pelite-js
+Open a PE file, then choose **Analysis → Facts**. Two horizontal views separate
+inspection from editing:
 
-The release URL is pinned in `package.json`, with its integrity recorded in
-`package-lock.json`. To adopt a newer published release, install its tarball:
+- **Inspect facts** combines the visible layers in a full-width, read-only record
+  table. The image address map, layer checkboxes, search, kind, section, and
+  inclusive hexadecimal RVA filters work across these layers. Right-click an
+  address to navigate to Hex Dump or Disassembly. The table displays records by
+  RVA with 100 per page; duplicates remain separate records.
+- **Manage layers** contains the layers table, import, and layer controls. Create,
+  rename, duplicate, reorder, merge, or delete layers, then edit the selected layer
+  below the table. Add, edit, or remove individual facts, or edit the complete
+  native `#factmap` text. The editor shows stored record order independently of
+  the inspection filters. Deletions require confirmation; undo/redo retains up to
+  40 changes. Drafts survive switching views.
+
+Import one or more `.factmap`, legacy `.symtext`, or text files to append separate
+layers. WASM validates the entire batch before adding any layer. **Export factmap**
+saves the selected layer as native text. File comments and source formatting are
+canonicalized; fact comments and duplicate records are retained. Merging appends
+the selected layer’s records to the preceding layer and keeps the preceding label
+and visibility. No override resolution or deduplication is applied.
+
+The database belongs to the open PE and survives closing the Facts tab, but is
+held only in memory. Export individual factmaps before closing or reloading.
+Facts currently do not affect disassembly, scanning, or other `PeFile` operations.
+
+## Updating the vendored pelite build
+
+Build in a local pelite checkout, then copy its package directory:
 
 ```sh
-npm install --save-exact https://github.com/CasualX/pelite/releases/download/pelite-js-v0.1.0/pelite-js-0.1.0.tgz
+npm --prefix ../pelite/pelite-js ci
+npm --prefix ../pelite/pelite-js run build
 npm run update:pelite
 npm run check
 npm run build
 ```
 
-Replace both version numbers in the URL with the new release version.
-`npm run update:pelite` copies `pelite.js`, `pelite.wasm`, `pelite.d.ts`, and
-`pelite-license.txt` from the installed package into `dist/deps`.
-Keep the JavaScript and wasm from the same package together: the module loads
-its adjacent wasm file during import. Check opening and closing a PE file,
-the hex dump, and disassembly after an update. Commit `package.json`,
-`package-lock.json`, the updated files in `dist/deps`, and any required UI fixes.
+The updater defaults to `../pelite/pelite-js`; pass another package directory with
+`npm run update:pelite -- /path/to/pelite-js`. Always update JS and WASM together.
+Commit the files in `dist/deps`, including `pelite-source.json` provenance.
+The Facts editor uses the existing layer APIs: it validates a replacement with
+`addLayer`, preserves the label, moves the new layer into place with `shiftLayer`,
+and removes the original with `deleteLayer`. No pelite API changes are required.
 
-## Using a local development build
+## UI document ownership
 
-Build `pelite-js` in your local pelite checkout, then copy its package directory:
+The UI passes one `PeDocument` for each open binary. It owns the browser `File`,
+the native `peFile`, and a lazily initialized `facts` database. View preparation,
+live viewers, and address navigation share this object; they do not independently
+own or dispose the native handles. Closing the binary disposes the whole document.
+The pelite.js `PeFile` and `Facts` APIs remain independent.
 
-```sh
-npm --prefix ../pelite/pelite-js ci
-npm --prefix ../pelite/pelite-js run build
-npm run update:pelite -- ../pelite/pelite-js
-npm run check
-npm run build
-```
+## Browser regression checks
 
-Adjust the checkout path as needed. Leave the copied files unstaged for local
-experiments, or commit them to have CI deploy that build. The release dependency
-can stay pinned while the vendored build moves ahead during development.
-Check and build commands preserve the current copy. To reinstall npm dependencies
-without replacing it, use `npm ci --ignore-scripts`; normal `npm ci` and
-`npm run update:pelite` restore the installed GitHub release assets.
+After building, serve the repository root (for example,
+`python3 -m http.server 8000 --bind 127.0.0.1`) and open
+`http://127.0.0.1:8000/tests/facts.html`. The integration suite creates synthetic
+PE32 and PE32+ fixtures and exercises editing, duplicate identity, atomic
+validation, layer operations, undo/redo, filters, factmap I/O,
+pagination, close protection, and native-handle disposal through the running UI.
+It does not require binary fixtures from a separate checkout.
 
 License
 -------

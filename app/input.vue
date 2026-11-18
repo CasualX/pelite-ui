@@ -1,3 +1,5 @@
+<link rel="component" href="workspace/document.vue.js">
+<link rel="component" href="workspace/facts.vue.js">
 <link rel="component" href="status.vue.js">
 
 <script>
@@ -76,9 +78,9 @@ const AppInput = Vue.defineComponent({
 			}
 			if (this.disposed) return;
 			const pelite = /** @type {typeof import('./deps/pelite.js')} */ (this.pelite);
-			let peFile;
+			let openedDocument;
 			try {
-				peFile = new pelite.PeFile(bytes);
+				openedDocument = new PeDocument(this.selectedFile, bytes, pelite);
 			} catch (error) {
 				this.loading = false;
 				this.error = 'This file is not a supported PE file.';
@@ -86,7 +88,7 @@ const AppInput = Vue.defineComponent({
 				return;
 			}
 			this.loading = false;
-			this.$emit('selected', this.selectedFile, peFile);
+			this.$emit('selected', openedDocument);
 		},
 
 		/** @param {Event} event */

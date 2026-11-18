@@ -8,8 +8,8 @@ const WorkspaceContextMenu = Vue.defineComponent({
 	emits: ['context-action'],
 	data() { return { items: /** @type {WorkspaceMenuItem[]} */ ([]) }; },
 	methods: {
-		/** @param {MouseEvent} event @param {import('./deps/pelite.js').PeFile} peFile */
-		open(event, peFile) {
+		/** @param {MouseEvent} event @param {PeDocument} openedDocument */
+		open(event, openedDocument) {
 			const menu = this.$refs.menu;
 			menu.hidePopover();
 			if (event.ctrlKey || !(event.target instanceof Element)) return;
@@ -31,7 +31,7 @@ const WorkspaceContextMenu = Vue.defineComponent({
 			const number = text?.trim() ?? '';
 			if (!/^(?:0x[\da-f]+|\d+)$/i.test(number)) return;
 			const value = BigInt(number);
-			const headers = peFile.headers();
+			const headers = openedDocument.peFile.headers();
 			if (headers instanceof Error) return;
 			const imageSize = headers.NtHeaders.OptionalHeader.SizeOfImage;
 			const kinds = kind ? [kind] : ['rva', 'va', 'fo'];
@@ -41,7 +41,7 @@ const WorkspaceContextMenu = Vue.defineComponent({
 				// The WASM VA input is u64; RVA/file-offset inputs must be exact.
 				if (value > (candidate === 'va' ? 0xffffffffffffffffn : 0xffffffffn)) continue;
 				try {
-					const rva = workspaceAddressToRva(peFile, { kind: candidate, value });
+					const rva = workspaceAddressToRva(openedDocument, { kind: candidate, value });
 					if (rva < 0 || rva >= imageSize) continue;
 					items.push({
 						title: `View Hex Dump as ${candidate === 'fo' ? 'file offset' : candidate.toUpperCase()} · 0x${rva.toString(16)}`,

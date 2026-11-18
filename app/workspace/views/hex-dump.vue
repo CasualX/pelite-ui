@@ -2,31 +2,31 @@
 
 <script>
 /** @typedef {{ start: number, anchor: number, bytes: Uint8Array, mask: Uint8Array }} HexDumpWindow */
-/** @typedef {{ peFile: import('./deps/pelite.js').PeFile, headers: import('./deps/pelite.js').PeHeaders, state: { window: HexDumpWindow, cursor: number, address: string, format: 'decimal' | 'hex', error: string | undefined } }} HexDumpViewData */
+/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { window: HexDumpWindow, cursor: number, address: string, format: 'decimal' | 'hex', error: string | undefined } }} HexDumpViewData */
 
-/** @param {import('./deps/pelite.js').PeFile} peFile @param {number} imageSize @param {number} rva @returns {HexDumpWindow} */
-function readHexDumpWindow(peFile, imageSize, rva) {
+/** @param {PeDocument} openedDocument @param {number} imageSize @param {number} rva @returns {HexDumpWindow} */
+function readHexDumpWindow(openedDocument, imageSize, rva) {
 	if (!Number.isInteger(rva) || rva < 0 || rva >= imageSize) throw new Error('RVA must be inside the virtual image.');
 	const anchor = Math.floor(rva / 16) * 16;
 	const start = Math.max(0, anchor - 0x1000);
 	const end = Math.min(imageSize, anchor + 0x1000);
 	const length = end - start;
-	const bytes = peFile.hexDumpBytes(start, length);
+	const bytes = openedDocument.peFile.hexDumpBytes(start, length);
 	if (bytes instanceof Error) throw bytes;
-	const mask = peFile.hexDumpMask(start, length);
+	const mask = openedDocument.peFile.hexDumpMask(start, length);
 	if (mask instanceof Error) throw mask;
 	return { start, anchor, bytes, mask };
 }
 
-/** @param {ViewContext} context @param {unknown} [data] @returns {ViewContent} */
+/** @param {PeDocument} context @param {unknown} [data] @returns {ViewContent} */
 function prepareHexDumpView(context, data) {
 	const options = /** @type {{ rva?: number, address?: WorkspaceAddressValue } | undefined} */ (data);
-	const rva = options?.address ? workspaceAddressToRva(context.peFile, options.address) : options?.rva ?? 0;
+	const rva = options?.address ? workspaceAddressToRva(context, options.address) : options?.rva ?? 0;
 	const headers = context.peFile.headers();
 	if (headers instanceof Error) throw headers;
-	const window = readHexDumpWindow(context.peFile, headers.NtHeaders.OptionalHeader.SizeOfImage, rva);
+	const window = readHexDumpWindow(context, headers.NtHeaders.OptionalHeader.SizeOfImage, rva);
 	const state = { format: /** @type {'decimal' | 'hex'} */ ('decimal'), window, cursor: rva - window.start, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
-	return { component: 'view-hex-dump', data: { peFile: context.peFile, headers, state },
+	return { component: 'view-hex-dump', data: { document: context, headers, state },
 		get titleSuffix() { const data = /** @type {HexDumpViewData} */ (/** @type {unknown} */ (this.data)); return `0x${(data.state.window.start + data.state.cursor).toString(16)}`; },
 	};
 }
@@ -40,7 +40,7 @@ const ViewHexDump = Vue.defineComponent({
 		instruction() {
 			const offset = this.state.cursor;
 			if (!this.backed(offset)) return new Error('No file-backed instruction bytes.');
-			const result = this.dumpData.peFile.disasm(this.state.window.start + offset);
+			const result = this.dumpData.document.peFile.disasm(this.state.window.start + offset);
 			if (result instanceof Error) return result;
 			const instruction = result[0];
 			if (instruction && (offset + instruction.bytes.length > this.state.window.bytes.length ||
@@ -101,7 +101,7 @@ const ViewHexDump = Vue.defineComponent({
 				const text = this.state.address.trim();
 				if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) throw new Error('Enter an RVA in decimal or 0xhex.');
 				const rva = Number(text);
-				const window = readHexDumpWindow(this.dumpData.peFile, this.dumpData.headers.NtHeaders.OptionalHeader.SizeOfImage, rva);
+				const window = readHexDumpWindow(this.dumpData.document, this.dumpData.headers.NtHeaders.OptionalHeader.SizeOfImage, rva);
 				this.state.window = window;
 				this.state.cursor = rva - window.start;
 				this.state.error = undefined;

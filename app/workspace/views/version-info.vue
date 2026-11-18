@@ -2,13 +2,13 @@
 
 <script>
 
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isVersionInfoAvailable(context) {
 	const version = context.peFile.resourcesVersionInfo();
 	return version !== null && !(version instanceof Error);
 }
 
-/** @param {ViewContext} context @returns {ViewContent} */
+/** @param {PeDocument} context @returns {ViewContent} */
 function prepareVersionInfoView(context) {
 	const version = context.peFile.resourcesVersionInfo();
 	if (version instanceof Error) throw version;

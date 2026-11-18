@@ -70,7 +70,7 @@ class WasmBytes {
 		this.length = 0;
 	}
 
-	dispose() {
+	[Symbol.dispose]() {
 		if (this.address !== 0) {
 			instance.exports.bytesFree(this.address, this.length);
 			this.address = 0;
@@ -90,7 +90,7 @@ class WasmString {
 		new Uint8Array(instance.exports.memory.buffer, this.address, this.length).set(bytes);
 	}
 
-	dispose() {
+	[Symbol.dispose]() {
 		if (this.address !== 0) {
 			instance.exports.bytesFree(this.address, this.length);
 			this.address = 0;
@@ -113,11 +113,22 @@ if (!response.ok) {
  * @typedef {T | Error} Result
  */
 
+/** Complete #factmap text, including its header. @typedef {string} FactMapText */
+/** One factmap record without a header or line ending. @typedef {string} FactRecordText */
+
 /**
  * @typedef {object} DisassembledInstruction
- * @property {string} address The formatted section name and virtual address.
+ * @property {number} rva The instruction address relative to the image base, an unsigned 32-bit value.
+ * @property {string} prefix The section name at the requested start.
+ * @property {string | null} label The symbol name at the instruction start, or null if absent.
  * @property {number[]} bytes The encoded instruction bytes.
  * @property {string} instruction The formatted instruction.
+ * @property {string[]} comments Annotations, including symbols inside the instruction; empty if none.
+ */
+
+/**
+ * @typedef {object} DisasmOptions
+ * @property {number} [lookback=0] Decode up to this many bytes earlier and include overlapping instructions.
  */
 
 /**
@@ -388,19 +399,14 @@ export class PeFile {
 		if (!(bytes instanceof Uint8Array)) {
 			throw new TypeError("PeFile expects a Uint8Array");
 		}
-		const wasmBytes = new WasmBytes(bytes);
-		try {
-			/** @private @type {number} */
-			this.p = instance.exports.pefileNew(wasmBytes.address, wasmBytes.length);
-			wasmBytes.forget();
-			if (!this.p) {
-				throw takeResult() ?? new Error("Unable to construct PeFile");
-			}
-			takeResult();
+		using wasmBytes = new WasmBytes(bytes);
+		/** @private @type {number} */
+		this.p = instance.exports.pefileNew(wasmBytes.address, wasmBytes.length);
+		wasmBytes.forget();
+		if (!this.p) {
+			throw takeResult() ?? new Error("Unable to construct PeFile");
 		}
-		finally {
-			wasmBytes.dispose();
-		}
+		takeResult();
 	}
 
 	/** Releases the PE image from WebAssembly memory. */
@@ -455,10 +461,30 @@ export class PeFile {
 	/**
 	 * Converts a virtual address to an RVA.
 	 *
-	 * @param {number | bigint} va Virtual address.
-	 * @returns {Result<number>} The corresponding RVA.
+	 * @overload
+	 * @param {number | bigint} va
+	 * @param {false} [optional=false]
+	 * @returns {Result<number>}
 	 */
-	vaToRva(va) {
+	/**
+	 * Converts a virtual address to an RVA.
+	 *
+	 * @overload
+	 * @param {number | bigint} va
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	/**
+	 * Converts a virtual address to an RVA.
+	 *
+	 * @param {number | bigint} va Virtual address.
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>} The corresponding RVA.
+	 */
+	vaToRva(va, optional = false) {
+		if (optional && (va === 0 || va === 0n)) {
+			return null;
+		}
 		let value = instance.exports.pefileVaToRva(this.p, BigInt(va));
 		return takeResult() ?? (value >>> 0);
 	}
@@ -466,71 +492,184 @@ export class PeFile {
 	/**
 	 * Converts an RVA to a virtual address.
 	 *
-	 * @param {number} rva Relative virtual address.
-	 * @returns {Result<bigint>} The corresponding virtual address.
+	 * @overload
+	 * @param {number} rva
+	 * @param {false} [optional=false]
+	 * @returns {Result<bigint>}
 	 */
-	rvaToVa(rva) {
+	/**
+	 * Converts an RVA to a virtual address.
+	 *
+	 * @overload
+	 * @param {number} rva
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<bigint | null>}
+	 */
+	/**
+	 * Converts an RVA to a virtual address.
+	 *
+	 * @param {number} rva Relative virtual address.
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<bigint | null>} The corresponding virtual address.
+	 */
+	rvaToVa(rva, optional = false) {
+		if (optional && rva === 0) {
+			return null;
+		}
 		let value = instance.exports.pefileRvaToVa(this.p, rva);
 		return takeResult() ?? BigInt.asUintN(64, value);
 	}
 
 	/**
 	 * Converts an RVA to a file offset; zero-filled data returns an Error.
+	 *
+	 * @overload
 	 * @param {number} rva
+	 * @param {false} [optional=false]
 	 * @returns {Result<number>}
 	 */
-	rvaToFileOffset(rva) {
+	/**
+	 * Converts an RVA to a file offset; zero-filled data returns an Error.
+	 *
+	 * @overload
+	 * @param {number} rva
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	/**
+	 * Converts an RVA to a file offset; zero-filled data returns an Error.
+	 * @param {number} rva
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	rvaToFileOffset(rva, optional = false) {
+		if (optional && rva === 0) {
+			return null;
+		}
 		let value = instance.exports.pefileRvaToFileOffset(this.p, rva);
 		return takeResult() ?? (value >>> 0);
 	}
 
 	/**
 	 * Converts a virtual address to a file offset; zero-filled data returns an Error.
+	 *
+	 * @overload
 	 * @param {number | bigint} va
+	 * @param {false} [optional=false]
 	 * @returns {Result<number>}
 	 */
-	vaToFileOffset(va) {
+	/**
+	 * Converts a virtual address to a file offset; zero-filled data returns an Error.
+	 *
+	 * @overload
+	 * @param {number | bigint} va
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	/**
+	 * Converts a virtual address to a file offset; zero-filled data returns an Error.
+	 * @param {number | bigint} va
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	vaToFileOffset(va, optional = false) {
+		if (optional && (va === 0 || va === 0n)) {
+			return null;
+		}
 		let value = instance.exports.pefileVaToFileOffset(this.p, BigInt(va));
 		return takeResult() ?? (value >>> 0);
 	}
 
 	/**
 	 * Converts a file offset to an RVA; unmapped raw data returns an Error.
+	 *
+	 * @overload
 	 * @param {number} offset
+	 * @param {false} [optional=false]
 	 * @returns {Result<number>}
 	 */
-	fileOffsetToRva(offset) {
+	/**
+	 * Converts a file offset to an RVA; unmapped raw data returns an Error.
+	 *
+	 * @overload
+	 * @param {number} offset
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	/**
+	 * Converts a file offset to an RVA; unmapped raw data returns an Error.
+	 * @param {number} offset
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<number | null>}
+	 */
+	fileOffsetToRva(offset, optional = false) {
+		if (optional && offset === 0) {
+			return null;
+		}
 		let value = instance.exports.pefileFileOffsetToRva(this.p, offset);
 		return takeResult() ?? (value >>> 0);
 	}
 
 	/**
 	 * Converts a file offset to a virtual address; unmapped raw data returns an Error.
+	 *
+	 * @overload
 	 * @param {number} offset
+	 * @param {false} [optional=false]
 	 * @returns {Result<bigint>}
 	 */
-	fileOffsetToVa(offset) {
+	/**
+	 * Converts a file offset to a virtual address; unmapped raw data returns an Error.
+	 *
+	 * @overload
+	 * @param {number} offset
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<bigint | null>}
+	 */
+	/**
+	 * Converts a file offset to a virtual address; unmapped raw data returns an Error.
+	 * @param {number} offset
+	 * @param {boolean} [optional=false] Return null when the input is zero.
+	 * @returns {Result<bigint | null>}
+	 */
+	fileOffsetToVa(offset, optional = false) {
+		if (optional && offset === 0) {
+			return null;
+		}
 		let value = instance.exports.pefileFileOffsetToVa(this.p, offset);
 		return takeResult() ?? BigInt.asUintN(64, value);
 	}
 
 	/**
 	 * Disassemble instructions starting in the half-open RVA range [start, end).
+	 * With lookback, also includes an instruction overlapping `start`.
+	 * Absolute operand symbols require matching base relocations; relative targets
+	 * resolve directly. Labels come from exports and import address table entries.
 	 *
 	 * @param {number} start Start RVA.
 	 * @param {number | null} [end=null] End RVA; defaults to one byte after `start`.
+	 * @param {DisasmOptions} [options]
 	 * @returns {Result<DisassembledInstruction[]>}
 	 */
-	disasm(start, end = null) {
+	disasm(start, end = null, options = {}) {
 		if (end === null) {
 			end = start + 1;
 		}
-		instance.exports.pefileDisasm(this.p, start, end);
+		if (options === null || typeof options !== "object") {
+			return new Error("disasm expects an options object");
+		}
+		const lookback = options.lookback ?? 0;
+		if (!Number.isInteger(start) || start < 0 || start > 0xffff_ffff ||
+			!Number.isInteger(end) || end < start || end > 0xffff_ffff ||
+			!Number.isInteger(lookback) || lookback < 0 || lookback > 0xffff_ffff) {
+			return new Error("disasm expects unsigned 32-bit RVAs and lookback");
+		}
+		instance.exports.pefileDisasm(this.p, start, end, lookback);
 		return takeResult();
 	}
 
 	/**
-	 * Interprets typed data at an RVA using the CLI read type syntax.
+	 * Interprets typed data at an RVA using the read type syntax.
 	 *
 	 * Types include u8/u16/u32/u64, i8/i16/i32/i64, f32/f64, cstr, utf16lez,
 	 * pointers (*T), arrays ([T; N] or [T; field]), structs, and unions.
@@ -552,14 +691,9 @@ export class PeFile {
 		if (!Number.isInteger(rva) || rva < 0 || rva > 0xffff_ffff || typeof type !== "string") {
 			return new Error("read expects an unsigned 32-bit RVA and a type string");
 		}
-		const argsWasm = new WasmString(JSON.stringify({ type, options }));
-		try {
-			instance.exports.pefileRead(this.p, rva, argsWasm.address, argsWasm.length);
-			return takeResult();
-		}
-		finally {
-			argsWasm.dispose();
-		}
+		using argsWasm = new WasmString(JSON.stringify({ type, options }));
+		instance.exports.pefileRead(this.p, rva, argsWasm.address, argsWasm.length);
+		return takeResult();
 	}
 
 	/**
@@ -718,14 +852,9 @@ export class PeFile {
 	 * @returns {Result<Uint8Array | null>} A copy of the resource bytes, or `null` if not found.
 	 */
 	resourcesGetResource(path) {
-		const nameWasm = new WasmString(path);
-		try {
-			instance.exports.pefileResourcesGetResource(this.p, nameWasm.address, nameWasm.length);
-			return takeResult();
-		}
-		finally {
-			nameWasm.dispose();
-		}
+		using nameWasm = new WasmString(path);
+		instance.exports.pefileResourcesGetResource(this.p, nameWasm.address, nameWasm.length);
+		return takeResult();
 	}
 
 	/** @returns {Result<string | null>} The manifest text, or `null` if not found. */
@@ -751,14 +880,9 @@ export class PeFile {
 	 * @returns {Result<Uint8Array | null>} A copy of the ICO file, or `null` if not found.
 	 */
 	resourcesGetIcon(name) {
-		const nameWasm = new WasmString(resourceName(name));
-		try {
-			instance.exports.pefileGetIcon(this.p, nameWasm.address, nameWasm.length);
-			return takeResult();
-		}
-		finally {
-			nameWasm.dispose();
-		}
+		using nameWasm = new WasmString(resourceName(name));
+		instance.exports.pefileGetIcon(this.p, nameWasm.address, nameWasm.length);
+		return takeResult();
 	}
 
 	/** @returns {Result<Array<ResourceName> | null>} Available cursor names, or `null` if absent. */
@@ -772,14 +896,9 @@ export class PeFile {
 	 * @returns {Result<Uint8Array | null>} A copy of the CUR file, or `null` if not found.
 	 */
 	resourcesGetCursor(name) {
-		const nameWasm = new WasmString(resourceName(name));
-		try {
-			instance.exports.pefileGetCursor(this.p, nameWasm.address, nameWasm.length);
-			return takeResult();
-		}
-		finally {
-			nameWasm.dispose();
-		}
+		using nameWasm = new WasmString(resourceName(name));
+		instance.exports.pefileGetCursor(this.p, nameWasm.address, nameWasm.length);
+		return takeResult();
 	}
 
 	/**
@@ -790,14 +909,9 @@ export class PeFile {
 	 * @returns {Result<number[] | null>} Captured values, or `null` when the pattern does not match.
 	 */
 	scannerExec(rva, pattern) {
-		const patternWasm = new WasmString(pattern);
-		try {
-			instance.exports.pefileScannerExec(this.p, rva, patternWasm.address, patternWasm.length);
-			return takeResult();
-		}
-		finally {
-			patternWasm.dispose();
-		}
+		using patternWasm = new WasmString(pattern);
+		instance.exports.pefileScannerExec(this.p, rva, patternWasm.address, patternWasm.length);
+		return takeResult();
 	}
 
 	/**
@@ -809,14 +923,9 @@ export class PeFile {
 	 */
 	scannerFind(pattern, section) {
 		let argString = JSON.stringify({ pattern, section });
-		const argWasm = new WasmString(argString);
-		try {
-			instance.exports.pefileScannerFind(this.p, argWasm.address, argWasm.length);
-			return takeResult();
-		}
-		finally {
-			argWasm.dispose();
-		}
+		using argWasm = new WasmString(argString);
+		instance.exports.pefileScannerFind(this.p, argWasm.address, argWasm.length);
+		return takeResult();
 	}
 
 	/**
@@ -829,13 +938,142 @@ export class PeFile {
 	 */
 	scannerMatches(pattern, section, options = {}) {
 		let argString = JSON.stringify({ pattern, section, ...options });
-		const argWasm = new WasmString(argString);
-		try {
-			instance.exports.pefileScannerMatches(this.p, argWasm.address, argWasm.length);
-			return takeResult();
+		using argWasm = new WasmString(argString);
+		instance.exports.pefileScannerMatches(this.p, argWasm.address, argWasm.length);
+		return takeResult();
+	}
+}
+
+/**
+ * Independently owned factmap layers backed by WebAssembly memory.
+ * Dispose the handle when it is no longer needed.
+ * Methods return an Error value on failure.
+ */
+export class Facts {
+	/**
+	 * Creates an empty collection for the target pointer width.
+	 * @param {32 | 64} pointerWidth Pointer width in bits for parsing symbol types.
+	 */
+	constructor(pointerWidth) {
+		/** @private @type {number} */
+		this.p = instance.exports.factsNew(pointerWidth);
+		if (!this.p) {
+			throw takeResult() ?? new Error("Unable to construct Facts");
 		}
-		finally {
-			argWasm.dispose();
+		takeResult();
+	}
+
+	/** Releases the layers from WebAssembly memory. */
+	dispose() {
+		if (this.p !== 0) {
+			instance.exports.factsDrop(this.p);
+			this.p = 0;
 		}
+	}
+
+	/** Releases the layers when used with explicit resource management. */
+	[Symbol.dispose]() {
+		this.dispose();
+	}
+
+	/** @returns {Result<number>} Number of stored facts layers; initially zero. */
+	getNumLayers() {
+		instance.exports.factsGetNumLayers(this.p);
+		return takeResult();
+	}
+
+	/**
+	 * Exports a layer as canonical #factmap text, preserving record order and duplicates.
+	 * Source whitespace and file comments are discarded; the label is stored separately.
+	 * All layer indices are zero-based signed 32-bit integers; negative values count
+	 * from the end (-1 is the last layer). Out-of-bounds indices return Error.
+	 * @param {number} index
+	 * @returns {Result<FactMapText>}
+	 */
+	getLayer(index) {
+		instance.exports.factsGetLayer(this.p, index);
+		return takeResult();
+	}
+
+	/**
+	 * Appends a layer with an empty label and returns its index.
+	 * The complete map is validated before appending, using the handle's pointer width.
+	 * Parse errors include line numbers.
+	 * @param {FactMapText} [facts="#factmap\n"] Complete factmap text.
+	 * @returns {Result<number>} New layer index, or Error on failure.
+	 */
+	addLayer(facts = "#factmap\n") {
+		if (typeof facts !== "string") {
+			return new Error("Facts must be a string");
+		}
+		using factsWasm = new WasmString(facts);
+		instance.exports.factsAddLayer(this.p, factsWasm.address, factsWasm.length);
+		return takeResult();
+	}
+
+	/**
+	 * Deletes a layer. Subsequent indices shift down by one.
+	 * @param {number} index Layer index; negative values count from the end.
+	 * @returns {Result<null>}
+	 */
+	deleteLayer(index) {
+		instance.exports.factsDeleteLayer(this.p, index);
+		return takeResult();
+	}
+
+	/**
+	 * Appends the source records to the base in order, then removes the source layer.
+	 * Keeps the base label and duplicate records. Both indices refer to the original
+	 * list; merging a layer into itself succeeds without changing it.
+	 * @param {number} base Destination layer index.
+	 * @param {number} index Source layer index.
+	 * @returns {Result<null>}
+	 */
+	mergeLayer(base, index) {
+		instance.exports.factsMergeLayer(this.p, base, index);
+		return takeResult();
+	}
+
+	/**
+	 * Moves a layer to a final index. Both indices resolve against the original list.
+	 * @param {number} index Layer to move.
+	 * @param {number} destination Final index; -1 moves to the end.
+	 * @returns {Result<null>}
+	 */
+	shiftLayer(index, destination) {
+		instance.exports.factsShiftLayer(this.p, index, destination);
+		return takeResult();
+	}
+
+	/** @param {number} index Layer index. @returns {Result<string>} The layer's display label. */
+	getLayerLabel(index) {
+		instance.exports.factsGetLayerLabel(this.p, index);
+		return takeResult();
+	}
+
+	/** @param {number} index Layer index. @param {string} label Display label. @returns {Result<null>} */
+	setLayerLabel(index, label) {
+		if (typeof label !== "string") {
+			return new Error("Facts label must be a string");
+		}
+		using labelWasm = new WasmString(label);
+		instance.exports.factsSetLayerLabel(this.p, index, labelWasm.address, labelWasm.length);
+		return takeResult();
+	}
+
+	/**
+	 * Validates and appends one fact record using the handle's pointer width.
+	 * Errors leave the layer unchanged; duplicates are retained.
+	 * @param {number} index Layer index.
+	 * @param {FactRecordText} fact Single fact record, such as `Cx1000 "Entry point"`.
+	 * @returns {Result<null>}
+	 */
+	addFact(index, fact) {
+		if (typeof fact !== "string") {
+			return new Error("Fact must be a string");
+		}
+		using factWasm = new WasmString(fact);
+		instance.exports.factsAddFact(this.p, index, factWasm.address, factWasm.length);
+		return takeResult();
 	}
 }

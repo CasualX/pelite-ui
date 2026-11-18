@@ -1,5 +1,4 @@
 /** @typedef {{ action: 'open-view', viewer: string, data?: unknown }} WorkspaceContextAction */
-/** @typedef {{ file: File, peFile: import('./deps/pelite.js').PeFile }} ViewContext */
 /** @typedef {{ component: string, data: Record<string, unknown>, titleSuffix?: string | null }} ViewContent */
 
 /** A live content view. Window placement and docking belong to the window manager. */
@@ -30,7 +29,7 @@ class WorkspaceModel {
 	}
 
 	/** Fetches data before allocating an ID or adding the instance. Throws on failure.
-	 * @param {ViewDefinition} definition @param {ViewContext} context @param {unknown} [data] @returns {ViewModel}
+	 * @param {ViewDefinition} definition @param {PeDocument} context @param {unknown} [data] @returns {ViewModel}
 	 */
 	createView(definition, context, data) {
 		if (!definition.prepare) throw new Error('This view is unavailable.');

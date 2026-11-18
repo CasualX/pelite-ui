@@ -2,24 +2,24 @@
 
 <script>
 /** @typedef {{ rva: number, section: string, bytes: string, instruction: string }} DisasmRow */
-/** @typedef {{ peFile: import('./deps/pelite.js').PeFile, headers: import('./deps/pelite.js').PeHeaders, state: { rows: DisasmRow[], cursor: number, address: string, error: string | undefined } }} DisasmViewData */
+/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { rows: DisasmRow[], cursor: number, address: string, error: string | undefined } }} DisasmViewData */
 
-/** @param {ViewContext} context @returns {boolean} */
+/** @param {PeDocument} context @returns {boolean} */
 function isDisasmAvailable(context) {
 	const header = context.peFile.fileHeader();
 	return !(header instanceof Error) && [0x14c, 0x8664].includes(header.Machine);
 }
 
-/** @param {import('./deps/pelite.js').PeFile} peFile @param {import('./deps/pelite.js').PeHeaders} headers @param {number} rva @returns {DisasmRow[]} */
-function readDisasmWindow(peFile, headers, rva) {
+/** @param {PeDocument} openedDocument @param {import('./deps/pelite.js').PeHeaders} headers @param {number} rva @returns {DisasmRow[]} */
+function readDisasmWindow(openedDocument, headers, rva) {
 	const imageSize = headers.NtHeaders.OptionalHeader.SizeOfImage;
 	if (!Number.isInteger(rva) || rva < 0 || rva >= imageSize) throw new Error('RVA must be inside the virtual image.');
-	const bytes = peFile.sliceBytes(rva);
+	const bytes = openedDocument.peFile.sliceBytes(rva);
 	if (bytes instanceof Error) throw bytes;
 	// Start exactly at the requested instruction: x86 has no fixed alignment,
 	// so decoding from an arbitrary earlier byte can change all boundaries.
 	const end = Math.min(rva + 0x1000, rva + bytes.length, imageSize);
-	const instructions = peFile.disasm(rva, end);
+	const instructions = openedDocument.peFile.disasm(rva, end);
 	if (instructions instanceof Error) throw instructions;
 	let address = rva;
 	return instructions.map(instruction => {
@@ -30,15 +30,15 @@ function readDisasmWindow(peFile, headers, rva) {
 	});
 }
 
-/** @param {ViewContext} context @param {unknown} [data] @returns {ViewContent} */
+/** @param {PeDocument} context @param {unknown} [data] @returns {ViewContent} */
 function prepareDisasmView(context, data) {
 	const headers = context.peFile.headers();
 	if (headers instanceof Error) throw headers;
 	const options = /** @type {{ rva?: number, address?: WorkspaceAddressValue } | undefined} */ (data);
-	const rva = options?.address ? workspaceAddressToRva(context.peFile, options.address) : options?.rva ?? headers.NtHeaders.OptionalHeader.AddressOfEntryPoint;
-	const rows = readDisasmWindow(context.peFile, headers, rva);
+	const rva = options?.address ? workspaceAddressToRva(context, options.address) : options?.rva ?? headers.NtHeaders.OptionalHeader.AddressOfEntryPoint;
+	const rows = readDisasmWindow(context, headers, rva);
 	const state = { rows, cursor: rva, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
-	return { component: 'view-disasm', data: { peFile: context.peFile, headers, state },
+	return { component: 'view-disasm', data: { document: context, headers, state },
 		get titleSuffix() { const data = /** @type {DisasmViewData} */ (/** @type {unknown} */ (this.data)); return `0x${data.state.cursor.toString(16)}`; },
 	};
 }
@@ -58,7 +58,7 @@ const ViewDisasm = Vue.defineComponent({
 				const text = this.state.address.trim();
 				if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) throw new Error('Enter an RVA in decimal or 0xhex.');
 				const rva = Number(text);
-				const rows = readDisasmWindow(this.disasmData.peFile, this.disasmData.headers, rva);
+				const rows = readDisasmWindow(this.disasmData.document, this.disasmData.headers, rva);
 				this.state.rows = rows;
 				this.state.cursor = rva;
 				this.state.error = undefined;

@@ -30,51 +30,125 @@ export class PeFile {
     /**
      * Converts a virtual address to an RVA.
      *
-     * @param {number | bigint} va Virtual address.
-     * @returns {Result<number>} The corresponding RVA.
+     * @overload
+     * @param {number | bigint} va
+     * @param {false} [optional=false]
+     * @returns {Result<number>}
      */
-    vaToRva(va: number | bigint): Result<number>;
+    vaToRva(va: number | bigint, optional?: false | undefined): Result<number>;
+    /**
+     * Converts a virtual address to an RVA.
+     *
+     * @overload
+     * @param {number | bigint} va
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<number | null>}
+     */
+    vaToRva(va: number | bigint, optional?: boolean | undefined): Result<number | null>;
     /**
      * Converts an RVA to a virtual address.
      *
-     * @param {number} rva Relative virtual address.
-     * @returns {Result<bigint>} The corresponding virtual address.
-     */
-    rvaToVa(rva: number): Result<bigint>;
-    /**
-     * Converts an RVA to a file offset; zero-filled data returns an Error.
+     * @overload
      * @param {number} rva
-     * @returns {Result<number>}
-     */
-    rvaToFileOffset(rva: number): Result<number>;
-    /**
-     * Converts a virtual address to a file offset; zero-filled data returns an Error.
-     * @param {number | bigint} va
-     * @returns {Result<number>}
-     */
-    vaToFileOffset(va: number | bigint): Result<number>;
-    /**
-     * Converts a file offset to an RVA; unmapped raw data returns an Error.
-     * @param {number} offset
-     * @returns {Result<number>}
-     */
-    fileOffsetToRva(offset: number): Result<number>;
-    /**
-     * Converts a file offset to a virtual address; unmapped raw data returns an Error.
-     * @param {number} offset
+     * @param {false} [optional=false]
      * @returns {Result<bigint>}
      */
-    fileOffsetToVa(offset: number): Result<bigint>;
+    rvaToVa(rva: number, optional?: false | undefined): Result<bigint>;
+    /**
+     * Converts an RVA to a virtual address.
+     *
+     * @overload
+     * @param {number} rva
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<bigint | null>}
+     */
+    rvaToVa(rva: number, optional?: boolean | undefined): Result<bigint | null>;
+    /**
+     * Converts an RVA to a file offset; zero-filled data returns an Error.
+     *
+     * @overload
+     * @param {number} rva
+     * @param {false} [optional=false]
+     * @returns {Result<number>}
+     */
+    rvaToFileOffset(rva: number, optional?: false | undefined): Result<number>;
+    /**
+     * Converts an RVA to a file offset; zero-filled data returns an Error.
+     *
+     * @overload
+     * @param {number} rva
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<number | null>}
+     */
+    rvaToFileOffset(rva: number, optional?: boolean | undefined): Result<number | null>;
+    /**
+     * Converts a virtual address to a file offset; zero-filled data returns an Error.
+     *
+     * @overload
+     * @param {number | bigint} va
+     * @param {false} [optional=false]
+     * @returns {Result<number>}
+     */
+    vaToFileOffset(va: number | bigint, optional?: false | undefined): Result<number>;
+    /**
+     * Converts a virtual address to a file offset; zero-filled data returns an Error.
+     *
+     * @overload
+     * @param {number | bigint} va
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<number | null>}
+     */
+    vaToFileOffset(va: number | bigint, optional?: boolean | undefined): Result<number | null>;
+    /**
+     * Converts a file offset to an RVA; unmapped raw data returns an Error.
+     *
+     * @overload
+     * @param {number} offset
+     * @param {false} [optional=false]
+     * @returns {Result<number>}
+     */
+    fileOffsetToRva(offset: number, optional?: false | undefined): Result<number>;
+    /**
+     * Converts a file offset to an RVA; unmapped raw data returns an Error.
+     *
+     * @overload
+     * @param {number} offset
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<number | null>}
+     */
+    fileOffsetToRva(offset: number, optional?: boolean | undefined): Result<number | null>;
+    /**
+     * Converts a file offset to a virtual address; unmapped raw data returns an Error.
+     *
+     * @overload
+     * @param {number} offset
+     * @param {false} [optional=false]
+     * @returns {Result<bigint>}
+     */
+    fileOffsetToVa(offset: number, optional?: false | undefined): Result<bigint>;
+    /**
+     * Converts a file offset to a virtual address; unmapped raw data returns an Error.
+     *
+     * @overload
+     * @param {number} offset
+     * @param {boolean} [optional=false] Return null when the input is zero.
+     * @returns {Result<bigint | null>}
+     */
+    fileOffsetToVa(offset: number, optional?: boolean | undefined): Result<bigint | null>;
     /**
      * Disassemble instructions starting in the half-open RVA range [start, end).
+     * With lookback, also includes an instruction overlapping `start`.
+     * Absolute operand symbols require matching base relocations; relative targets
+     * resolve directly. Labels come from exports and import address table entries.
      *
      * @param {number} start Start RVA.
      * @param {number | null} [end=null] End RVA; defaults to one byte after `start`.
+     * @param {DisasmOptions} [options]
      * @returns {Result<DisassembledInstruction[]>}
      */
-    disasm(start: number, end?: number | null): Result<DisassembledInstruction[]>;
+    disasm(start: number, end?: number | null, options?: DisasmOptions): Result<DisassembledInstruction[]>;
     /**
-     * Interprets typed data at an RVA using the CLI read type syntax.
+     * Interprets typed data at an RVA using the read type syntax.
      *
      * Types include u8/u16/u32/u64, i8/i16/i32/i64, f32/f64, cstr, utf16lez,
      * pointers (*T), arrays ([T; N] or [T; field]), structs, and unions.
@@ -219,14 +293,101 @@ export class PeFile {
     [Symbol.dispose](): void;
 }
 /**
+ * Independently owned factmap layers backed by WebAssembly memory.
+ * Dispose the handle when it is no longer needed.
+ * Methods return an Error value on failure.
+ */
+export class Facts {
+    /**
+     * Creates an empty collection for the target pointer width.
+     * @param {32 | 64} pointerWidth Pointer width in bits for parsing symbol types.
+     */
+    constructor(pointerWidth: 32 | 64);
+    /** @private @type {number} */
+    private p;
+    /** Releases the layers from WebAssembly memory. */
+    dispose(): void;
+    /** @returns {Result<number>} Number of stored facts layers; initially zero. */
+    getNumLayers(): Result<number>;
+    /**
+     * Exports a layer as canonical #factmap text, preserving record order and duplicates.
+     * Source whitespace and file comments are discarded; the label is stored separately.
+     * All layer indices are zero-based signed 32-bit integers; negative values count
+     * from the end (-1 is the last layer). Out-of-bounds indices return Error.
+     * @param {number} index
+     * @returns {Result<FactMapText>}
+     */
+    getLayer(index: number): Result<FactMapText>;
+    /**
+     * Appends a layer with an empty label and returns its index.
+     * The complete map is validated before appending, using the handle's pointer width.
+     * Parse errors include line numbers.
+     * @param {FactMapText} [facts="#factmap\n"] Complete factmap text.
+     * @returns {Result<number>} New layer index, or Error on failure.
+     */
+    addLayer(facts?: FactMapText): Result<number>;
+    /**
+     * Deletes a layer. Subsequent indices shift down by one.
+     * @param {number} index Layer index; negative values count from the end.
+     * @returns {Result<null>}
+     */
+    deleteLayer(index: number): Result<null>;
+    /**
+     * Appends the source records to the base in order, then removes the source layer.
+     * Keeps the base label and duplicate records. Both indices refer to the original
+     * list; merging a layer into itself succeeds without changing it.
+     * @param {number} base Destination layer index.
+     * @param {number} index Source layer index.
+     * @returns {Result<null>}
+     */
+    mergeLayer(base: number, index: number): Result<null>;
+    /**
+     * Moves a layer to a final index. Both indices resolve against the original list.
+     * @param {number} index Layer to move.
+     * @param {number} destination Final index; -1 moves to the end.
+     * @returns {Result<null>}
+     */
+    shiftLayer(index: number, destination: number): Result<null>;
+    /** @param {number} index Layer index. @returns {Result<string>} The layer's display label. */
+    getLayerLabel(index: number): Result<string>;
+    /** @param {number} index Layer index. @param {string} label Display label. @returns {Result<null>} */
+    setLayerLabel(index: number, label: string): Result<null>;
+    /**
+     * Validates and appends one fact record using the handle's pointer width.
+     * Errors leave the layer unchanged; duplicates are retained.
+     * @param {number} index Layer index.
+     * @param {FactRecordText} fact Single fact record, such as `Cx1000 "Entry point"`.
+     * @returns {Result<null>}
+     */
+    addFact(index: number, fact: FactRecordText): Result<null>;
+    /** Releases the layers when used with explicit resource management. */
+    [Symbol.dispose](): void;
+}
+/**
  * A value returned by the WebAssembly module, or an error reported by it.
  */
 export type Result<T> = T | Error;
+/**
+ * Complete #factmap text, including its header.
+ */
+export type FactMapText = string;
+/**
+ * One factmap record without a header or line ending.
+ */
+export type FactRecordText = string;
 export type DisassembledInstruction = {
     /**
-     * The formatted section name and virtual address.
+     * The instruction address relative to the image base, an unsigned 32-bit value.
      */
-    address: string;
+    rva: number;
+    /**
+     * The section name at the requested start.
+     */
+    prefix: string;
+    /**
+     * The symbol name at the instruction start, or null if absent.
+     */
+    label: string | null;
     /**
      * The encoded instruction bytes.
      */
@@ -235,6 +396,16 @@ export type DisassembledInstruction = {
      * The formatted instruction.
      */
     instruction: string;
+    /**
+     * Annotations, including symbols inside the instruction; empty if none.
+     */
+    comments: string[];
+};
+export type DisasmOptions = {
+    /**
+     * Decode up to this many bytes earlier and include overlapping instructions.
+     */
+    lookback?: number | undefined;
 };
 export type ScannerMatch = {
     /**
