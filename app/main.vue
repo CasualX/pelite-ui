@@ -86,6 +86,7 @@ app.component('view-resources', ViewResources);
 app.component('view-icons-cursors', ViewIconsCursors);
 app.component('view-scanner', ViewScanner);
 app.component('view-facts', ViewFacts);
+app.component('view-address-converter', ViewAddressConverter);
 app.component('view-hex-dump', ViewHexDump);
 app.component('view-disasm', ViewDisasm);
 app.component('app-main', AppMain);

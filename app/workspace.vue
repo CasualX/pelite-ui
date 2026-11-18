@@ -14,6 +14,7 @@
 <link rel="component" href="pe/views/icons-cursors.vue" dynamic>
 <link rel="component" href="pe/views/scanner.vue" dynamic>
 <link rel="component" href="pe/views/facts.vue" dynamic>
+<link rel="component" href="pe/views/address-converter.vue" dynamic>
 <link rel="component" href="pe/views/hex-dump.vue" dynamic>
 <link rel="component" href="pe/views/disasm.vue" dynamic>
 <link rel="component" href="pe/browser.vue.js">

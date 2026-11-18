@@ -48,6 +48,7 @@ const workspaceViewGroups = [
 	] },
 	{ id: 'analysis', title: 'Analysis', views: [
 		{ id: 'facts', title: 'Facts', singleton: true, icon: workspaceIcons.resources, prepare: prepareFactsView },
+		{ id: 'address-converter', title: 'Address Converter', singleton: true, icon: workspaceIcons.imports, prepare: prepareAddressConverterView },
 		{ id: 'hex-dump', title: 'Hex Dump', singleton: false, icon: workspaceIcons.sections, prepare: prepareHexDumpView },
 		{ id: 'disasm', title: 'Disassembly', singleton: false, icon: workspaceIcons.document, isAvailable: isDisasmAvailable, prepare: prepareDisasmView },
 		{ id: 'scanner', title: 'Scanner', singleton: false, icon: workspaceIcons.scanner, prepare: prepareScannerView },
