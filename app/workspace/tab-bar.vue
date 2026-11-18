@@ -10,7 +10,7 @@ const WorkspaceTabBar = Vue.defineComponent({
 		prefix: { type: String, required: true },
 		tabDragType: { type: String, required: true },
 	},
-	emits: ['select', 'close', 'split', 'float', 'move-tab'],
+	emits: ['select', 'close', 'split', 'float', 'move-tab', 'duplicate'],
 	data() {
 		return {
 			menuTab: /** @type {number | undefined} */ (undefined),
@@ -171,12 +171,13 @@ const WorkspaceTabBar = Vue.defineComponent({
 				: (index + offset + buttons.length) % buttons.length;
 			buttons[next]?.focus();
 		},
-		/** @param {WorkspaceDirection | 'float'} action */
+		/** @param {WorkspaceDirection | 'float' | 'duplicate'} action */
 		choose(action) {
 			const id = this.menuTab;
 			if (id === undefined) return;
 			this.closeMenu();
 			if (action === 'float') this.$emit('float', id);
+			else if (action === 'duplicate') this.$emit('duplicate', id);
 			else this.$emit('split', id, action);
 		},
 	},
@@ -202,6 +203,8 @@ const WorkspaceTabBar = Vue.defineComponent({
 		<div ref="menu" class="workspace-tab-bar__menu" popover="manual" role="menu" :aria-label="'Actions for ' + titles.get(menuTab)"
 			@contextmenu.prevent.stop @keydown.esc.prevent.stop="closeMenu(true)" @keydown.tab="closeMenu(true)"
 			@keydown.up.prevent="navigateMenu" @keydown.down.prevent="navigateMenu" @keydown.home.prevent="navigateMenu" @keydown.end.prevent="navigateMenu">
+			<button type="button" role="menuitem" tabindex="-1" @click="choose('duplicate')">Duplicate tab</button>
+			<hr>
 			<button type="button" role="menuitem" tabindex="-1" @click="choose('row')">Split right</button>
 			<button type="button" role="menuitem" tabindex="-1" @click="choose('column')">Split down</button>
 			<button type="button" role="menuitem" tabindex="-1" @click="choose('float')">Float window</button>
@@ -220,6 +223,7 @@ const WorkspaceTabBar = Vue.defineComponent({
 .workspace-tab__select:hover { color: var(--workspace-text); }
 .workspace-tab__close { flex-shrink: 0; margin-right: 3px; }
 .workspace-tab-bar__menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--workspace-border); border-radius: 4px; background: var(--workspace-surface); color: var(--workspace-text); box-shadow: 0 3px 12px #0002; }
+.workspace-tab-bar__menu hr { margin: 4px 0; border: 0; border-block-start: 1px solid var(--workspace-border); }
 .workspace-tab-bar__menu button { display: block; width: 100%; padding: 6px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .workspace-tab-bar__menu button:hover, .workspace-tab-bar__menu button:focus-visible { background: var(--workspace-background); outline: 1px solid var(--workspace-accent); }
 </style>

@@ -48,11 +48,14 @@ class WorkspaceLayout {
 		this.focused = { type: 'window', id: floating.viewId };
 	}
 
-	/** @param {number} viewId */
-	open(viewId) {
+	/** @param {number} viewId @param {number} [afterViewId] */
+	open(viewId, afterViewId) {
 		if (this.activate(viewId)) return;
-		const pane = this.panes.find(item => item.id === this.lastPaneId) ?? this.panes[0];
-		pane.tabs.push(viewId);
+		const panes = this.panes;
+		const source = afterViewId === undefined ? undefined : panes.find(item => item.tabs.includes(afterViewId));
+		const pane = source ?? panes.find(item => item.id === this.lastPaneId) ?? panes[0];
+		if (source && afterViewId !== undefined) pane.tabs.splice(pane.tabs.indexOf(afterViewId) + 1, 0, viewId);
+		else pane.tabs.push(viewId);
 		pane.selected = viewId;
 		this.focusPane(pane.id);
 	}

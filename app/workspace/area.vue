@@ -10,6 +10,7 @@
 
 /** Render a reactive WorkspaceLayout with host-provided titles and a `view({ id })` slot.
  * The host handles `close-view` by removing the view and calling `layout.close(id)`.
+ * For `duplicate-view`, the host creates a fresh view and calls `layout.open(newId, sourceId)`.
  */
 const WorkspaceArea = Vue.defineComponent({
 	template: '#workspace-area',
@@ -18,7 +19,7 @@ const WorkspaceArea = Vue.defineComponent({
 		layout: { type: WorkspaceLayout, required: true },
 		views: { type: /** @type {new () => WorkspaceViewInfo[]} */ (/** @type {unknown} */ (Array)), required: true },
 	},
-	emits: ['close-view'],
+	emits: ['close-view', 'duplicate-view'],
 	data() {
 		return {
 			prefix: `workspace-${Vue.useId()}`,
@@ -130,6 +131,11 @@ const WorkspaceArea = Vue.defineComponent({
 		/** @param {number} id */
 		closePane(id) { if (this.layout.closeEmptyPane(id)) this.focusControl(); },
 		/** @param {number} id */
+		requestDuplicate(id) {
+			this.$emit('duplicate-view', id);
+			this.focusControl();
+		},
+		/** @param {number} id */
 		requestClose(id) {
 			this.$emit('close-view', id);
 			this.focusControl();
@@ -145,7 +151,7 @@ const WorkspaceArea = Vue.defineComponent({
 				<workspace-pane :pane="pane" :titles="titles" :prefix="prefix" :tab-drag-type="tabDragType" :can-close="layout.root.type === 'split'"
 					:focused="layout.focused.type === 'pane' && layout.focused.id === pane.id" @focus-pane="layout.focusPane(pane.id)"
 					@select="layout.activate($event)" @close="requestClose" @split="(id, direction) => splitPane(pane.id, id, direction)"
-					@move-tab="(id, index) => moveTab(pane.id, id, index)"
+					@move-tab="(id, index) => moveTab(pane.id, id, index)" @duplicate="requestDuplicate"
 					@float="floatView" @close-pane="closePane(pane.id)">
 					<workspace-outlet :key="pane.id" :target="'pane-' + pane.id" @register="registerOutlet" @unregister="unregisterOutlet"></workspace-outlet>
 				</workspace-pane>

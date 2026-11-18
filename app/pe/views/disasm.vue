@@ -40,6 +40,7 @@ function prepareDisasmView(context, data) {
 	const state = { rows, requestedRva: rva, cursor: rva, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
 	return { component: 'view-disasm', data: { document: context, headers, state },
 		get titleSuffix() { const data = /** @type {DisasmViewData} */ (/** @type {unknown} */ (this.data)); return `0x${data.state.requestedRva.toString(16)}`; },
+		get duplicateData() { return { rva: state.requestedRva }; },
 	};
 }
 

@@ -28,6 +28,7 @@ function prepareHexDumpView(context, data) {
 	const state = { format: /** @type {'decimal' | 'hex'} */ ('decimal'), window, cursor: rva - window.start, address: `0x${rva.toString(16)}`, error: /** @type {string | undefined} */ (undefined) };
 	return { component: 'view-hex-dump', data: { document: context, headers, state },
 		get titleSuffix() { const data = /** @type {HexDumpViewData} */ (/** @type {unknown} */ (this.data)); return `0x${data.state.window.requestedRva.toString(16)}`; },
+		get duplicateData() { return { rva: state.window.requestedRva }; },
 	};
 }
 

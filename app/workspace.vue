@@ -45,23 +45,28 @@ const AppWorkspace = Vue.defineComponent({
 		viewContent() { return new Map(this.model.views.map(view => [view.id, view.content])); },
 	},
 	methods: {
-		/** @param {string} kind @param {unknown} [data] */
-		openView(kind, data) {
+		/** @param {string} kind @param {unknown} [data] @param {number} [afterViewId] */
+		openView(kind, data, afterViewId) {
 			const definition = this.viewGroups.flatMap(group => group.views).find(view => view.id === kind);
 			if (!definition?.available) return;
 			try {
-				const existing = definition.singleton ? this.model.views.find(view => view.kind === kind) : undefined;
+				const existing = definition.singleton && afterViewId === undefined ? this.model.views.find(view => view.kind === kind) : undefined;
 				if (existing) {
 					this.activateView(existing.id);
 					return;
 				}
-				this.model.createView(definition, this.peDocument, data);
+				this.model.createView(definition, this.peDocument, data, afterViewId);
 				this.clearViewError();
 			} catch (error) {
 				const message = error instanceof Error ? error.message : String(error);
 				this.viewError = `Unable to open ${definition.title}: ${message}`;
 				this.$emit('status', new StatusModel('var(--color-danger)', 'View failed', this.viewError));
 			}
+		},
+		/** @param {number} id */
+		duplicateView(id) {
+			const source = this.model.views.find(view => view.id === id);
+			if (source) this.openView(source.kind, source.content.duplicateData, source.id);
 		},
 		/** @param {MouseEvent} event */
 		addressMenu(event) {
@@ -102,7 +107,7 @@ const AppWorkspace = Vue.defineComponent({
 		<div class="app-workspace__content">
 			<p v-if="viewError" class="app-workspace__error" role="alert">{{ viewError }}</p>
 			<workspace-area class="app-workspace__area" :layout="model.layout" :views="viewTitles"
-				@close-view="closeView" @contextmenu="addressMenu">
+				@close-view="closeView" @duplicate-view="duplicateView" @contextmenu="addressMenu">
 				<template #view="{ id }">
 					<component :is="viewContent.get(id).component" :data="viewContent.get(id).data" @context-action="contextAction"></component>
 				</template>

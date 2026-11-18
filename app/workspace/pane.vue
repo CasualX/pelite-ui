@@ -13,7 +13,7 @@ const WorkspacePane = Vue.defineComponent({
 		focused: Boolean,
 		canClose: Boolean,
 	},
-	emits: ['focus-pane', 'select', 'close', 'split', 'float', 'close-pane', 'move-tab'],
+	emits: ['focus-pane', 'select', 'close', 'split', 'float', 'close-pane', 'move-tab', 'duplicate'],
 	computed: {
 		paneId() { return `${this.prefix}-pane-${this.pane.id}`; },
 	},
@@ -26,7 +26,7 @@ const WorkspacePane = Vue.defineComponent({
 		<div v-if="pane.tabs.length" class="workspace-pane__bar">
 			<workspace-tab-bar :tabs="pane.tabs" :selected="pane.selected" :titles="titles" :prefix="prefix" :tab-drag-type="tabDragType"
 				@select="$emit('select', $event)" @close="$emit('close', $event)"
-				@move-tab="(id, index) => $emit('move-tab', id, index)"
+				@move-tab="(id, index) => $emit('move-tab', id, index)" @duplicate="$emit('duplicate', $event)"
 				@split="(id, direction) => $emit('split', id, direction)" @float="$emit('float', $event)"></workspace-tab-bar>
 		</div>
 		<template v-else>
