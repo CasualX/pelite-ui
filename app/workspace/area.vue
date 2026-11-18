@@ -5,7 +5,7 @@
 <link rel="component" href="window.vue">
 
 <script>
-/** @typedef {{ id: number, title: string }} WorkspaceViewInfo */
+/** @typedef {{ id: number, title: string, preferredWindowSize?: WorkspaceSize }} WorkspaceViewInfo */
 /** @typedef {{ target: string, tab: boolean, visible: boolean }} WorkspaceViewPlacement */
 
 /** Render a reactive WorkspaceLayout with host-provided titles and a `view({ id })` slot.
@@ -125,7 +125,10 @@ const WorkspaceArea = Vue.defineComponent({
 			event.stopPropagation();
 		},
 		/** @param {number} id */
-		floatView(id) { if (this.layout.float(id)) this.focusControl(); },
+		floatView(id) {
+			const size = this.views.find(view => view.id === id)?.preferredWindowSize;
+			if (this.layout.float(id, size)) this.focusControl();
+		},
 		/** @param {number} id */
 		dockView(id) { if (this.layout.dock(id)) this.focusControl(); },
 		/** @param {number} id */

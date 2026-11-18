@@ -9,7 +9,11 @@
 function prepareAddressConverterView(document) {
 	const header = document.peFile.optionalHeader();
 	if (header instanceof Error) throw header;
-	return { component: 'view-address-converter', data: { document, imageSize: header.SizeOfImage } };
+	return {
+		component: 'view-address-converter',
+		data: { document, imageSize: header.SizeOfImage },
+		preferredWindowSize: { width: 272, height: 188 },
+	};
 }
 
 const addressConverterFields = /** @type {{ kind: AddressConverterKind, label: string }[]} */ ([

@@ -41,7 +41,13 @@ const AppWorkspace = Vue.defineComponent({
 	},
 	computed: {
 		peDocument() { return /** @type {PeDocument} */ (/** @type {unknown} */ (this.document)); },
-		viewTitles() { return this.model.views.map(view => ({ id: view.id, title: view.displayTitle })); },
+		workspaceViews() {
+			return this.model.views.map(view => ({
+				id: view.id,
+				title: view.displayTitle,
+				preferredWindowSize: view.content.preferredWindowSize,
+			}));
+		},
 		viewContent() { return new Map(this.model.views.map(view => [view.id, view.content])); },
 	},
 	methods: {
@@ -106,7 +112,7 @@ const AppWorkspace = Vue.defineComponent({
 			@open-view="openView" @activate-view="activateView" @close-view="closeView"></workspace-sidebar>
 		<div class="app-workspace__content">
 			<p v-if="viewError" class="app-workspace__error" role="alert">{{ viewError }}</p>
-			<workspace-area class="app-workspace__area" :layout="model.layout" :views="viewTitles"
+			<workspace-area class="app-workspace__area" :layout="model.layout" :views="workspaceViews"
 				@close-view="closeView" @duplicate-view="duplicateView" @contextmenu="addressMenu">
 				<template #view="{ id }">
 					<component :is="viewContent.get(id).component" :data="viewContent.get(id).data" @context-action="contextAction"></component>

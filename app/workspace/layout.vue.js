@@ -2,7 +2,8 @@
 /** @typedef {{ type: 'pane', id: number, tabs: number[], selected: number | undefined }} WorkspacePaneNode */
 /** @typedef {{ type: 'split', id: number, direction: WorkspaceDirection, ratio: number, first: WorkspaceNode, second: WorkspaceNode }} WorkspaceSplitNode */
 /** @typedef {WorkspacePaneNode | WorkspaceSplitNode} WorkspaceNode */
-/** @typedef {{ x: number, y: number, width: number, height: number }} WorkspaceBounds */
+/** @typedef {{ width: number, height: number }} WorkspaceSize */
+/** @typedef {WorkspaceSize & { x: number, y: number }} WorkspaceBounds */
 /** @typedef {{ viewId: number, bounds: WorkspaceBounds, layer: number }} WorkspaceFloatingWindow */
 
 /** Workspace placement and focus. The host owns view IDs and their content. */
@@ -112,12 +113,12 @@ class WorkspaceLayout {
 		return true;
 	}
 
-	/** @param {number} viewId */
-	float(viewId) {
+	/** @param {number} viewId @param {WorkspaceSize} [size] */
+	float(viewId, { width, height } = { width: 640, height: 460 }) {
 		const pane = this.panes.find(item => item.tabs.includes(viewId));
 		if (!pane) return false;
 		const offset = 24 + this.windows.length % 6 * 24;
-		const floating = { viewId, bounds: { x: offset, y: offset, width: 640, height: 460 }, layer: 0 };
+		const floating = { viewId, bounds: { x: offset, y: offset, width, height }, layer: 0 };
 		this.focusPane(pane.id);
 		this.removeTab(pane, viewId);
 		this.closeEmptyPane(pane.id);
@@ -195,7 +196,7 @@ function clampWorkspaceValue(value, min, max) {
 	return Math.max(min, Math.min(max, value));
 }
 
-/** @param {WorkspaceBounds} bounds @param {{ width: number, height: number }} area @returns {WorkspaceBounds} */
+/** @param {WorkspaceBounds} bounds @param {WorkspaceSize} area @returns {WorkspaceBounds} */
 function boundWorkspaceWindow(bounds, area) {
 	const width = clampWorkspaceValue(bounds.width, Math.min(240, area.width), area.width);
 	const height = clampWorkspaceValue(bounds.height, Math.min(160, area.height), area.height);

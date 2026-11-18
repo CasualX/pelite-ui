@@ -1,5 +1,5 @@
 /** @typedef {{ action: 'open-view', viewer: string, data?: unknown }} WorkspaceContextAction */
-/** @typedef {{ component: string, data: Record<string, unknown>, titleSuffix?: string | null, duplicateData?: unknown }} ViewContent */
+/** @typedef {{ component: string, data: Record<string, unknown>, titleSuffix?: string | null, duplicateData?: unknown, preferredWindowSize?: WorkspaceSize }} ViewContent */
 
 /** A live content view. Window placement and docking belong to the window manager. */
 class ViewModel {

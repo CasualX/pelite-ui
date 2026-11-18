@@ -111,7 +111,7 @@ const PeAddressMenu = Vue.defineComponent({
 </template>
 
 <style>
-.pe-address-menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); }
+.pe-address-menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
 .pe-address-menu button { display: block; width: 100%; padding: 7px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; text-align: left; font: 12px system-ui, sans-serif; cursor: pointer; }
 .pe-address-menu button:hover, .pe-address-menu button:focus-visible { background: var(--color-accent); color: var(--color-on-accent); outline: none; }
 </style>

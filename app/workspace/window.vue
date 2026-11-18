@@ -67,7 +67,7 @@ const WorkspaceWindow = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-window { box-sizing: border-box; position: absolute; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--workspace-border); border-radius: 6px; background: var(--workspace-background); box-shadow: 0 6px 24px #0004; }
+.workspace-window { box-sizing: border-box; position: absolute; display: flex; flex-direction: column; overflow: hidden; border: 1px solid var(--workspace-border); background: var(--workspace-background); box-shadow: 0 0 6px #0004, 0 4px 12px #0006; }
 .workspace-window--focused { border-color: var(--workspace-accent); }
 .workspace-window:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
 .workspace-window__header { display: flex; align-items: center; gap: 4px; flex: 0 0 35px; min-width: 0; padding: 0 4px 0 12px; border-bottom: 1px solid var(--workspace-border); background: var(--workspace-surface); cursor: move; touch-action: none; user-select: none; }
