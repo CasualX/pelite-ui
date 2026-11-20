@@ -33,6 +33,18 @@ const WorkspaceTabBar = Vue.defineComponent({
 		this.$el.ownerDocument.removeEventListener('dragend', this.clearDropMarker, true);
 	},
 	methods: {
+		/** @param {WheelEvent} event */
+		scrollTabs(event) {
+			const { deltaMode, deltaX, deltaY, ctrlKey } = event;
+			if (ctrlKey || deltaX || !deltaY) return;
+			const bar = /** @type {HTMLElement} */ (event.currentTarget);
+			if (bar.scrollWidth <= bar.clientWidth) return;
+			const start = bar.scrollLeft;
+			const unit = deltaMode === WheelEvent.DOM_DELTA_LINE ? 16
+				: deltaMode === WheelEvent.DOM_DELTA_PAGE ? bar.clientWidth : 1;
+			bar.scrollLeft += deltaY * unit;
+			if (bar.scrollLeft !== start) event.preventDefault();
+		},
 		revealSelected() {
 			const bar = /** @type {HTMLElement} */ (this.$refs.tabs);
 			if (!bar) return;
@@ -187,7 +199,7 @@ const WorkspaceTabBar = Vue.defineComponent({
 <template id="workspace-tab-bar">
 	<div class="workspace-tab-bar">
 		<div ref="tabs" class="workspace-tab-bar__tabs" role="tablist" aria-label="Open views"
-			@dragover="previewDrop" @dragleave="leaveDrop" @drop="dropTab">
+			@wheel="scrollTabs" @dragover="previewDrop" @dragleave="leaveDrop" @drop="dropTab">
 			<div v-for="(id, index) in tabs" :key="id" class="workspace-tab" :class="{ 'workspace-tab--selected': selected === id }" role="presentation"
 				@mousedown.middle.prevent @auxclick.middle.prevent="$emit('close', id)">
 				<button :id="prefix + '-tab-' + id" class="workspace-tab__select" type="button" role="tab"
@@ -214,7 +226,8 @@ const WorkspaceTabBar = Vue.defineComponent({
 
 <style>
 .workspace-tab-bar { position: relative; display: flex; flex: 1; min-width: 0; }
-.workspace-tab-bar__tabs { display: flex; flex: 1; min-width: 0; overflow: auto hidden; scrollbar-width: none; }
+.workspace-tab-bar__tabs { display: flex; flex: 1; min-width: 0; overflow: auto hidden; scrollbar-width: thin; scrollbar-color: var(--workspace-border) transparent; }
+.workspace-tab-bar__tabs:hover { scrollbar-color: var(--workspace-muted) transparent; }
 .workspace-tab-bar__insertion { position: absolute; top: 3px; bottom: 3px; width: 2px; border-radius: 1px; background: var(--workspace-accent); pointer-events: none; }
 .workspace-tab { display: flex; align-items: center; flex: 0 0 auto; min-width: 0; max-width: 100%; border-right: 1px solid var(--workspace-border); }
 .workspace-tab--selected { background: var(--workspace-background); box-shadow: inset 0 -2px var(--workspace-border); color: var(--workspace-text); }
