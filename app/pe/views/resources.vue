@@ -2,12 +2,6 @@
 /** @typedef {{ tree: import('./deps/pelite.js').PeResourceTreeEntry[], state: { expanded: Set<string> } }} ResourcesViewData */
 /** @typedef {{ entry: import('./deps/pelite.js').PeResourceTreeEntry, key: string, depth: number }} ResourceTreeRow */
 
-/** @param {PeDocument} context @returns {boolean} */
-function isResourcesAvailable(context) {
-	const tree = context.peFile.resourcesTree();
-	return tree !== null && !(tree instanceof Error);
-}
-
 /** @param {PeDocument} context @returns {ViewContent} */
 function prepareResourcesView(context) {
 	const tree = context.peFile.resourcesTree();

@@ -4,12 +4,6 @@
 /** @typedef {{ ordinal: number, target: number | null | string, names: string[] }} ExportRow */
 /** @typedef {{ directory: import('./deps/pelite.js').PeExportDirectory, rows: ExportRow[], state: { query: string } }} ExportsViewData */
 
-/** @param {PeDocument} context @returns {boolean} */
-function isExportsAvailable(context) {
-	const exports = context.peFile.exports();
-	return exports !== null && !(exports instanceof Error);
-}
-
 /** @param {number} value @returns {string} */
 function formatExportHex(value) {
 	return value === 0 ? '0' : `0x${value.toString(16)}`;

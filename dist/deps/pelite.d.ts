@@ -235,7 +235,7 @@ export class PeFile {
     pdbFileName(): Result<string | null>;
     /** @returns {Result<PeDebugDirectoryEntry[] | null>} Parsed debug directory JSON. */
     debug(): Result<PeDebugDirectoryEntry[] | null>;
-    /** @returns {Result<PeSecurityDirectory | null>} Parsed Authenticode security directory JSON. */
+    /** @returns {Result<PeSecurityDirectory | null>} Certificates in file order, or null if the security directory is absent. */
     security(): Result<PeSecurityDirectory | null>;
     /** @returns {Result<PeResourceTreeEntry[] | null>} Parsed resource tree JSON. */
     resourcesTree(): Result<PeResourceTreeEntry[] | null>;
@@ -764,13 +764,18 @@ export type PeCertificateImage = {
     wCertificateType: number;
 };
 /**
- * certificate_data is base64-encoded.
+ * The payload is base64-encoded.
  */
-export type PeSecurityDirectory = {
+export type PeCertificate = {
     image: PeCertificateImage;
-    certificate_type: number;
-    certificate_data: string;
+    payload: string;
 };
+/**
+ * A malformed entry appears as a `$error` object after any valid certificates.
+ */
+export type PeSecurityDirectory = (PeCertificate | {
+    $error: string;
+})[];
 /**
  * A resource name or unsigned 32-bit resource ID.
  */

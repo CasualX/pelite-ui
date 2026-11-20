@@ -2,6 +2,12 @@
 /** @typedef {{ title: string, kind?: string | ((value: unknown, index: string | number) => string | undefined), style?: Record<string, string | number>, format: (value: unknown, index: string | number) => string }} PropertyGridColumn */
 /** @typedef {unknown[] | Record<string, unknown>} PropertyGridList */
 
+/** @param {unknown} value @returns {string} */
+function formatPropertyGridHex(value) {
+	if (value == null) return '—';
+	return typeof value === 'number' && value !== 0 ? `0x${value.toString(16)}` : String(value);
+}
+
 // Each column interprets the original value and its array index or object key.
 // Optional kind supplies a semantic data-kind hint for contextual tools.
 // Current address kinds are rva, va, and fo; other kinds can be added later.
@@ -26,7 +32,9 @@ const PropertyGrid = Vue.defineComponent({
 	<div class="property-grid">
 		<table class="property-grid__table" :aria-label="label">
 			<thead>
-				<tr><th v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" scope="col">{{ column.title }}</th></tr>
+				<tr>
+					<th v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" scope="col">{{ column.title }}</th>
+				</tr>
 			</thead>
 			<tbody>
 				<tr v-for="(value, index) in list" :key="index">

@@ -1,4 +1,5 @@
-/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, isAvailable?: (context: PeDocument) => boolean, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
+/** @typedef {(context: PeDocument, headers: import('./deps/pelite.js').PeHeaders | undefined) => boolean} ViewAvailability */
+/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, isAvailable?: ViewAvailability, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
 /** @typedef {{ id: string, title: string | undefined, views: ViewDefinition[] }} ViewGroup */
 /** @typedef {ViewDefinition & { available: boolean }} ViewMenuEntry */
 /** @typedef {{ id: string, title: string | undefined, views: ViewMenuEntry[] }} ViewMenuGroup */
@@ -7,13 +8,32 @@
  * @param {PeDocument} context @returns {ViewMenuGroup[]}
  */
 function createWorkspaceViewGroups(context) {
+	const result = context.peFile.headers();
+	const headers = result instanceof Error ? undefined : result;
 	return workspaceViewGroups.map(group => ({
 		...group,
 		views: group.views.map(view => ({
 			...view,
-			available: !!view.prepare && (view.isAvailable?.(context) ?? true),
+			available: !!view.prepare && (view.isAvailable?.(context, headers) ?? true),
 		})),
 	}));
+}
+
+const peDirectoryIndex = {
+	exports: 0,
+	imports: 1,
+	resources: 2,
+	exceptions: 3,
+	security: 4,
+	baseRelocations: 5,
+	debug: 6,
+	tls: 9,
+	loadConfig: 10,
+};
+
+/** @param {number} index @returns {ViewAvailability} */
+function createIsDirectoryAvailable(index) {
+	return (_context, headers) => !!headers?.DataDirectory[index]?.VirtualAddress;
 }
 
 const workspaceIcons = {
@@ -37,11 +57,17 @@ const workspaceViewGroups = [
 		{ id: 'nt', title: 'NT Headers', singleton: true, icon: workspaceIcons.document, prepare: prepareNtHeadersView },
 		{ id: 'sections', title: 'Section Headers', singleton: true, icon: workspaceIcons.sections, prepare: context => prepareSectionHeadersView(context) },
 		{ id: 'rich', title: 'Rich Structure', singleton: true, icon: workspaceIcons.document, isAvailable: isRichStructureAvailable, prepare: prepareRichStructureView },
-		{ id: 'exports', title: 'Exports', singleton: true, icon: workspaceIcons.imports, isAvailable: isExportsAvailable, prepare: prepareExportsView },
-		{ id: 'imports', title: 'Imports', singleton: true, icon: workspaceIcons.imports, isAvailable: isImportsAvailable, prepare: prepareImportsView },
+		{ id: 'exports', title: 'Exports', singleton: true, icon: workspaceIcons.imports, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.exports), prepare: prepareExportsView },
+		{ id: 'imports', title: 'Imports', singleton: true, icon: workspaceIcons.imports, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.imports), prepare: prepareImportsView },
+		{ id: 'exceptions', title: 'Exceptions', singleton: true, icon: workspaceIcons.sections, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.exceptions), prepare: prepareExceptionsView },
+		{ id: 'security', title: 'Security Directory', singleton: true, icon: workspaceIcons.document, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.security), prepare: prepareSecurityView },
+		{ id: 'relocations', title: 'Base Relocations', singleton: true, icon: workspaceIcons.sections, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.baseRelocations), prepare: prepareBaseRelocationsView },
+		{ id: 'debug', title: 'Debug Directory', singleton: true, icon: workspaceIcons.document, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.debug), prepare: prepareDebugDirectoryView },
+		{ id: 'tls', title: 'TLS Directory', singleton: true, icon: workspaceIcons.document, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.tls), prepare: prepareTlsView },
+		{ id: 'load-config', title: 'Load Configuration', singleton: true, icon: workspaceIcons.document, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.loadConfig), prepare: prepareLoadConfigView },
 	] },
 	{ id: 'resources', title: 'Resources', views: [
-		{ id: 'resources', title: 'Resources', singleton: true, icon: workspaceIcons.resources, isAvailable: isResourcesAvailable, prepare: prepareResourcesView },
+		{ id: 'resources', title: 'Resources', singleton: true, icon: workspaceIcons.resources, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.resources), prepare: prepareResourcesView },
 		{ id: 'version', title: 'Version Info', singleton: true, icon: workspaceIcons.document, isAvailable: isVersionInfoAvailable, prepare: prepareVersionInfoView },
 		{ id: 'manifest', title: 'Manifest', singleton: true, icon: workspaceIcons.document, isAvailable: isManifestAvailable, prepare: prepareManifestView },
 		{ id: 'icons-cursors', title: 'Icons & Cursors', singleton: true, icon: workspaceIcons.resources, isAvailable: isIconsCursorsAvailable, prepare: prepareIconsCursorsView },

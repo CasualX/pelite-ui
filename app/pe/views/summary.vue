@@ -155,7 +155,7 @@ const ViewSummary = Vue.defineComponent({
 		},
 		imageFields() {
 			const timestamp = this.headers.NtHeaders.FileHeader.TimeDateStamp;
-			const entrySection = this.entryPointSection;
+			const entrySection = this.headers.SectionHeaders[this.entryPointSection];
 			const checksum = this.optional.CheckSum;
 			const checksumState = checksum === 0 ? 'Not set' : checksum === this.headers.details['OptionalHeader.CheckSum'] ? 'Valid' : 'Does not match';
 			const certificate = this.headers.DataDirectory[4];
@@ -163,7 +163,8 @@ const ViewSummary = Vue.defineComponent({
 			return [
 				{ label: 'File size', value: formatSummarySize(this.summaryData.fileSize) },
 				{ label: 'Image size', value: formatSummarySize(this.optional.SizeOfImage) },
-				{ label: 'Entry point', value: `${formatSummaryHex(this.optional.AddressOfEntryPoint)} · ${entrySection < 0 ? 'No section' : this.headers.SectionHeaders[entrySection].Name}` },
+				{ label: 'Entry point', value: formatSummaryHex(this.optional.AddressOfEntryPoint), kind: 'rva',
+					prefix: entrySection?.Name ? `${entrySection.Name}:` : '', suffix: entrySection ? '' : ' · No section' },
 				{ label: 'Image base', value: formatSummaryHex(this.optional.ImageBase) },
 				{ label: 'Timestamp (self-reported)', value: timestamp === 0 || timestamp === 0xffffffff ? 'Unspecified' : new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC') },
 				{ label: 'Checksum', value: `${formatSummaryHex(checksum)} · ${checksumState}` },
@@ -195,7 +196,7 @@ const ViewSummary = Vue.defineComponent({
 	<section class="view-summary">
 		<p class="view-summary__identity">{{ identity }}</p>
 		<dl class="view-summary__image">
-			<div v-for="field in imageFields" :key="field.label"><dt>{{ field.label }}</dt><dd>{{ field.value }}</dd></div>
+			<div v-for="field in imageFields" :key="field.label"><dt>{{ field.label }}</dt><dd>{{ field.prefix }}<span :data-kind="field.kind">{{ field.value }}</span>{{ field.suffix }}</dd></div>
 		</dl>
 		<h2>Hashes</h2>
 		<property-grid :list="summaryData.hashes" :interpretations="hashInterpretations" label="File hashes"></property-grid>

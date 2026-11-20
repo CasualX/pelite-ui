@@ -3,11 +3,6 @@
 <script>
 /** @typedef {{ descriptors: import('./deps/pelite.js').PeImportDescriptor[], state: { query: string } }} ImportsViewData */
 
-/** @param {PeDocument} context @returns {boolean} */
-function isImportsAvailable(context) {
-	return !(context.peFile.imports() instanceof Error);
-}
-
 /** @param {number} value @returns {string} */
 function formatImportHex(value) {
 	return value === 0 ? '0' : `0x${value.toString(16)}`;
@@ -17,8 +12,8 @@ function formatImportHex(value) {
 function prepareImportsView(context) {
 	const result = context.peFile.imports();
 	if (result instanceof Error) throw result;
-	const descriptors = result ?? [];
-	return { component: 'view-imports', data: { descriptors, state: { query: '' } } };
+	if (result === null) throw new Error('The import directory is unavailable.');
+	return { component: 'view-imports', data: { descriptors: result, state: { query: '' } } };
 }
 
 const ViewImports = Vue.defineComponent({
@@ -87,7 +82,7 @@ const ViewImports = Vue.defineComponent({
 			<property-grid v-if="group.rows?.length" :list="group.rows" :interpretations="interpretations" :label="'Imports from ' + (group.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
 			<p v-else class="view-imports__empty">{{ group.rows === null ? 'The import lookup table could not be parsed.' : 'No imported symbols.' }}</p>
 		</section>
-		<p v-if="!filteredDescriptors.length" class="view-imports__empty">{{ data.descriptors.length ? 'No matching entries.' : 'No imports.' }}</p>
+		<p v-if="!filteredDescriptors.length" class="view-imports__empty">{{ data.descriptors.length ? 'No matching entries.' : 'The import directory is empty.' }}</p>
 	</section>
 </template>
 
