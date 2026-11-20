@@ -80,7 +80,7 @@ const ViewResources = Vue.defineComponent({
 								<span v-if="!row.entry.data" class="view-resources__unavailable">Unavailable</span>
 							</span>
 						</td>
-						<td>{{ row.entry.data ? hex(row.entry.data.image.OffsetToData) : '' }}</td>
+						<td :data-kind="row.entry.data ? 'rva' : undefined">{{ row.entry.data ? hex(row.entry.data.image.OffsetToData) : '' }}</td>
 						<td>{{ row.entry.data?.size }}</td>
 						<td>{{ row.entry.data?.code_page }}</td>
 					</tr>

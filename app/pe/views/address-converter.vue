@@ -82,6 +82,7 @@ const ViewAddressConverter = Vue.defineComponent({
 		<label v-for="field in fields" :key="field.kind" class="view-address-converter__field">
 			<span>{{ field.label }}</span>
 			<input type="text" :value="conversion.values[field.kind]"
+				:data-kind="!conversion.invalid && conversion.values[field.kind] ? field.kind : undefined"
 				:aria-invalid="source === field.kind && conversion.invalid ? 'true' : undefined"
 				autocomplete="off" autocapitalize="off" spellcheck="false" @input="edit(field.kind, $event)">
 		</label>

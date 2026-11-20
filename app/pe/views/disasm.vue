@@ -130,7 +130,7 @@ const ViewDisasm = Vue.defineComponent({
 	<section class="view-disasm">
 		<div class="view-disasm__body">
 			<form class="view-disasm__toolbar" @submit.prevent="go">
-				<label>RVA <input v-model="state.address" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
+				<label>RVA <input v-model="state.address" data-kind="rva" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
 			</form>
 			<p v-if="state.error" class="view-disasm__error" role="alert">{{ state.error }}</p>
 			<p class="view-disasm__help">Place the cursor in an instruction and press Enter to start decoding there.</p>

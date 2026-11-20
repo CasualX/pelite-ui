@@ -34,7 +34,8 @@ const ViewExports = Vue.defineComponent({
 		return {
 			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
-				{ title: 'Value', style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
+				{ title: 'Value', kind: (value, field) => value && ['Name', 'AddressOfFunctions', 'AddressOfNames', 'AddressOfNameOrdinals'].includes(String(field)) ? 'rva' : undefined,
+					style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
 				{ title: 'Interpretation', style: { minWidth: '240px' }, format: (value, name) => {
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);
@@ -49,7 +50,8 @@ const ViewExports = Vue.defineComponent({
 			const columns = /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Ordinal', style: { minWidth: '80px', textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
 				{ title: 'Name', style: { minWidth: '260px' }, format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
-				{ title: 'RVA', kind: 'rva', style: { minWidth: '120px', textAlign: 'right' }, format: value => {
+				{ title: 'RVA', kind: value => typeof (/** @type {ExportRow} */ (value)).target === 'number' ? 'rva' : undefined,
+					style: { minWidth: '120px', textAlign: 'right' }, format: value => {
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },

@@ -35,7 +35,7 @@ const ViewLoadConfig = Vue.defineComponent({
 		return {
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-				{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => addresses[field], format: formatPropertyGridHex },
+				{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => value ? addresses[field] : undefined, format: formatPropertyGridHex },
 			]),
 			handlerColumns: /** @type {PropertyGridColumn[]} */ ([{ title: 'Handler RVA', kind: 'rva', format: formatPropertyGridHex }]),
 		};

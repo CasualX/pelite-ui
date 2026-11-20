@@ -48,18 +48,24 @@ const ViewDebugDirectory = Vue.defineComponent({
 			openedEntries: /** @type {Set<number>} */ (new Set()),
 			entryColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Type', format: row => formatDebugField(row, 'type') },
-				{ title: 'Data RVA', kind: 'rva', format: row => formatDebugField(row, 'AddressOfRawData') },
-				{ title: 'File offset', kind: 'fo', format: row => formatDebugField(row, 'PointerToRawData') },
+				{ title: 'Data RVA', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
+					format: row => formatDebugField(row, 'AddressOfRawData') },
+				{ title: 'File offset', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
+					format: row => formatDebugField(row, 'PointerToRawData') },
 				{ title: 'Size', format: row => formatDebugField(row, 'SizeOfData') },
 			]),
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
 				payloadColumns[0],
-				{ ...payloadColumns[1], kind: (value, field) => field === 'AddressOfRawData' ? 'rva' : field === 'PointerToRawData' ? 'fo' : undefined },
+				{ ...payloadColumns[1], kind: (value, field) => {
+					if (!value) return undefined;
+					return field === 'AddressOfRawData' ? 'rva' : field === 'PointerToRawData' ? 'fo' : undefined;
+				} },
 			]),
 			payloadColumns,
 			sectionColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Name', format: row => formatDebugField(row, 'name') },
-				{ title: 'RVA', kind: 'rva', format: row => formatDebugField(row, 'rva') },
+				{ title: 'RVA', kind: row => typeof (/** @type {import('./deps/pelite.js').PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
+					format: row => formatDebugField(row, 'rva') },
 				{ title: 'Size', format: row => formatDebugField(row, 'size') },
 				{ title: 'Error', format: row => formatDebugField(row, 'error') },
 			]),

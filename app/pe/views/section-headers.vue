@@ -43,7 +43,7 @@ const ViewSectionHeaders = Vue.defineComponent({
 				<tbody><tr v-for="(header, index) in sectionData.headers" :key="index">
 					<td>{{ index + 1 }}</td>
 					<td v-for="field in fields" :key="field" :class="{ 'view-section-headers__name': field === 'Name' }"
-						:data-kind="field === 'VirtualAddress' ? 'rva' : field === 'PointerToRawData' ? 'fo' : undefined">{{ formatValue(header[field]) }}</td>
+						:data-kind="field === 'VirtualAddress' ? 'rva' : field === 'PointerToRawData' && header.PointerToRawData !== 0 ? 'fo' : undefined">{{ formatValue(header[field]) }}</td>
 					<td>{{ permissions(header.Characteristics) }}</td>
 					<td>{{ sectionData.entropy[index].entropy?.toFixed(2) ?? '—' }}</td>
 					<td><div class="view-section-headers__entropy" aria-label="Entropy distribution, scale 0 to 8"><span v-for="(entropy, sample) in sectionData.entropy[index].samples" :key="sample" :style="{ height: (entropy / 8 * 100) + '%' }" :title="entropy.toFixed(2)"></span></div></td>

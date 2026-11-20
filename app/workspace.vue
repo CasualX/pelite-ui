@@ -1,6 +1,6 @@
 <link rel="component" href="pe/sidebar.vue">
 <link rel="component" href="workspace/area.vue">
-<link rel="component" href="pe/context-menu.vue">
+<link rel="component" href="pe/address-menu.vue">
 <link rel="component" href="pe/views/summary.vue" dynamic>
 <link rel="component" href="pe/views/dos-header.vue" dynamic>
 <link rel="component" href="pe/views/nt-headers.vue" dynamic>

@@ -17,7 +17,7 @@ const ViewTls = Vue.defineComponent({
 		return {
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-				{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => addresses.includes(String(field)) ? 'va' : undefined, format: formatPropertyGridHex },
+				{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => value && addresses.includes(String(field)) ? 'va' : undefined, format: formatPropertyGridHex },
 			]),
 			callbackColumns: /** @type {PropertyGridColumn[]} */ ([{ title: 'Callback VA', kind: 'va', format: formatPropertyGridHex }]),
 		};

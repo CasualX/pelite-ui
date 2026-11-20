@@ -210,7 +210,7 @@ const ViewHexDump = Vue.defineComponent({
 	<section class="view-hex-dump">
 		<div class="view-hex-dump__body">
 			<form class="view-hex-dump__toolbar" @submit.prevent="go">
-				<label>RVA <input v-model="state.address" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
+				<label>RVA <input v-model="state.address" data-kind="rva" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
 				<button class="view-hex-dump__inspect" type="button" @click="inspectByte">Inspect</button>
 			</form>
 			<p v-if="state.error" class="view-hex-dump__error" role="alert">{{ state.error }}</p>

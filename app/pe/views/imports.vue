@@ -22,7 +22,7 @@ const ViewImports = Vue.defineComponent({
 	data() {
 		return {
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'IAT RVA', style: { minWidth: '120px', textAlign: 'right' }, format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
+				{ title: 'IAT RVA', kind: 'rva', style: { minWidth: '120px', textAlign: 'right' }, format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
 				{ title: 'Name', style: { minWidth: '260px' }, format: value => {
 					const symbol = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import;
 					return symbol === null ? 'Unavailable' : symbol.ByName?.name ?? '—';
@@ -38,7 +38,8 @@ const ViewImports = Vue.defineComponent({
 			]),
 			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
-				{ title: 'Value', style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
+				{ title: 'Value', kind: (value, field) => value && ['OriginalFirstThunk', 'Name', 'FirstThunk'].includes(String(field)) ? 'rva' : undefined,
+					style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
 				{ title: 'Interpretation', style: { minWidth: '240px' }, format: (value, name) => {
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);

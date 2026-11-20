@@ -163,15 +163,16 @@ const ViewSummary = Vue.defineComponent({
 			return [
 				{ label: 'File size', value: formatSummarySize(this.summaryData.fileSize) },
 				{ label: 'Image size', value: formatSummarySize(this.optional.SizeOfImage) },
-				{ label: 'Entry point', value: formatSummaryHex(this.optional.AddressOfEntryPoint), kind: 'rva',
+				{ label: 'Entry point', value: formatSummaryHex(this.optional.AddressOfEntryPoint), kind: this.optional.AddressOfEntryPoint ? 'rva' : undefined,
 					prefix: entrySection?.Name ? `${entrySection.Name}:` : '', suffix: entrySection ? '' : ' · No section' },
-				{ label: 'Image base', value: formatSummaryHex(this.optional.ImageBase) },
+				{ label: 'Image base', value: formatSummaryHex(this.optional.ImageBase), kind: 'va' },
 				{ label: 'Timestamp (self-reported)', value: timestamp === 0 || timestamp === 0xffffffff ? 'Unspecified' : new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC') },
 				{ label: 'Checksum', value: `${formatSummaryHex(checksum)} · ${checksumState}` },
 				{ label: 'Certificate table', value: certificate?.VirtualAddress && certificate.Size ? 'Present (not validated)' : 'Not present' },
 				{ label: 'CLR (.NET)', value: clr?.VirtualAddress && clr.Size ? 'Present' : 'Not present' },
 				{ label: 'TLS callbacks', value: this.tlsCallbacks === null ? 'Unavailable' : String(this.tlsCallbacks) },
-				{ label: 'Overlay', value: `${formatSummarySize(this.overlay.size)} at file offset ${formatSummaryHex(this.overlay.offset)}` },
+				{ label: 'Overlay', prefix: `${formatSummarySize(this.overlay.size)} at file offset `,
+					value: formatSummaryHex(this.overlay.offset), kind: this.overlay.size ? 'fo' : undefined },
 				...(this.summaryData.pdbFileName === null ? [] : [{ label: 'PDB path', value: this.summaryData.pdbFileName instanceof Error ? 'Unavailable' : this.summaryData.pdbFileName }]),
 			];
 		},
@@ -209,7 +210,7 @@ const ViewSummary = Vue.defineComponent({
 			<table aria-label="Section summary">
 				<thead><tr><th scope="col">Name</th><th scope="col">RVA</th><th scope="col">Virtual size</th><th scope="col">Raw size</th><th scope="col">Permissions</th><th scope="col">Entropy</th><th scope="col">Distribution</th><th scope="col">Entry</th></tr></thead>
 				<tbody><tr v-for="(section, index) in sections" :key="index">
-					<td>{{ section.header.Name }}</td><td>{{ formatSummaryHex(section.header.VirtualAddress) }}</td><td>{{ formatSummaryHex(section.header.VirtualSize) }}</td><td>{{ formatSummaryHex(section.header.SizeOfRawData) }}</td><td>{{ permissions(section.header.Characteristics) }}</td><td>{{ section.analysis.entropy?.toFixed(2) ?? '—' }}</td>
+					<td>{{ section.header.Name }}</td><td data-kind="rva">{{ formatSummaryHex(section.header.VirtualAddress) }}</td><td>{{ formatSummaryHex(section.header.VirtualSize) }}</td><td>{{ formatSummaryHex(section.header.SizeOfRawData) }}</td><td>{{ permissions(section.header.Characteristics) }}</td><td>{{ section.analysis.entropy?.toFixed(2) ?? '—' }}</td>
 					<td><div class="view-summary__entropy" aria-label="Entropy distribution, scale 0 to 8"><span v-for="(entropy, sample) in section.analysis.samples" :key="sample" :style="{ height: (entropy / 8 * 100) + '%' }" :title="entropy.toFixed(2)"></span></div></td><td>{{ section.entry ? '← Entry point' : '' }}</td>
 				</tr></tbody>
 			</table>

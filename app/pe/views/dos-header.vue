@@ -19,7 +19,8 @@ const ViewDosHeader = Vue.defineComponent({
 		return {
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Field', format: (value, name) => String(name) },
-				{ title: 'Value', style: { textAlign: 'right' }, format: value => typeof value === 'number' && value !== 0 ? `0x${value.toString(16)}` : String(value) },
+				{ title: 'Value', kind: (value, field) => value && (field === 'e_lfarlc' || field === 'e_lfanew') ? 'fo' : undefined,
+					style: { textAlign: 'right' }, format: formatPropertyGridHex },
 			]),
 		};
 	},

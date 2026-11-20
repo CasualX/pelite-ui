@@ -12,9 +12,13 @@ function formatNtHeaderValue(value) {
 
 /** @param {string} table @param {Record<string, unknown>} details @returns {PropertyGridColumn[]} */
 function ntHeaderInterpretations(table, details) {
+	const addresses = /** @type {Partial<Record<string, string>>} */ (table === 'OptionalHeader'
+		? { ImageBase: 'va', AddressOfEntryPoint: 'rva', BaseOfCode: 'rva', BaseOfData: 'rva' }
+		: table === 'FileHeader' ? { PointerToSymbolTable: 'fo' } : {});
 	return [
 		{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
-		{ title: 'Value', kind: (value, field) => table === 'OptionalHeader' ? ({ ImageBase: 'va', AddressOfEntryPoint: 'rva', BaseOfCode: 'rva', BaseOfData: 'rva' })[String(field)] : undefined, style: { minWidth: '140px', textAlign: 'right' }, format: formatNtHeaderValue },
+		{ title: 'Value', kind: (value, field) => value !== 0 || field === 'ImageBase' ? addresses[field] : undefined,
+			style: { minWidth: '140px', textAlign: 'right' }, format: formatNtHeaderValue },
 		{ title: 'Interpretation', style: { minWidth: '360px' }, format: (value, name) => {
 			if (table === 'FileHeader' && name === 'TimeDateStamp') {
 				const timestamp = Number(value);
@@ -62,7 +66,12 @@ const ViewNtHeaders = Vue.defineComponent({
 			return [
 				{ title: '#', style: { textAlign: 'right' }, format: (value, index) => String(index) },
 				{ title: 'Directory', format: (value, index) => names[Number(index)] ?? '—' },
-				{ title: 'VirtualAddress', kind: (value, index) => Number(index) === 4 ? 'fo' : 'rva', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).VirtualAddress) },
+				{ title: 'VirtualAddress', kind: (value, index) => {
+					const directory = /** @type {import('./deps/pelite.js').PeDataDirectory} */ (value);
+					const slot = Number(index);
+					if (directory.VirtualAddress === 0 || slot === 7 || slot >= 15) return undefined;
+					return slot === 4 ? 'fo' : 'rva';
+				}, style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).VirtualAddress) },
 				{ title: 'Size', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).Size) },
 			];
 		},

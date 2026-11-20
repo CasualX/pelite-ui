@@ -41,11 +41,12 @@ const ViewScanner = Vue.defineComponent({
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
 				{ title: '#', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
+				{ title: 'Match RVA', kind: 'rva', style: { textAlign: 'right' }, format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).rva) },
 			]);
 			const captureCount = this.state.results?.matches[0]?.save.length ?? 0;
-			for (let slot = 0; slot < captureCount; slot++) {
+			for (let slot = 1; slot < captureCount; slot++) {
 				columns.push({
-					title: slot === 0 ? 'Match RVA' : `Save ${slot}`,
+					title: `Save ${slot}`,
 					style: { textAlign: 'right' },
 					format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).save[slot]),
 				});
