@@ -61,7 +61,7 @@ const WorkspaceSidebar = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-sidebar { flex: 0 0 240px; min-height: 0; overflow-y: auto; border-right: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
+.workspace-sidebar { min-width: 0; min-height: 0; overflow-y: auto; border-right: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
 .workspace-sidebar__section { padding: 0 0 8px; }
 .workspace-sidebar__section--browser { border-top: 1px solid var(--color-border); }
 .workspace-sidebar__heading { display: flex; align-items: center; justify-content: space-between; min-height: 32px; margin: 0 0 6px; padding: 7px 16px; border-bottom: 1px solid var(--color-border); background: color-mix(in srgb, var(--color-border) 35%, var(--color-surface)); color: var(--color-text); font-size: 11px; font-weight: 700; user-select: none; }
@@ -91,4 +91,7 @@ const WorkspaceSidebar = Vue.defineComponent({
 .workspace-sidebar__chevron { flex-shrink: 0; color: var(--color-muted); }
 .workspace-sidebar__group-toggle[aria-expanded="false"] .workspace-sidebar__chevron { transform: rotate(-90deg); }
 .workspace-sidebar__row--nested { padding-left: 27px; }
+.workspace-sidebar--compact .workspace-sidebar__row, .workspace-sidebar--compact .workspace-sidebar__group-toggle { min-height: 44px; }
+.workspace-sidebar--compact .workspace-sidebar__close { top: 4px; width: 36px; height: 36px; }
+.workspace-sidebar--compact .workspace-sidebar__open-row .workspace-sidebar__view-button { padding-right: 46px; }
 </style>

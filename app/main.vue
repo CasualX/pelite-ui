@@ -11,6 +11,8 @@
 <script>
 "use strict";
 
+const compactWorkspaceMedia = window.matchMedia('(max-width: 40rem), (orientation: portrait) and (max-width: 64rem)');
+
 const AppMain = Vue.defineComponent({
 	template: '#app-main',
 	data() {
@@ -19,10 +21,16 @@ const AppMain = Vue.defineComponent({
 			contentKey: 0,
 			document: /** @type {PeDocument | null} */ (null),
 			pelite: /** @type {typeof import('./deps/pelite.js') | null} */ (null),
+			compactWorkspace: compactWorkspaceMedia.matches,
+			sidebarOpen: true,
 			status: new StatusModel('var(--color-warning)', 'Loading', 'Initializing pelite…'),
 		};
 	},
+	mounted() {
+		compactWorkspaceMedia.addEventListener('change', this.syncWorkspaceMode);
+	},
 	beforeUnmount() {
+		compactWorkspaceMedia.removeEventListener('change', this.syncWorkspaceMode);
 		this.document?.dispose();
 	},
 	watch: {
@@ -33,12 +41,15 @@ const AppMain = Vue.defineComponent({
 	},
 	computed: {
 		contentProps() {
-			if (this.content === 'app-workspace') return { document: this.document };
+			if (this.content === 'app-workspace') return { document: this.document, compact: this.compactWorkspace, sidebarOpen: this.sidebarOpen };
 			if (this.content === 'app-input') return { pelite: this.pelite };
 			return {};
 		},
 	},
 	methods: {
+		/** @param {MediaQueryListEvent} event */
+		syncWorkspaceMode(event) { this.compactWorkspace = event.matches; },
+		toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; },
 		/** @param {typeof import('./deps/pelite.js')} pelite */
 		onReady(pelite) {
 			this.pelite = Vue.markRaw(pelite);
@@ -52,6 +63,7 @@ const AppMain = Vue.defineComponent({
 		launchWorkspace(openedDocument) {
 			this.document?.dispose();
 			this.document = openedDocument;
+			if (this.compactWorkspace) this.sidebarOpen = false;
 			this.content = 'app-workspace';
 		},
 		closeFile() {
@@ -102,9 +114,11 @@ app.mount('#app');
 
 <template id="app-main">
 	<div class="app-main" @dragover.prevent @drop.prevent>
-		<app-header :filename="document?.file.name" @close="closeFile"></app-header>
+		<app-header :filename="document?.file.name" :sidebar-open="sidebarOpen"
+			@toggle-sidebar="toggleSidebar" @close="closeFile"></app-header>
 		<main class="app-main__content">
-			<component ref="content" :is="content" :key="contentKey" v-bind="contentProps" @ready="onReady" @status="setStatus" @selected="launchWorkspace"></component>
+			<component ref="content" :is="content" :key="contentKey" v-bind="contentProps" @ready="onReady" @status="setStatus"
+				@selected="launchWorkspace" @show-content="sidebarOpen = false"></component>
 		</main>
 		<app-status :model="status"></app-status>
 	</div>

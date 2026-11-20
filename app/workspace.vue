@@ -35,8 +35,10 @@ const AppWorkspace = Vue.defineComponent({
 	components: { WorkspaceArea, WorkspaceSidebar, PeAddressMenu },
 	props: {
 		document: { type: Object, required: true },
+		compact: Boolean,
+		sidebarOpen: { type: Boolean, default: true },
 	},
-	emits: ['status'],
+	emits: ['status', 'show-content'],
 	data() {
 		const openedDocument = /** @type {PeDocument} */ (/** @type {unknown} */ (this.document));
 		return {
@@ -57,6 +59,21 @@ const AppWorkspace = Vue.defineComponent({
 		viewContent() { return new Map(this.model.views.map(view => [view.id, view.content])); },
 	},
 	methods: {
+		/** @param {string} kind */
+		openSidebarView(kind) {
+			this.openView(kind);
+			this.showWorkspaceContent();
+		},
+		/** @param {number} id */
+		activateSidebarView(id) {
+			this.activateView(id);
+			this.showWorkspaceContent();
+		},
+		showWorkspaceContent() {
+			if (!this.compact) return;
+			this.$emit('show-content');
+			this.$refs.area?.focusControl();
+		},
 		/** @param {string} kind @param {unknown} [data] @param {number} [afterViewId] */
 		openView(kind, data, afterViewId) {
 			const definition = this.viewGroups.flatMap(group => group.views).find(view => view.id === kind);
@@ -113,12 +130,13 @@ const AppWorkspace = Vue.defineComponent({
 </script>
 
 <template id="app-workspace">
-	<div class="app-workspace">
-		<workspace-sidebar :open-views="model.views" :view-groups="viewGroups" :active-view-id="model.activeViewId"
-			@open-view="openView" @activate-view="activateView" @close-view="closeView"></workspace-sidebar>
+	<div class="app-workspace" :class="{ 'app-workspace--compact': compact, 'app-workspace--sidebar-open': sidebarOpen }">
+		<workspace-sidebar id="pe-view-sidebar" :class="{ 'workspace-sidebar--compact': compact }" :inert="!sidebarOpen"
+			:open-views="model.views" :view-groups="viewGroups" :active-view-id="model.activeViewId"
+			@open-view="openSidebarView" @activate-view="activateSidebarView" @close-view="closeView"></workspace-sidebar>
 		<div class="app-workspace__content">
 			<p v-if="viewError" class="app-workspace__error" role="alert">{{ viewError }}</p>
-			<workspace-area class="app-workspace__area" :layout="model.layout" :views="workspaceViews"
+			<workspace-area ref="area" class="app-workspace__area" :layout="model.layout" :views="workspaceViews"
 				@close-view="closeView" @duplicate-view="duplicateView" @contextmenu="addressMenu">
 				<template #view="{ id }">
 					<component :is="viewContent.get(id).component" :data="viewContent.get(id).data" @context-action="contextAction"></component>
@@ -130,7 +148,12 @@ const AppWorkspace = Vue.defineComponent({
 </template>
 
 <style>
-.app-workspace { flex: 1; display: flex; min-width: 0; min-height: 0; }
+.app-workspace { --workspace-sidebar-width: 240px; flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.app-workspace > .workspace-sidebar { flex: 0 0 var(--workspace-sidebar-width); transition: margin-inline-start 180ms ease; }
+.app-workspace:not(.app-workspace--sidebar-open) > .workspace-sidebar { margin-inline-start: calc(-1 * var(--workspace-sidebar-width)); }
+.app-workspace--compact > .workspace-sidebar { flex-basis: 100%; border-inline-end: 0; transition: none; }
+.app-workspace--compact:not(.app-workspace--sidebar-open) > .workspace-sidebar,
+.app-workspace--compact.app-workspace--sidebar-open .app-workspace__content { display: none; }
 .app-workspace__content { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
 .app-workspace__area {
 	--workspace-background: var(--color-background);
@@ -142,4 +165,7 @@ const AppWorkspace = Vue.defineComponent({
 	--workspace-view-padding: 24px clamp(12px, 4cqi, 32px);
 }
 .app-workspace__error { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-danger); background: var(--color-surface); font-size: 13px; overflow-wrap: anywhere; }
+@media (prefers-reduced-motion: reduce) {
+	.app-workspace > .workspace-sidebar { transition: none; }
+}
 </style>
