@@ -116,40 +116,42 @@ const AppInput = Vue.defineComponent({
 </script>
 
 <template id="app-input">
-	<div class="app-input" @dragover.prevent @drop.prevent="dragDepth = 0">
-		<section class="app-input__dropzone" :class="{ 'app-input__dropzone--active': dragDepth > 0 }"
-			:aria-busy="loading" aria-labelledby="upload-title" aria-describedby="upload-description"
-			@dragenter.prevent="onDragEnter" @dragleave.prevent="dragDepth = Math.max(0, dragDepth - 1)"
-			@dragover.prevent="onDragOver" @drop.prevent.stop="onDrop">
-			<svg class="app-input__file-icon" viewBox="0 0 80 96" fill="none" aria-hidden="true">
-				<path d="M17 4h31l22 22v59a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V11a7 7 0 0 1 7-7Z" fill="var(--color-surface)" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-				<path d="M48 4v22h22" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
-				<text x="40" y="66" text-anchor="middle" fill="currentColor" font-size="25" font-family="sans-serif" font-weight="700">PE</text>
-			</svg>
-			<h1 id="upload-title">{{ dragDepth > 0 ? 'Drop your file to select it' : 'Open a Windows binary' }}</h1>
-			<p id="upload-description">Drag and drop a file here, or choose one from your device.</p>
-			<p class="app-input__formats">.exe, .dll, .sys and other PE files</p>
-			<input ref="fileInput" class="app-input__file-input" type="file" :disabled="loading" tabindex="-1" aria-label="Choose a Windows binary" @change="onFileChange">
-			<button ref="chooseButton" class="app-input__choose" type="button" :disabled="loading" @click="chooseFile">
-				<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-					<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+	<div class="app-input" @dragenter.prevent="onDragEnter" @dragleave.prevent="dragDepth = Math.max(0, dragDepth - 1)"
+		@dragover.prevent="onDragOver" @drop.prevent.stop="onDrop">
+		<div class="app-input__body">
+			<section class="app-input__dropzone" :class="{ 'app-input__dropzone--active': dragDepth > 0 }"
+				:aria-busy="loading" aria-labelledby="upload-title" aria-describedby="upload-description">
+				<svg class="app-input__file-icon" viewBox="0 0 80 96" fill="none" aria-hidden="true">
+					<path d="M17 4h31l22 22v59a7 7 0 0 1-7 7H17a7 7 0 0 1-7-7V11a7 7 0 0 1 7-7Z" fill="var(--color-surface)" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+					<path d="M48 4v22h22" stroke="currentColor" stroke-width="4" stroke-linejoin="round" />
+					<text x="40" y="66" text-anchor="middle" fill="currentColor" font-size="25" font-family="sans-serif" font-weight="700">PE</text>
 				</svg>
-				{{ loading ? 'Loading file…' : selectedFile ? 'Choose another file…' : 'Choose a file…' }}
-			</button>
-		</section>
+				<h1 id="upload-title">{{ dragDepth > 0 ? 'Drop your file to select it' : 'Open a Windows binary' }}</h1>
+				<p id="upload-description">Drag and drop a file here, or choose one from your device.</p>
+				<p class="app-input__formats">.exe, .dll, .sys and other PE files</p>
+				<input ref="fileInput" class="app-input__file-input" type="file" :disabled="loading" tabindex="-1" aria-label="Choose a Windows binary" @change="onFileChange">
+				<button ref="chooseButton" class="app-input__choose" type="button" :disabled="loading" @click="chooseFile">
+					<svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+						<path d="M3 7a2 2 0 0 1 2-2h5l2 3h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+					</svg>
+					{{ loading ? 'Loading file…' : selectedFile ? 'Choose another file…' : 'Choose a file…' }}
+				</button>
+			</section>
 
-		<div class="app-input__feedback" role="status" aria-live="polite" aria-atomic="true">
-			<p v-if="error" class="app-input__error">{{ error }}</p>
+			<div class="app-input__feedback" role="status" aria-live="polite" aria-atomic="true">
+				<p v-if="error" class="app-input__error">{{ error }}</p>
+			</div>
+			<p class="app-input__privacy">
+				<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.6" /><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" /></svg>
+				Your file stays on your device.
+			</p>
 		</div>
-		<p class="app-input__privacy">
-			<svg width="16" height="16" viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="5" y="10" width="14" height="11" rx="2" stroke="currentColor" stroke-width="1.6" /><path d="M8 10V7a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="1.6" /></svg>
-			Your file stays on your device.
-		</p>
 	</div>
 </template>
 
 <style>
-.app-input { width: min(100%, 760px); margin: auto; padding: 40px 28px; text-align: center; }
+.app-input { display: flex; flex: 1; min-width: 0; }
+.app-input__body { width: min(100%, 760px); margin: auto; padding: 40px 28px; text-align: center; }
 .app-input__dropzone { padding: 48px 24px; border: 2px dashed color-mix(in srgb, var(--color-secondary) 35%, var(--color-border)); border-radius: 12px; background: var(--color-surface); transition: border-color .15s, background .15s; }
 .app-input__dropzone--active { border-color: var(--color-accent); background: color-mix(in srgb, var(--color-accent) 12%, var(--color-surface)); }
 .app-input__file-icon { width: 72px; height: 86px; margin-bottom: 22px; color: var(--color-secondary); user-select: none; }
@@ -165,7 +167,7 @@ const AppInput = Vue.defineComponent({
 .app-input__error { margin: 18px 0 0; color: var(--color-danger); font-size: 14px; }
 .app-input__privacy { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 24px 0 0; color: var(--color-muted); font-size: 13px; }
 @media (max-width: 560px) {
-	.app-input { padding: 32px 20px; }
+	.app-input__body { padding: 32px 20px; }
 	.app-input__dropzone { padding: 32px 18px; }
 	.app-input__dropzone h1 { font-size: 24px; }
 	.app-input__dropzone p { font-size: 14px; }
