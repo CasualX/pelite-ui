@@ -2,10 +2,10 @@
 <link rel="component" href="section-entropy.vue">
 
 <script>
-/** @typedef {{ fileSize: number, hashes: import('./deps/pelite.js').PeHashes, sectionEntropy: import('./deps/pelite.js').SectionEntropy[], imports: SummaryImports, headers: import('./deps/pelite.js').PeHeaders, tls: import('./deps/pelite.js').Result<import('./deps/pelite.js').PeTls | null>, pdbFileName: import('./deps/pelite.js').Result<string | null> }} SummaryViewData */
+/** @typedef {{ fileSize: number, hashes: PeLite.PeHashes, sectionEntropy: PeLite.SectionEntropy[], imports: SummaryImports, headers: PeLite.PeHeaders, tls: PeLite.Result<PeLite.PeTls | null>, pdbFileName: PeLite.Result<string | null> }} SummaryViewData */
 
 /** @typedef {{ libraries: number, functions: number, by_library: { name: string, functions: number }[], notable: Record<string, string[]>, complete: boolean }} SummaryImports */
-/** @typedef {{ header: import('./deps/pelite.js').PeSectionHeader, analysis: import('./deps/pelite.js').SectionEntropy }} SummarySection */
+/** @typedef {{ header: PeLite.PeSectionHeader, analysis: PeLite.SectionEntropy }} SummarySection */
 
 const summaryImportCategories = {
 	'process execution': ['CreateProcessA', 'CreateProcessW', 'ShellExecuteA', 'ShellExecuteW', 'WinExec'],
@@ -17,7 +17,7 @@ const summaryImportCategories = {
 	'dynamic loading': ['LoadLibraryA', 'LoadLibraryW', 'LoadLibraryExA', 'LoadLibraryExW', 'GetProcAddress'],
 };
 
-/** @param {import('./deps/pelite.js').Result<import('./deps/pelite.js').PeImportDescriptor[] | null>} result @param {boolean} present @returns {SummaryImports} */
+/** @param {PeLite.Result<PeLite.PeImportDescriptor[] | null>} result @param {boolean} present @returns {SummaryImports} */
 function summarizeImports(result, present) {
 	const summary = /** @type {SummaryImports} */ ({ libraries: 0, functions: 0, by_library: [], notable: {}, complete: true });
 	if (result === null || result instanceof Error) {

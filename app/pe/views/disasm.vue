@@ -2,7 +2,7 @@
 
 <script>
 /** @typedef {{ rva: number, section: string, bytes: string, instruction: string }} DisasmRow */
-/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { rows: DisasmRow[], requestedRva: number, cursor: number, address: string, error: string | undefined } }} DisasmViewData */
+/** @typedef {{ document: PeDocument, headers: PeLite.PeHeaders, state: { rows: DisasmRow[], requestedRva: number, cursor: number, address: string, error: string | undefined } }} DisasmViewData */
 
 /** @param {PeDocument} context @returns {boolean} */
 function isDisasmAvailable(context) {
@@ -10,7 +10,7 @@ function isDisasmAvailable(context) {
 	return !(header instanceof Error) && [0x14c, 0x8664].includes(header.Machine);
 }
 
-/** @param {PeDocument} openedDocument @param {import('./deps/pelite.js').PeHeaders} headers @param {number} rva @returns {DisasmRow[]} */
+/** @param {PeDocument} openedDocument @param {PeLite.PeHeaders} headers @param {number} rva @returns {DisasmRow[]} */
 function readDisasmWindow(openedDocument, headers, rva) {
 	const imageSize = headers.NtHeaders.OptionalHeader.SizeOfImage;
 	if (!Number.isInteger(rva) || rva < 0 || rva >= imageSize) throw new Error('RVA must be inside the virtual image.');

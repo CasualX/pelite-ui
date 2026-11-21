@@ -6,7 +6,7 @@ function formatDebugField(row, field) {
 	return formatPropertyGridHex((/** @type {Record<string, unknown>} */ (row))[field]);
 }
 
-/** @param {import('./deps/pelite.js').PeDebugDirectoryEntry['entry']} entry */
+/** @param {PeLite.PeDebugDirectoryEntry['entry']} entry */
 function debugEntryDetails(entry) {
 	if (!entry) return null;
 	if ('pdb_file_name' in entry) {
@@ -48,9 +48,9 @@ const ViewDebugDirectory = Vue.defineComponent({
 			openedEntries: /** @type {Set<number>} */ (new Set()),
 			entryColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Type', width: 'clamp(8rem, 27cqi, 13rem)', format: row => formatDebugField(row, 'type') },
-				{ title: 'Data RVA', width: '7rem', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
+				{ title: 'Data RVA', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'AddressOfRawData') },
-				{ title: 'File offset', width: '7rem', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
+				{ title: 'File offset', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'PointerToRawData') },
 				{ title: 'Size', width: '7rem', style: { textAlign: 'right' }, format: row => formatDebugField(row, 'SizeOfData') },
 			]),
@@ -64,7 +64,7 @@ const ViewDebugDirectory = Vue.defineComponent({
 			payloadColumns,
 			sectionColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Name', format: row => formatDebugField(row, 'name') },
-				{ title: 'RVA', width: '7rem', kind: row => typeof (/** @type {import('./deps/pelite.js').PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
+				{ title: 'RVA', width: '7rem', kind: row => typeof (/** @type {PeLite.PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'rva') },
 				{ title: 'Size', width: '7rem', style: { textAlign: 'right' }, format: row => formatDebugField(row, 'size') },
 				{ title: 'Error', format: row => formatDebugField(row, 'error') },

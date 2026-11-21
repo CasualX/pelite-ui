@@ -2,7 +2,7 @@
 
 <script>
 /** @typedef {{ ordinal: number, target: number | null | string, names: string[] }} ExportRow */
-/** @typedef {{ directory: import('./deps/pelite.js').PeExportDirectory, rows: ExportRow[], state: { query: string } }} ExportsViewData */
+/** @typedef {{ directory: PeLite.PeExportDirectory, rows: ExportRow[], state: { query: string } }} ExportsViewData */
 
 /** @param {number} value @returns {string} */
 function formatExportHex(value) {
@@ -15,7 +15,7 @@ function prepareExportsView(context) {
 	if (result instanceof Error) throw result;
 	// The serializer returns null when the export lookup tables cannot be parsed.
 	if (result === null) throw new Error('The export tables could not be parsed.');
-	const directory = /** @type {import('./deps/pelite.js').PeExportDirectory} */ (/** @type {unknown} */ (result));
+	const directory = /** @type {PeLite.PeExportDirectory} */ (/** @type {unknown} */ (result));
 	// One row per function slot, in ordinal order; aliases share the Name cell.
 	const rows = directory.functions.map((target, index) => ({
 		ordinal: directory.ordinal_base + index, target, names: /** @type {string[]} */ ([]),

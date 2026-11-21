@@ -15,7 +15,7 @@ const factKinds = [
 
 /** Owns native storage for one open image. UI caches contain canonical native output only. */
 class FactsDatabase {
-	/** @param {import('./deps/pelite.js').PeFile} peFile @param {typeof import('./deps/pelite.js').Facts} FactsClass */
+	/** @param {PeLite.PeFile} peFile @param {typeof PeLite.Facts} FactsClass */
 	constructor(peFile, FactsClass) {
 		this.Facts = Vue.markRaw(FactsClass);
 		this.disposed = false;

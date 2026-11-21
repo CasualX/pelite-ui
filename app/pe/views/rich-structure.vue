@@ -55,11 +55,11 @@ const ViewRichStructure = Vue.defineComponent({
 			recordInterpretations: /** @type {PropertyGridColumn[]} */ ([
 				{ title: '#', width: '4.5rem', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
 				{ title: 'Product', width: '6rem', style: { textAlign: 'right' }, format: value => {
-					const product = (/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).product;
+					const product = (/** @type {PeLite.PeRichRecord} */ (value)).product;
 					return product === 0 ? '0' : `0x${product.toString(16)}`;
 				} },
-				{ title: 'Build', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).build) },
-				{ title: 'Count', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).count) },
+				{ title: 'Build', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {PeLite.PeRichRecord} */ (value)).build) },
+				{ title: 'Count', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {PeLite.PeRichRecord} */ (value)).count) },
 			]),
 		};
 	},
@@ -69,7 +69,7 @@ const ViewRichStructure = Vue.defineComponent({
 			const descriptions = this.descriptions;
 			if (!descriptions) return this.recordInterpretations;
 			return [...this.recordInterpretations, { title: 'Interpretation', format: value => {
-				const record = /** @type {import('./deps/pelite.js').PeRichRecord} */ (value);
+				const record = /** @type {PeLite.PeRichRecord} */ (value);
 				const product = record.product.toString(16).padStart(4, '0');
 				const build = record.build.toString(16).padStart(4, '0');
 				const exact = descriptions.get(product + build);
@@ -80,7 +80,7 @@ const ViewRichStructure = Vue.defineComponent({
 		},
 		/** @returns {PropertyGridColumn[]} */
 		summaryInterpretations() {
-			const rich = /** @type {import('./deps/pelite.js').PeRichStructure} */ (/** @type {unknown} */ (this.data.rich));
+			const rich = /** @type {PeLite.PeRichStructure} */ (/** @type {unknown} */ (this.data.rich));
 			return [
 				{ title: 'Field', width: '9rem', format: (value, name) => name === 'xor_key' ? 'XOR key' : 'Checksum' },
 				{ title: 'Value', width: '7rem', style: { textAlign: 'right' }, format: value => value === 0 ? '0' : `0x${Number(value).toString(16)}` },

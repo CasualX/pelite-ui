@@ -77,7 +77,7 @@ const AppInput = Vue.defineComponent({
 				return;
 			}
 			if (this.disposed) return;
-			const pelite = /** @type {typeof import('./deps/pelite.js')} */ (this.pelite);
+			const pelite = /** @type {typeof PeLite} */ (this.pelite);
 			let openedDocument;
 			try {
 				openedDocument = new PeDocument(this.selectedFile, bytes, pelite);

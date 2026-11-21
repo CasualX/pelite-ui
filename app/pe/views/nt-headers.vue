@@ -67,12 +67,12 @@ const ViewNtHeaders = Vue.defineComponent({
 				{ title: '#', width: '3.75rem', style: { textAlign: 'right' }, format: (value, index) => String(index) },
 				{ title: 'Directory', width: 'clamp(6.5rem, 100cqi - 17.75rem, 22rem)', format: (value, index) => names[Number(index)] ?? '—' },
 				{ title: 'VirtualAddress', width: '8rem', kind: (value, index) => {
-					const directory = /** @type {import('./deps/pelite.js').PeDataDirectory} */ (value);
+					const directory = /** @type {PeLite.PeDataDirectory} */ (value);
 					const slot = Number(index);
 					if (directory.VirtualAddress === 0 || slot === 7 || slot >= 15) return undefined;
 					return slot === 4 ? 'fo' : 'rva';
-				}, style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).VirtualAddress) },
-				{ title: 'Size', width: '6rem', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).Size) },
+				}, style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {PeLite.PeDataDirectory} */ (value)).VirtualAddress) },
+				{ title: 'Size', width: '6rem', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {PeLite.PeDataDirectory} */ (value)).Size) },
 			];
 		},
 	},

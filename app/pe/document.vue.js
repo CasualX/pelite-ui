@@ -1,11 +1,11 @@
 /** One open binary and its analysis database. Passed through the UI as a unit. */
 class PeDocument {
-	/** @param {File} file @param {Uint8Array} bytes @param {typeof import('./deps/pelite.js')} pelite */
+	/** @param {File} file @param {Uint8Array} bytes @param {typeof PeLite} pelite */
 	constructor(file, bytes, pelite) {
 		this.file = file;
-		/** @type {import('./deps/pelite.js').PeFile} */
+		/** @type {PeLite.PeFile} */
 		this.peFile = Vue.markRaw(new pelite.PeFile(bytes));
-		/** @private @type {typeof import('./deps/pelite.js').Facts} */ this.FactsClass = Vue.markRaw(pelite.Facts);
+		/** @private @type {typeof PeLite.Facts} */ this.FactsClass = Vue.markRaw(pelite.Facts);
 		/** @private @type {FactsDatabase | null} */ this.factsDatabase = null;
 		this.disposed = false;
 	}

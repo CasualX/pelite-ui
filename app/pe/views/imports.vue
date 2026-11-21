@@ -1,8 +1,8 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @typedef {{ descriptors: import('./deps/pelite.js').PeImportDescriptor[], state: { query: string, selectedIndex: number | null } }} ImportsViewData */
-/** @typedef {{ descriptor: import('./deps/pelite.js').PeImportDescriptor, index: number, rows: import('./deps/pelite.js').PeImportEntry[] | null }} ImportModule */
+/** @typedef {{ descriptors: PeLite.PeImportDescriptor[], state: { query: string, selectedIndex: number | null } }} ImportsViewData */
+/** @typedef {{ descriptor: PeLite.PeImportDescriptor, index: number, rows: PeLite.PeImportEntry[] | null }} ImportModule */
 
 /** @param {number} value @returns {string} */
 function formatImportHex(value) {
@@ -31,17 +31,17 @@ const ViewImports = Vue.defineComponent({
 			]),
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'IAT RVA', width: 'calc(5.5rem + var(--workspace-view-inline-padding))', kind: 'rva',
-					format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
+					format: value => formatImportHex((/** @type {PeLite.PeImportEntry} */ (value)).address) },
 				{ title: 'Name', format: value => {
-					const symbol = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import;
+					const symbol = (/** @type {PeLite.PeImportEntry} */ (value)).import;
 					return symbol === null ? 'Unavailable' : symbol.ByName?.name ?? '—';
 				} },
 				{ title: 'Ordinal', width: '5.5rem', style: { textAlign: 'right' }, format: value => {
-					const ordinal = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import?.ByOrdinal?.ord;
+					const ordinal = (/** @type {PeLite.PeImportEntry} */ (value)).import?.ByOrdinal?.ord;
 					return ordinal === undefined ? '' : String(ordinal);
 				} },
 				{ title: 'Hint', width: '5rem', style: { textAlign: 'right' }, format: value => {
-					const hint = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import?.ByName?.hint;
+					const hint = (/** @type {PeLite.PeImportEntry} */ (value)).import?.ByName?.hint;
 					return hint === undefined ? '' : String(hint);
 				} },
 			]),

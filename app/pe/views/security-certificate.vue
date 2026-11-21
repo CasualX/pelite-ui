@@ -22,7 +22,7 @@ const SecurityCertificate = Vue.defineComponent({
 		};
 	},
 	computed: {
-		entry() { return /** @type {import('./deps/pelite.js').PeCertificate} */ (/** @type {unknown} */ (this.certificate)); },
+		entry() { return /** @type {PeLite.PeCertificate} */ (/** @type {unknown} */ (this.certificate)); },
 		payloadTitle() {
 			const format = securityCertificateFormats[this.entry.image.wCertificateType];
 			return format ? `${format} (ASN.1 DER, Base64-encoded)` : 'Certificate payload (Base64-encoded)';

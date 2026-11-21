@@ -1,4 +1,4 @@
-/** @typedef {(context: PeDocument, headers: import('./deps/pelite.js').PeHeaders | undefined) => boolean} ViewAvailability */
+/** @typedef {(context: PeDocument, headers: PeLite.PeHeaders | undefined) => boolean} ViewAvailability */
 /** @typedef {{ id: string, title: string, icon: string, singleton: boolean, sidebarKey?: string, target?: 'tab' | 'window', isAvailable?: ViewAvailability, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
 /** @typedef {{ id: string, title: string | undefined, views: ViewDefinition[] }} ViewGroup */
 /** @typedef {ViewDefinition & { available: boolean }} ViewMenuEntry */

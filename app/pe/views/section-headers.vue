@@ -2,9 +2,9 @@
 <link rel="component" href="section-entropy.vue">
 
 <script>
-/** @typedef {{ headers: import('./deps/pelite.js').PeSectionHeader[], characteristics: string[][], entropy: import('./deps/pelite.js').SectionEntropy[] }} SectionHeadersViewData */
+/** @typedef {{ headers: PeLite.PeSectionHeader[], characteristics: string[][], entropy: PeLite.SectionEntropy[] }} SectionHeadersViewData */
 
-/** @param {PeDocument} context @param {import('./deps/pelite.js').PeHeaders} [existingHeaders] @returns {ViewContent} */
+/** @param {PeDocument} context @param {PeLite.PeHeaders} [existingHeaders] @returns {ViewContent} */
 function prepareSectionHeadersView(context, existingHeaders) {
 	const headers = existingHeaders ?? context.peFile.headers();
 	if (headers instanceof Error) throw headers;
@@ -25,7 +25,7 @@ const ViewSectionHeaders = Vue.defineComponent({
 		sectionData() { return /** @type {SectionHeadersViewData} */ (/** @type {unknown} */ (this.data)); },
 		/** @returns {PropertyGridColumn[]} */
 		columns() {
-			const order = /** @type {(keyof import('./deps/pelite.js').PeSectionHeader)[]} */ (['Name', 'VirtualAddress', 'VirtualSize', 'PointerToRawData', 'SizeOfRawData']);
+			const order = /** @type {(keyof PeLite.PeSectionHeader)[]} */ (['Name', 'VirtualAddress', 'VirtualSize', 'PointerToRawData', 'SizeOfRawData']);
 			const fields = /** @type {typeof order} */ (Object.keys(this.sectionData.headers[0] ?? {}));
 			const orderedFields = [...order.filter(field => fields.includes(field)), ...fields.filter(field => !order.includes(field))];
 			const numericStyle = { textAlign: 'right' };
@@ -36,12 +36,12 @@ const ViewSectionHeaders = Vue.defineComponent({
 					width: '1%',
 					style: field === 'Name' ? undefined : numericStyle,
 					kind: field === 'VirtualAddress' ? 'rva' : field === 'PointerToRawData' ? value =>
-						(/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value)).PointerToRawData !== 0 ? 'fo' : undefined : undefined,
+						(/** @type {PeLite.PeSectionHeader} */ (value)).PointerToRawData !== 0 ? 'fo' : undefined : undefined,
 					slot: field === 'Characteristics' ? 'characteristics' : undefined,
-					format: value => this.formatValue((/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value))[field]),
+					format: value => this.formatValue((/** @type {PeLite.PeSectionHeader} */ (value))[field]),
 				})),
 				{ title: 'Perms', label: 'Permissions', width: '1%', style: numericStyle,
-					format: value => this.permissions((/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value)).Characteristics) },
+					format: value => this.permissions((/** @type {PeLite.PeSectionHeader} */ (value)).Characteristics) },
 				{ title: 'Entropy', width: '1%', style: numericStyle,
 					format: (_header, index) => this.sectionData.entropy[Number(index)].entropy?.toFixed(2) ?? '—' },
 				{ title: 'Distribution', slot: 'distribution' },

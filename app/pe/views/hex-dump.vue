@@ -2,7 +2,7 @@
 
 <script>
 /** @typedef {{ requestedRva: number, start: number, anchor: number, bytes: Uint8Array, mask: Uint8Array }} HexDumpWindow */
-/** @typedef {{ document: PeDocument, headers: import('./deps/pelite.js').PeHeaders, state: { window: HexDumpWindow, cursor: number, address: string, format: 'decimal' | 'hex', error: string | undefined } }} HexDumpViewData */
+/** @typedef {{ document: PeDocument, headers: PeLite.PeHeaders, state: { window: HexDumpWindow, cursor: number, address: string, format: 'decimal' | 'hex', error: string | undefined } }} HexDumpViewData */
 
 /** @param {PeDocument} openedDocument @param {number} imageSize @param {number} rva @returns {HexDumpWindow} */
 function readHexDumpWindow(openedDocument, imageSize, rva) {

@@ -11,6 +11,8 @@
 <script>
 "use strict";
 
+/** @import * as PeLite from './deps/pelite.js' */
+
 const compactWorkspaceMedia = window.matchMedia('(max-width: 40rem), (orientation: portrait) and (max-width: 64rem)');
 
 const AppMain = Vue.defineComponent({
@@ -20,7 +22,7 @@ const AppMain = Vue.defineComponent({
 			content: 'app-splash',
 			contentKey: 0,
 			document: /** @type {PeDocument | null} */ (null),
-			pelite: /** @type {typeof import('./deps/pelite.js') | null} */ (null),
+			pelite: /** @type {typeof PeLite | null} */ (null),
 			compactWorkspace: compactWorkspaceMedia.matches,
 			sidebarOpen: true,
 			status: new StatusModel('var(--color-warning)', 'Loading', 'Initializing pelite…'),
@@ -50,7 +52,7 @@ const AppMain = Vue.defineComponent({
 		/** @param {MediaQueryListEvent} event */
 		syncWorkspaceMode(event) { this.compactWorkspace = event.matches; },
 		toggleSidebar() { this.sidebarOpen = !this.sidebarOpen; },
-		/** @param {typeof import('./deps/pelite.js')} pelite */
+		/** @param {typeof PeLite} pelite */
 		onReady(pelite) {
 			this.pelite = Vue.markRaw(pelite);
 			this.content = 'app-input';

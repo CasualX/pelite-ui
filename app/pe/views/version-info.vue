@@ -49,7 +49,7 @@ const ViewVersionInfo = Vue.defineComponent({
 		};
 	},
 	computed: {
-		version() { return /** @type {import('./deps/pelite.js').PeVersionInfo} */ (/** @type {unknown} */ (this.data.version)); },
+		version() { return /** @type {PeLite.PeVersionInfo} */ (/** @type {unknown} */ (this.data.version)); },
 	},
 	methods: { formatVersionLanguage, formatVersionCodePage },
 });

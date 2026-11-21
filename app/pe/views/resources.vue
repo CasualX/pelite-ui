@@ -1,8 +1,8 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @typedef {{ tree: import('./deps/pelite.js').PeResourceTreeEntry[], state: { expanded: Set<string> } }} ResourcesViewData */
-/** @typedef {{ entry: import('./deps/pelite.js').PeResourceTreeEntry, key: string, depth: number }} ResourceTreeRow */
+/** @typedef {{ tree: PeLite.PeResourceTreeEntry[], state: { expanded: Set<string> } }} ResourcesViewData */
+/** @typedef {{ entry: PeLite.PeResourceTreeEntry, key: string, depth: number }} ResourceTreeRow */
 
 /** @param {PeDocument} context @returns {ViewContent} */
 function prepareResourcesView(context) {
@@ -39,7 +39,7 @@ const ViewResources = Vue.defineComponent({
 		rows() {
 			/** @type {ResourceTreeRow[]} */
 			const rows = [];
-			/** @param {import('./deps/pelite.js').PeResourceTreeEntry[]} entries @param {string} parent @param {number} depth */
+			/** @param {PeLite.PeResourceTreeEntry[]} entries @param {string} parent @param {number} depth */
 			const visit = (entries, parent, depth) => {
 				entries.forEach((entry, index) => {
 					const key = `${parent}/${index}`;
@@ -58,7 +58,7 @@ const ViewResources = Vue.defineComponent({
 			else this.state.expanded.add(key);
 		},
 		expandAll() {
-			/** @param {import('./deps/pelite.js').PeResourceTreeEntry[]} entries @param {string} parent */
+			/** @param {PeLite.PeResourceTreeEntry[]} entries @param {string} parent */
 			const visit = (entries, parent) => {
 				entries.forEach((entry, index) => {
 					if (!entry.directory) return;
@@ -69,7 +69,7 @@ const ViewResources = Vue.defineComponent({
 			};
 			visit(this.resourcesData.tree, '');
 		},
-		/** @param {import('./deps/pelite.js').PeResourceTreeEntry} entry @returns {string} */
+		/** @param {PeLite.PeResourceTreeEntry} entry @returns {string} */
 		name(entry) { return typeof entry.name === 'number' ? `#${entry.name}` : entry.name ?? 'Name unavailable'; },
 		/** @param {ResourceTreeRow} row */
 		rowKey(row) { return row.key; },

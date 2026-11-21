@@ -1,9 +1,9 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @typedef {{ matches: import('./deps/pelite.js').ScannerMatch[], limit: number }} ScannerResults */
+/** @typedef {{ matches: PeLite.ScannerMatch[], limit: number }} ScannerResults */
 /** @typedef {{ pattern: string, section: number | undefined, requestedLimit: number | string, error: string | undefined, results: ScannerResults | undefined }} ScannerState */
-/** @typedef {{ document: PeDocument, sections: import('./deps/pelite.js').PeSectionHeader[], state: ScannerState }} ScannerData */
+/** @typedef {{ document: PeDocument, sections: PeLite.PeSectionHeader[], state: ScannerState }} ScannerData */
 
 /** @param {PeDocument} context @returns {ViewContent} */
 function prepareScannerView(context) {
@@ -41,7 +41,7 @@ const ViewScanner = Vue.defineComponent({
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
 				{ title: '#', width: '4.5rem', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
-				{ title: 'Match RVA', width: '8rem', kind: 'rva', style: { textAlign: 'right' }, format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).rva) },
+				{ title: 'Match RVA', width: '8rem', kind: 'rva', style: { textAlign: 'right' }, format: value => this.hex((/** @type {PeLite.ScannerMatch} */ (value)).rva) },
 			]);
 			const captureCount = this.state.results?.matches[0]?.save.length ?? 0;
 			for (let slot = 1; slot < captureCount; slot++) {
@@ -49,7 +49,7 @@ const ViewScanner = Vue.defineComponent({
 					title: `Save ${slot}`,
 					width: '8rem',
 					style: { textAlign: 'right' },
-					format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).save[slot]),
+					format: value => this.hex((/** @type {PeLite.ScannerMatch} */ (value)).save[slot]),
 				});
 			}
 			return columns;
