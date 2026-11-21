@@ -41,22 +41,22 @@ const ViewDebugDirectory = Vue.defineComponent({
 	props: { data: { type: Object, required: true } },
 	data() {
 		const payloadColumns = /** @type {PropertyGridColumn[]} */ ([
-			{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-			{ title: 'Value', style: { minWidth: '120px' }, format: formatPropertyGridHex },
+			{ title: 'Field', width: 'clamp(9rem, 26.5cqi, 12rem)', format: (value, field) => String(field) },
+			{ title: 'Value', format: formatPropertyGridHex },
 		]);
 		return {
 			openedEntries: /** @type {Set<number>} */ (new Set()),
 			entryColumns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Type', format: row => formatDebugField(row, 'type') },
-				{ title: 'Data RVA', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
-					format: row => formatDebugField(row, 'AddressOfRawData') },
-				{ title: 'File offset', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
-					format: row => formatDebugField(row, 'PointerToRawData') },
-				{ title: 'Size', format: row => formatDebugField(row, 'SizeOfData') },
+				{ title: 'Type', width: 'clamp(8rem, 27cqi, 13rem)', format: row => formatDebugField(row, 'type') },
+				{ title: 'Data RVA', width: '7rem', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
+					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'AddressOfRawData') },
+				{ title: 'File offset', width: '7rem', kind: row => (/** @type {import('./deps/pelite.js').PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
+					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'PointerToRawData') },
+				{ title: 'Size', width: '7rem', style: { textAlign: 'right' }, format: row => formatDebugField(row, 'SizeOfData') },
 			]),
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
 				payloadColumns[0],
-				{ ...payloadColumns[1], kind: (value, field) => {
+				{ ...payloadColumns[1], width: '9rem', style: { textAlign: 'right' }, kind: (value, field) => {
 					if (!value) return undefined;
 					return field === 'AddressOfRawData' ? 'rva' : field === 'PointerToRawData' ? 'fo' : undefined;
 				} },
@@ -64,9 +64,9 @@ const ViewDebugDirectory = Vue.defineComponent({
 			payloadColumns,
 			sectionColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Name', format: row => formatDebugField(row, 'name') },
-				{ title: 'RVA', kind: row => typeof (/** @type {import('./deps/pelite.js').PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
-					format: row => formatDebugField(row, 'rva') },
-				{ title: 'Size', format: row => formatDebugField(row, 'size') },
+				{ title: 'RVA', width: '7rem', kind: row => typeof (/** @type {import('./deps/pelite.js').PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
+					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'rva') },
+				{ title: 'Size', width: '7rem', style: { textAlign: 'right' }, format: row => formatDebugField(row, 'size') },
 				{ title: 'Error', format: row => formatDebugField(row, 'error') },
 			]),
 		};
@@ -82,19 +82,19 @@ const ViewDebugDirectory = Vue.defineComponent({
 
 <template id="view-debug-directory">
 	<section>
-		<property-grid v-if="data.rows.length" :list="data.rows" :interpretations="entryColumns" label="Debug directory entries"></property-grid>
+		<property-grid v-if="data.rows.length" :list="data.rows" :interpretations="entryColumns" min-width="29rem" label="Debug directory entries" spacer></property-grid>
 		<p v-else class="view-debug-directory__note">No debug entries.</p>
 		<div v-if="data.rows.length" class="view-debug-directory__entries">
 			<details v-for="(entry, index) in data.rows" :key="index" class="view-debug-directory__entry" @toggle="showEntry(index, $event)">
 				<summary>Debug entry {{ index + 1 }} · {{ entry.type }}</summary>
 				<div v-if="openedEntries.has(index)" class="view-debug-directory__details">
-					<property-grid :list="entry.image" :interpretations="headerColumns" :label="'Debug entry ' + (index + 1) + ' header'"></property-grid>
+					<property-grid :list="entry.image" :interpretations="headerColumns" :label="'Debug entry ' + (index + 1) + ' header'" spacer></property-grid>
 					<h2 class="view-debug-directory__title">Debug data</h2>
 					<template v-if="entry.payload">
 						<property-grid :list="entry.payload.fields" :interpretations="payloadColumns" :label="'Debug entry ' + (index + 1) + ' data'"></property-grid>
 						<template v-if="entry.payload.sections">
 							<h2 class="view-debug-directory__title">PGO sections</h2>
-							<property-grid v-if="entry.payload.sections.length" :list="entry.payload.sections" :interpretations="sectionColumns" label="PGO sections"></property-grid>
+							<property-grid v-if="entry.payload.sections.length" :list="entry.payload.sections" :interpretations="sectionColumns" min-width="24rem" label="PGO sections"></property-grid>
 							<p v-else class="view-debug-directory__note">No PGO sections.</p>
 						</template>
 					</template>

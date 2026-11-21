@@ -53,13 +53,13 @@ const ViewRichStructure = Vue.defineComponent({
 			descriptionError: '',
 			databaseUrl: richprintDatabaseUrl,
 			recordInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: '#', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
-				{ title: 'Product', style: { minWidth: '100px', textAlign: 'right' }, format: value => {
+				{ title: '#', width: '4.5rem', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
+				{ title: 'Product', width: '6rem', style: { textAlign: 'right' }, format: value => {
 					const product = (/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).product;
 					return product === 0 ? '0' : `0x${product.toString(16)}`;
 				} },
-				{ title: 'Build', style: { minWidth: '100px', textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).build) },
-				{ title: 'Count', style: { minWidth: '100px', textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).count) },
+				{ title: 'Build', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).build) },
+				{ title: 'Count', width: '6rem', style: { textAlign: 'right' }, format: value => String((/** @type {import('./deps/pelite.js').PeRichRecord} */ (value)).count) },
 			]),
 		};
 	},
@@ -82,9 +82,9 @@ const ViewRichStructure = Vue.defineComponent({
 		summaryInterpretations() {
 			const rich = /** @type {import('./deps/pelite.js').PeRichStructure} */ (/** @type {unknown} */ (this.data.rich));
 			return [
-				{ title: 'Field', style: { minWidth: '160px' }, format: (value, name) => name === 'xor_key' ? 'XOR key' : 'Checksum' },
-				{ title: 'Value', style: { minWidth: '140px', textAlign: 'right' }, format: value => value === 0 ? '0' : `0x${Number(value).toString(16)}` },
-				{ title: 'Interpretation', style: { minWidth: '240px' }, format: (value, name) =>
+				{ title: 'Field', width: '9rem', format: (value, name) => name === 'xor_key' ? 'XOR key' : 'Checksum' },
+				{ title: 'Value', width: '7rem', style: { textAlign: 'right' }, format: value => value === 0 ? '0' : `0x${Number(value).toString(16)}` },
+				{ title: 'Interpretation', format: (value, name) =>
 					name === 'checksum' ? (rich.checksum === rich.xor_key ? 'Matches XOR key' : 'Does not match XOR key') : '' },
 			];
 		},
@@ -118,7 +118,7 @@ const ViewRichStructure = Vue.defineComponent({
 				</template>
 			</div>
 			<p v-if="descriptionError" class="view-rich-structure__error" role="alert">{{ descriptionError }}</p>
-			<property-grid v-if="data.rich.records.length" :list="data.rich.records" :interpretations="recordColumns" label="Rich records"></property-grid>
+			<property-grid v-if="data.rich.records.length" :list="data.rich.records" :interpretations="recordColumns" :min-width="descriptions ? '32rem' : undefined" :spacer="!descriptions" label="Rich records"></property-grid>
 			<p v-else class="view-rich-structure__description">No Rich records.</p>
 		</template>
 		<p v-else class="view-rich-structure__description">No Rich structure.</p>

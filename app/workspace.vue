@@ -149,6 +149,11 @@ const AppWorkspace = Vue.defineComponent({
 </template>
 
 <style>
+@property --workspace-view-inline-padding {
+	syntax: '<length>';
+	inherits: true;
+	initial-value: 0px;
+}
 .app-workspace { --workspace-sidebar-width: 240px; flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
 .app-workspace > .workspace-sidebar { flex: 0 0 var(--workspace-sidebar-width); transition: margin-inline-start 180ms ease; }
 .app-workspace:not(.app-workspace--sidebar-open) > .workspace-sidebar { margin-inline-start: calc(-1 * var(--workspace-sidebar-width)); }
@@ -163,7 +168,10 @@ const AppWorkspace = Vue.defineComponent({
 	--workspace-muted: var(--color-muted);
 	--workspace-border: var(--color-border);
 	--workspace-accent: var(--color-accent);
-	--workspace-view-padding: 24px clamp(12px, 4cqi, 32px);
+}
+:where(.app-workspace__area) .workspace-area__view {
+	--workspace-view-inline-padding: clamp(12px, 4cqi, 32px);
+	--workspace-view-padding: 24px var(--workspace-view-inline-padding);
 }
 .app-workspace__error { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-danger); background: var(--color-surface); font-size: 13px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {

@@ -34,10 +34,11 @@ const ViewLoadConfig = Vue.defineComponent({
 		});
 		return {
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-				{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => value ? addresses[field] : undefined, format: formatPropertyGridHex },
+				{ title: 'Field', width: 'clamp(12rem, 100cqi - 10rem, 26rem)', format: (value, field) => String(field) },
+				{ title: 'Value', width: '10rem', kind: (value, field) => value ? addresses[field] : undefined,
+					style: { textAlign: 'right' }, format: formatPropertyGridHex },
 			]),
-			handlerColumns: /** @type {PropertyGridColumn[]} */ ([{ title: 'Handler RVA', kind: 'rva', format: formatPropertyGridHex }]),
+			handlerColumns: /** @type {PropertyGridColumn[]} */ ([{ title: 'Handler RVA', width: '10rem', kind: 'rva', style: { textAlign: 'right' }, format: formatPropertyGridHex }]),
 		};
 	},
 });
@@ -46,11 +47,11 @@ const ViewLoadConfig = Vue.defineComponent({
 <template id="view-load-config">
 	<section>
 		<p class="view-load-config__note">pelite zero-fills fields beyond the size of the load configuration structure.</p>
-		<property-grid :list="data.image" :interpretations="headerColumns" label="Load configuration header"></property-grid>
+		<property-grid :list="data.image" :interpretations="headerColumns" label="Load configuration header" spacer></property-grid>
 		<h2 class="view-load-config__title">Security cookie value</h2>
 		<p class="view-load-config__cookie"><code>{{ data.securityCookie }}</code></p>
 		<h2 class="view-load-config__title">SE handlers</h2>
-		<property-grid v-if="data.handlers?.length" :list="data.handlers" :interpretations="handlerColumns" label="SE handlers"></property-grid>
+		<property-grid v-if="data.handlers?.length" :list="data.handlers" :interpretations="handlerColumns" label="SE handlers" spacer></property-grid>
 		<p v-else class="view-load-config__note">{{ data.handlers === null && data.image.SEHandlerTable ? 'SE handler table unavailable.' : 'No SE handlers.' }}</p>
 	</section>
 </template>

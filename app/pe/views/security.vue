@@ -22,8 +22,9 @@ const ViewSecurity = Vue.defineComponent({
 	props: { data: { type: Object, required: true } },
 	data() {
 		return { columns: /** @type {PropertyGridColumn[]} */ ([
-			{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-			{ title: 'Value', style: { minWidth: '120px' }, kind: (value, field) => field === 'File offset' ? 'fo' : undefined, format: formatPropertyGridHex },
+			{ title: 'Field', width: '10rem', format: (value, field) => String(field) },
+			{ title: 'Value', width: '8rem', kind: (value, field) => field === 'File offset' ? 'fo' : undefined,
+				style: { textAlign: 'right' }, format: formatPropertyGridHex },
 		]) };
 	},
 });
@@ -31,7 +32,7 @@ const ViewSecurity = Vue.defineComponent({
 
 <template id="view-security">
 	<section>
-		<property-grid :list="data.fields" :interpretations="columns" label="Certificate table"></property-grid>
+		<property-grid :list="data.fields" :interpretations="columns" label="Certificate table" spacer></property-grid>
 		<ol v-if="data.certificates.length" class="view-security__certificates" role="list" aria-label="Certificates">
 			<li v-for="(certificate, index) in data.certificates" :key="index">
 				<h2 class="view-security__title">Certificate {{ index + 1 }}</h2>

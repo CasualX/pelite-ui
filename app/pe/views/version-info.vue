@@ -34,17 +34,17 @@ const ViewVersionInfo = Vue.defineComponent({
 	data() {
 		return {
 			stringInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
-				{ title: 'Value', style: { minWidth: '360px' }, format: value => String(value) },
+				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
+				{ title: 'Value', format: value => String(value) },
 			]),
 			fixedInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
-				{ title: 'Value', style: { minWidth: '180px', textAlign: 'right' }, format: value =>
+				{ title: 'Field', width: 'clamp(10.5rem, 26.5cqi, 16rem)', format: (value, name) => String(name) },
+				{ title: 'Value', width: '8rem', style: { textAlign: 'right' }, format: value =>
 					typeof value === 'number' && value !== 0 ? `0x${value.toString(16)}` : String(value) },
 			]),
 			translationInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Language ID', style: { minWidth: '140px', textAlign: 'right' }, format: value => formatVersionLanguage(String(value)) },
-				{ title: 'Code page', style: { minWidth: '140px', textAlign: 'right' }, format: value => formatVersionCodePage(String(value)) },
+				{ title: 'Language ID', width: '10rem', style: { textAlign: 'right' }, format: value => formatVersionLanguage(String(value)) },
+				{ title: 'Code page', width: '8rem', style: { textAlign: 'right' }, format: value => formatVersionCodePage(String(value)) },
 			]),
 		};
 	},
@@ -63,11 +63,11 @@ const ViewVersionInfo = Vue.defineComponent({
 		</section>
 		<details v-if="version.fixed" class="view-version-info__fixed">
 			<summary>Fixed file information</summary>
-			<property-grid :list="version.fixed" :interpretations="fixedInterpretations" label="Fixed file information"></property-grid>
+			<property-grid :list="version.fixed" :interpretations="fixedInterpretations" label="Fixed file information" spacer></property-grid>
 		</details>
 		<section v-if="version.langs.length" class="view-version-info__translations">
 			<h2>Translations</h2>
-			<property-grid :list="version.langs" :interpretations="translationInterpretations" label="Version translations"></property-grid>
+			<property-grid :list="version.langs" :interpretations="translationInterpretations" label="Version translations" spacer></property-grid>
 		</section>
 	</section>
 </template>

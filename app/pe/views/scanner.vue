@@ -40,13 +40,14 @@ const ViewScanner = Vue.defineComponent({
 		/** @returns {PropertyGridColumn[]} */
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
-				{ title: '#', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
-				{ title: 'Match RVA', kind: 'rva', style: { textAlign: 'right' }, format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).rva) },
+				{ title: '#', width: '4.5rem', style: { textAlign: 'right' }, format: (value, index) => String(Number(index) + 1) },
+				{ title: 'Match RVA', width: '8rem', kind: 'rva', style: { textAlign: 'right' }, format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).rva) },
 			]);
 			const captureCount = this.state.results?.matches[0]?.save.length ?? 0;
 			for (let slot = 1; slot < captureCount; slot++) {
 				columns.push({
 					title: `Save ${slot}`,
+					width: '8rem',
 					style: { textAlign: 'right' },
 					format: value => this.hex((/** @type {import('./deps/pelite.js').ScannerMatch} */ (value)).save[slot]),
 				});
@@ -111,7 +112,7 @@ const ViewScanner = Vue.defineComponent({
 				<strong>{{ state.results.matches.length === 0 ? 'No matches found.' : `${state.results.matches.length.toLocaleString()} matches` }}</strong>
 				<span v-if="state.results.limit > 0 && state.results.matches.length >= state.results.limit">Limit reached; more matches may exist.</span>
 			</div>
-			<property-grid v-if="state.results.matches.length" :list="state.results.matches" :interpretations="interpretations" label="Scanner matches"></property-grid>
+			<property-grid v-if="state.results.matches.length" :list="state.results.matches" :interpretations="interpretations" label="Scanner matches" spacer></property-grid>
 		</template>
 	</section>
 </template>

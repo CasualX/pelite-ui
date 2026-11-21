@@ -33,10 +33,10 @@ const ViewExports = Vue.defineComponent({
 	data() {
 		return {
 			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
+				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['Name', 'AddressOfFunctions', 'AddressOfNames', 'AddressOfNameOrdinals'].includes(String(field)) ? 'rva' : undefined,
-					style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
-				{ title: 'Interpretation', style: { minWidth: '240px' }, format: (value, name) => {
+					width: 'max(7.5rem, 18.5cqi)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
+				{ title: 'Interpretation', format: (value, name) => {
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);
 					if (timestamp === 0 || timestamp === 0xffffffff) return 'Unspecified';
@@ -48,16 +48,16 @@ const ViewExports = Vue.defineComponent({
 	computed: {
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Ordinal', style: { minWidth: '80px', textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
-				{ title: 'Name', style: { minWidth: '260px' }, format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
+				{ title: 'Ordinal', width: '7rem', style: { textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
+				{ title: 'Name', format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
 				{ title: 'RVA', kind: value => typeof (/** @type {ExportRow} */ (value)).target === 'number' ? 'rva' : undefined,
-					style: { minWidth: '120px', textAlign: 'right' }, format: value => {
+					width: '8rem', style: { textAlign: 'right' }, format: value => {
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },
 			]);
 			if (this.exportsData.rows.some(row => typeof row.target === 'string')) {
-				columns.push({ title: 'Forwarded to', style: { minWidth: '220px' }, format: value => {
+				columns.push({ title: 'Forwarded to', format: value => {
 					const target = (/** @type {ExportRow} */ (value)).target;
 					return typeof target === 'string' ? target : '';
 				} });
@@ -85,12 +85,12 @@ const ViewExports = Vue.defineComponent({
 		<strong class="view-exports__dll">{{ data.directory.dll_name ?? 'DLL name unavailable' }}</strong>
 		<details class="view-exports__header">
 			<summary>Directory header</summary>
-			<property-grid :list="data.directory.image" :interpretations="headerInterpretations" label="Export directory header"></property-grid>
+			<property-grid :list="data.directory.image" :interpretations="headerInterpretations" min-width="27rem" label="Export directory header"></property-grid>
 		</details>
 		<label class="view-exports__search">Search
 			<input v-model="state.query" type="search" placeholder="Name, ordinal, RVA, or forwarder" spellcheck="false" autocomplete="off">
 		</label>
-		<property-grid v-if="filteredRows.length" :list="filteredRows" :interpretations="interpretations" label="Exports"></property-grid>
+		<property-grid v-if="filteredRows.length" :list="filteredRows" :interpretations="interpretations" min-width="30rem" label="Exports"></property-grid>
 		<p v-else class="view-exports__empty">{{ data.rows.length ? 'No matching entries.' : 'No exports.' }}</p>
 	</section>
 </template>

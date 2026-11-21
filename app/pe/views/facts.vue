@@ -1,4 +1,5 @@
 <link rel="component" href="../facts.vue.js">
+<link rel="component" href="../../components/property-grid.vue">
 
 <script>
 /** @param {PeDocument} context @returns {ViewContent} */
@@ -13,6 +14,26 @@ const ViewFacts = Vue.defineComponent({
 	props: { data: { type: Object, required: true } },
 	computed: {
 		db() { return (/** @type {PeDocument} */ (this.data.document)).facts; },
+		/** @returns {PropertyGridColumn[]} */
+		layerColumns() {
+			return [
+				{ title: 'Inspect', width: '1%', slot: 'inspect' },
+				{ title: 'Order', width: '1%', style: { textAlign: 'right' }, format: (_layer, index) => String(Number(index) + 1) },
+				{ title: 'Layer', slot: 'layer' },
+				{ title: 'Records', width: '1%', style: { textAlign: 'right' }, format: (_layer, index) => this.db.rows(Number(index)).length.toLocaleString() },
+			];
+		},
+		/** @returns {PropertyGridColumn[]} */
+		recordColumns() {
+			return [
+				{ title: 'Kind', slot: 'kind' },
+				{ title: 'Section:RVA', slot: 'address' },
+				{ title: 'Value / metadata', slot: 'payload' },
+				this.db.mode === 'inspect'
+					? { title: 'Layer', format: value => this.db.layers[(/** @type {FactsRow} */ (value)).layer].label || 'Unnamed' }
+					: { title: 'Actions', width: '1%', slot: 'actions' },
+			];
+		},
 		kinds() { return factKinds; },
 		drafting() { return this.db.editorLayer >= 0 || this.db.bulk || this.db.busy; },
 		allRows() { return this.db.layers.flatMap((layer, index) => this.db.rows(index)); },
@@ -57,6 +78,8 @@ const ViewFacts = Vue.defineComponent({
 		outOfImage() { return this.visibleRows.filter(row => row.rva >= this.imageSize).length; },
 	},
 	methods: {
+		/** @param {FactsRow} row */
+		recordKey(row) { return `${row.layer}:${row.index}`; },
 		/** @param {number} rva */
 		hex(rva) { return `0x${rva.toString(16).padStart(8, '0')}`; },
 		/** @param {string} text */
@@ -197,15 +220,15 @@ const ViewFacts = Vue.defineComponent({
 					<button :disabled="drafting" @click="newLayer">+ New</button>
 				</div>
 			</div>
-			<div class="view-facts__table-wrap"><table class="view-facts__table view-facts__layers-table" aria-label="Fact layers">
-				<thead><tr><th>Inspect</th><th>Order</th><th>Layer</th><th>Records</th></tr></thead>
-				<tbody><tr v-for="(layer, index) in db.layers" :key="index" :class="{ 'view-facts__layer--selected': db.selected === index }">
-					<td><input type="checkbox" :checked="layer.visible" :disabled="drafting" :aria-label="`Include ${layer.label || 'unnamed layer'} in inspection`" @change="toggleLayer(index)"></td>
-					<td>{{ index + 1 }}</td>
-					<td><button class="view-facts__layer-select" :disabled="drafting" :aria-pressed="db.selected === index" @click="db.select(index)">{{ layer.label || 'Unnamed layer' }}</button></td>
-					<td>{{ db.rows(index).length.toLocaleString() }}</td>
-				</tr><tr v-if="!db.layers.length"><td colspan="4" class="view-facts__empty">Create a layer or import a native factmap to get started.</td></tr></tbody>
-			</table></div>
+			<property-grid class="view-facts__table-wrap view-facts__layers-table" :list="db.layers" :interpretations="layerColumns" label="Fact layers" auto-layout>
+				<template #inspect="{ value: layer, index }">
+					<input type="checkbox" :checked="layer.visible" :disabled="drafting" :aria-label="`Include ${layer.label || 'unnamed layer'} in inspection`" @change="toggleLayer(index)">
+				</template>
+				<template #layer="{ value: layer, index }">
+					<button class="view-facts__layer-select" :disabled="drafting" :aria-pressed="db.selected === index" @click="db.select(index)">{{ layer.label || 'Unnamed layer' }}</button>
+				</template>
+				<template #empty><div class="view-facts__empty">Create a layer or import a native factmap to get started.</div></template>
+			</property-grid>
 			<p class="view-facts__help">Layers are ordered from earlier to later. Import factmaps as new layers; export individual layers to keep your work.</p>
 			<div v-if="db.current" class="view-facts__layer-toolbar">
 				<form @submit.prevent="renameLayer"><label>Layer name <input v-model="db.rename" :disabled="drafting" aria-label="Layer name"></label><button :disabled="drafting || db.rename === db.current.label">Rename</button></form>
@@ -236,13 +259,29 @@ const ViewFacts = Vue.defineComponent({
 
 		</section>
 		<div v-if="db.mode === 'inspect' || db.current">
-			<div class="view-facts__table-wrap"><table class="view-facts__table view-facts__records-table" aria-label="Fact records"><thead><tr><th>Kind</th><th>Section:RVA</th><th>Value / metadata</th><th v-if="db.mode === 'inspect'">Layer</th><th v-else>Actions</th></tr></thead><tbody>
-				<tr v-for="row in pageRows" :key="`${row.layer}:${row.index}`"><td><span class="view-facts__badge" :data-fact-kind="row.kind">{{ kindName(row.kind) }}</span></td><td class="view-facts__address"><span class="view-facts__muted">{{ sectionName(row.rva) }}:</span><span data-kind="rva">{{ hex(row.rva) }}</span></td><td class="view-facts__payload" :title="row.text"><span v-if="row.kind === 'R'" data-kind="rva">{{ row.payload }}</span><template v-else>{{ description(row) }}</template></td><td v-if="db.mode === 'inspect'">{{ db.layers[row.layer].label || 'Unnamed' }}</td><td v-else><div class="view-facts__row-actions">
-					<button :disabled="drafting" @click="edit(row)" aria-label="Edit fact" title="Edit fact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5M4 15 15 4a2.1 2.1 0 0 1 3 0l2 2a2.1 2.1 0 0 1 0 3L9 20l-6 1 1-6Z"/></svg></button>
-					<button :disabled="drafting" @click="removeFact(row)" aria-label="Remove fact" title="Remove fact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
-				</div></td></tr>
-				<tr v-if="!pageRows.length"><td colspan="4" class="view-facts__empty">{{ db.mode === 'layers' ? 'This layer is empty. Add a fact or edit its text.' : 'No matching facts. Adjust the filters or import a factmap in Manage layers.' }}</td></tr>
-			</tbody></table></div>
+			<property-grid class="view-facts__table-wrap" :list="pageRows" :interpretations="recordColumns" :row-key="recordKey" label="Fact records" auto-layout>
+				<template #kind="{ value: row }">
+					<span class="view-facts__badge" :data-fact-kind="row.kind">{{ kindName(row.kind) }}</span>
+				</template>
+				<template #address="{ value: row }">
+					<span class="view-facts__address"><span class="view-facts__muted">{{ sectionName(row.rva) }}:</span><span data-kind="rva">{{ hex(row.rva) }}</span></span>
+				</template>
+				<template #payload="{ value: row }">
+					<div class="view-facts__payload" :title="row.text">
+						<span v-if="row.kind === 'R'" data-kind="rva">{{ row.payload }}</span>
+						<template v-else>{{ description(row) }}</template>
+					</div>
+				</template>
+				<template #actions="{ value: row }">
+					<div class="view-facts__row-actions">
+						<button :disabled="drafting" @click="edit(row)" aria-label="Edit fact" title="Edit fact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m16 3 5 5M4 15 15 4a2.1 2.1 0 0 1 3 0l2 2a2.1 2.1 0 0 1 0 3L9 20l-6 1 1-6Z"/></svg></button>
+						<button :disabled="drafting" @click="removeFact(row)" aria-label="Remove fact" title="Remove fact"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18M9 6V3h6v3M5 6l1 15h12l1-15M10 10v7M14 10v7"/></svg></button>
+					</div>
+				</template>
+				<template #empty>
+					<div class="view-facts__empty">{{ db.mode === 'layers' ? 'This layer is empty. Add a fact or edit its text.' : 'No matching facts. Adjust the filters or import a factmap in Manage layers.' }}</div>
+				</template>
+			</property-grid>
 			<div class="view-facts__pagination"><span>Page {{ pageIndex + 1 }} of {{ pageCount }} · 100 records per page · {{ db.mode === 'inspect' ? 'sorted by RVA' : 'stored record order' }}</span><button :disabled="pageIndex === 0" @click="db.page = pageIndex - 1">Previous</button><button :disabled="pageIndex + 1 >= pageCount" @click="db.page = pageIndex + 1">Next</button></div>
 		</div>
 	</section>
@@ -283,16 +322,14 @@ const ViewFacts = Vue.defineComponent({
 .view-facts__editor .view-facts__help { margin: 0; }
 .view-facts__editor code { display: block; margin: 6px 0; }
 .view-facts__editor summary { cursor: pointer; }
-.view-facts__table-wrap { overflow: auto; border: 1px solid var(--color-border); border-radius: 4px; }
-.view-facts__table { border-collapse: collapse; width: 100%; text-align: left; }
-.view-facts__table th { background: var(--color-surface); color: var(--color-muted); font-weight: 500; white-space: nowrap; }
-.view-facts__table :is(th, td) { padding: 3px 8px; border: 0; vertical-align: middle; line-height: 18px; }
-.view-facts__table th { padding-top: 6px; padding-bottom: 6px; }
-.view-facts__table tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-surface) 55%, var(--color-background)); }
+.view-facts__table-wrap { margin-inline: 0; border: 1px solid var(--color-border); border-radius: 4px; }
+.view-facts__table-wrap .property-grid__table :is(th, td) { padding: 3px 8px; border: 0; vertical-align: middle; line-height: 18px; }
+.view-facts__table-wrap .property-grid__table th { padding-block: 6px; white-space: nowrap; }
+.view-facts__table-wrap .property-grid__table td { font-family: inherit; white-space: normal; }
+.view-facts__table-wrap .property-grid__table :is(th, td):last-child { white-space: nowrap; }
+.view-facts__table-wrap tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-surface) 55%, var(--color-background)); }
 .view-facts__address { font: 12px ui-monospace, monospace; white-space: nowrap; }
 .view-facts__address .view-facts__muted { font-size: inherit; }
-.view-facts__table :is(th, td):last-child { white-space: nowrap; }
-.view-facts__table:has(.view-facts__row-actions) :is(th, td):last-child { width: 1%; }
 .view-facts__row-actions { display: flex; flex-wrap: nowrap; gap: 2px; }
 .view-facts__row-actions button { display: inline-flex; align-items: center; justify-content: center; width: 22px; height: 22px; padding: 3px; border-color: transparent; background: transparent; color: var(--color-muted); }
 .view-facts__row-actions button:hover:enabled { color: var(--color-text); }
@@ -302,7 +339,7 @@ const ViewFacts = Vue.defineComponent({
 .view-facts__badge { font-size: 10px; border-left: 2px solid var(--color-accent); padding-left: 5px; }
 .view-facts__badge[data-fact-kind="C"] { border-color: var(--color-secondary); }
 .view-facts__badge[data-fact-kind="R"] { border-color: var(--color-warning); }
-.view-facts__empty { text-align: center; color: var(--color-muted); padding: 32px !important; }
+.view-facts__empty { text-align: center; color: var(--color-muted); padding: 29px 24px; white-space: normal; }
 .view-facts__pagination { margin-top: 12px; color: var(--color-muted); }
 .view-facts__pagination span { margin-right: auto; }
 .view-facts__subhead, .view-facts__actions, .view-facts__layer-toolbar, .view-facts__layer-toolbar form, .view-facts__pagination { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
@@ -314,9 +351,8 @@ const ViewFacts = Vue.defineComponent({
 .view-facts__inspection-layers > span { color: var(--color-muted); }
 .view-facts__inspection-layers label { flex-direction: row; align-items: center; gap: 6px; }
 .view-facts input[type="checkbox"] { accent-color: var(--color-accent); }
-.view-facts__layers-table td { padding-top: 5px; padding-bottom: 5px; }
-.view-facts__layers-table :is(th, td):nth-child(-n+2), .view-facts__layers-table :is(th, td):last-child { width: 1%; }
-.view-facts__layers-table tbody tr.view-facts__layer--selected { background: color-mix(in srgb, var(--color-accent) 9%, var(--color-background)); }
+.view-facts__layers-table .property-grid__table td { padding-block: 5px; }
+.view-facts__layers-table tbody tr:has(.view-facts__layer-select[aria-pressed="true"]) { background: color-mix(in srgb, var(--color-accent) 9%, var(--color-background)); }
 .view-facts button.view-facts__layer-select { border: 0; padding: 3px 0; background: transparent; text-align: left; }
 .view-facts__layer-select[aria-pressed="true"] { color: var(--color-accent); font-weight: 600; }
 .view-facts__editor-heading { padding-top: 20px; border-top: 1px solid var(--color-border); margin-top: 24px; }

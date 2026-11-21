@@ -16,10 +16,10 @@ function ntHeaderInterpretations(table, details) {
 		? { ImageBase: 'va', AddressOfEntryPoint: 'rva', BaseOfCode: 'rva', BaseOfData: 'rva' }
 		: table === 'FileHeader' ? { PointerToSymbolTable: 'fo' } : {});
 	return [
-		{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
+		{ title: 'Field', width: 'max(10rem, 26.5cqi)', format: (value, name) => String(name) },
 		{ title: 'Value', kind: (value, field) => value !== 0 || field === 'ImageBase' ? addresses[field] : undefined,
-			style: { minWidth: '140px', textAlign: 'right' }, format: formatNtHeaderValue },
-		{ title: 'Interpretation', style: { minWidth: '360px' }, format: (value, name) => {
+			width: 'max(6.75rem, 18.5cqi)', style: { textAlign: 'right' }, format: formatNtHeaderValue },
+		{ title: 'Interpretation', format: (value, name) => {
 			if (table === 'FileHeader' && name === 'TimeDateStamp') {
 				const timestamp = Number(value);
 				if (timestamp === 0 || timestamp === 0xffffffff) return 'Unspecified';
@@ -64,15 +64,15 @@ const ViewNtHeaders = Vue.defineComponent({
 		directoryInterpretations() {
 			const names = /** @type {(string | null)[]} */ (this.data.directoryNames);
 			return [
-				{ title: '#', style: { textAlign: 'right' }, format: (value, index) => String(index) },
-				{ title: 'Directory', format: (value, index) => names[Number(index)] ?? '—' },
-				{ title: 'VirtualAddress', kind: (value, index) => {
+				{ title: '#', width: '3.75rem', style: { textAlign: 'right' }, format: (value, index) => String(index) },
+				{ title: 'Directory', width: 'clamp(6.5rem, 100cqi - 17.75rem, 22rem)', format: (value, index) => names[Number(index)] ?? '—' },
+				{ title: 'VirtualAddress', width: '8rem', kind: (value, index) => {
 					const directory = /** @type {import('./deps/pelite.js').PeDataDirectory} */ (value);
 					const slot = Number(index);
 					if (directory.VirtualAddress === 0 || slot === 7 || slot >= 15) return undefined;
 					return slot === 4 ? 'fo' : 'rva';
 				}, style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).VirtualAddress) },
-				{ title: 'Size', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).Size) },
+				{ title: 'Size', width: '6rem', style: { textAlign: 'right' }, format: value => formatNtHeaderValue((/** @type {import('./deps/pelite.js').PeDataDirectory} */ (value)).Size) },
 			];
 		},
 	},
@@ -82,13 +82,13 @@ const ViewNtHeaders = Vue.defineComponent({
 <template id="view-nt-headers">
 	<section class="view-nt-headers">
 		<p class="view-nt-headers__description">IMAGE_NT_HEADERS</p>
-		<property-grid :list="{ Signature: data.header.Signature }" :interpretations="signatureInterpretations" label="NT signature"></property-grid>
+		<property-grid :list="{ Signature: data.header.Signature }" :interpretations="signatureInterpretations" min-width="22rem" label="NT signature"></property-grid>
 		<h2 class="view-nt-headers__section-title">File header</h2>
-		<property-grid :list="data.header.FileHeader" :interpretations="fileInterpretations" label="NT file header"></property-grid>
+		<property-grid :list="data.header.FileHeader" :interpretations="fileInterpretations" min-width="22rem" label="NT file header"></property-grid>
 		<h2 class="view-nt-headers__section-title">Optional header</h2>
-		<property-grid :list="data.header.OptionalHeader" :interpretations="optionalInterpretations" label="NT optional header"></property-grid>
+		<property-grid :list="data.header.OptionalHeader" :interpretations="optionalInterpretations" min-width="22rem" label="NT optional header"></property-grid>
 		<h2 class="view-nt-headers__section-title">Data directory</h2>
-		<property-grid v-if="data.dataDirectory.length" :list="data.dataDirectory" :interpretations="directoryInterpretations" label="Data directory"></property-grid>
+		<property-grid v-if="data.dataDirectory.length" :list="data.dataDirectory" :interpretations="directoryInterpretations" min-width="24.25rem" label="Data directory" spacer></property-grid>
 		<p v-else class="view-nt-headers__description">No data directories.</p>
 		<h2 class="view-nt-headers__section-title">Section headers</h2>
 		<view-section-headers :data="data.sections"></view-section-headers>
@@ -96,7 +96,6 @@ const ViewNtHeaders = Vue.defineComponent({
 </template>
 
 <style>
-.view-nt-headers { max-width: 1100px; }
 .view-nt-headers__description { margin: 0 0 26px; color: var(--color-muted); font-size: 13px; }
 .view-nt-headers__section-title { margin: 26px 0 12px; font-size: 14px; font-weight: 600; }
 </style>

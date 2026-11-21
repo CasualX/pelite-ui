@@ -1,9 +1,11 @@
 <link rel="component" href="../../components/property-grid.vue">
+<link rel="component" href="section-entropy.vue">
 
 <script>
 /** @typedef {{ fileSize: number, hashes: import('./deps/pelite.js').PeHashes, sectionEntropy: import('./deps/pelite.js').SectionEntropy[], imports: SummaryImports, headers: import('./deps/pelite.js').PeHeaders, tls: import('./deps/pelite.js').Result<import('./deps/pelite.js').PeTls | null>, pdbFileName: import('./deps/pelite.js').Result<string | null> }} SummaryViewData */
 
 /** @typedef {{ libraries: number, functions: number, by_library: { name: string, functions: number }[], notable: Record<string, string[]>, complete: boolean }} SummaryImports */
+/** @typedef {{ header: import('./deps/pelite.js').PeSectionHeader, analysis: import('./deps/pelite.js').SectionEntropy }} SummarySection */
 
 const summaryImportCategories = {
 	'process execution': ['CreateProcessA', 'CreateProcessW', 'ShellExecuteA', 'ShellExecuteW', 'WinExec'],
@@ -66,20 +68,39 @@ function formatSummarySize(value) { return `${value.toLocaleString()} bytes`; }
 
 const ViewSummary = Vue.defineComponent({
 	template: '#view-summary',
+	components: { SectionEntropy },
 	props: { data: { type: Object, required: true } },
 	data() {
 		return {
 			hashInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Hash', style: { minWidth: '120px' }, format: (value, name) => ({ md5: 'MD5', sha256: 'SHA-256', imphash: 'Import hash' })[name] ?? String(name) },
-				{ title: 'Value', style: { minWidth: '520px' }, format: value => value === null ? 'Unavailable' : String(value) },
+				{ title: 'Hash', width: '9rem', format: (value, name) => ({ md5: 'MD5', sha256: 'SHA-256', imphash: 'Import hash' })[name] ?? String(name) },
+				{ title: 'Value', format: value => value === null ? 'Unavailable' : String(value) },
 			]),
 			importInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Library', style: { minWidth: '260px' }, format: value => (/** @type {{ name: string }} */ (value)).name },
-				{ title: 'Functions', style: { minWidth: '100px', textAlign: 'right' }, format: value => String((/** @type {{ functions: number }} */ (value)).functions) },
+				{ title: 'Library', width: 'clamp(12rem, 30cqi, 20rem)', format: value => (/** @type {{ name: string }} */ (value)).name },
+				{ title: 'Functions', width: '8rem', style: { textAlign: 'right' }, format: value => String((/** @type {{ functions: number }} */ (value)).functions) },
 			]),
 		};
 	},
 	computed: {
+		/** @returns {PropertyGridColumn[]} */
+		sectionColumns() {
+			const numericStyle = { textAlign: 'right' };
+			return [
+				{ title: 'Name', width: '1%', format: value => (/** @type {SummarySection} */ (value)).header.Name },
+				{ title: 'RVA', width: '1%', kind: 'rva', style: numericStyle,
+					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.VirtualAddress) },
+				{ title: 'Virtual size', width: '1%', style: numericStyle,
+					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.VirtualSize) },
+				{ title: 'Raw size', width: '1%', style: numericStyle,
+					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.SizeOfRawData) },
+				{ title: 'Perms', label: 'Permissions', width: '1%', style: numericStyle,
+					format: value => this.permissions((/** @type {SummarySection} */ (value)).header.Characteristics) },
+				{ title: 'Entropy', width: '1%', style: numericStyle,
+					format: value => (/** @type {SummarySection} */ (value)).analysis.entropy?.toFixed(2) ?? '—' },
+				{ title: 'Distribution', slot: 'distribution' },
+			];
+		},
 		summaryData() { return /** @type {SummaryViewData} */ (/** @type {unknown} */ (this.data)); },
 		imports() { return this.summaryData.imports; },
 		headers() { return this.summaryData.headers; },
@@ -181,7 +202,7 @@ const ViewSummary = Vue.defineComponent({
 				.map(item => ({ name: item.name, enabled: !!(this.optional.DllCharacteristics & item.flag) }));
 		},
 		sections() {
-			return this.headers.SectionHeaders.map((header, index) => ({ header, analysis: this.summaryData.sectionEntropy[index], entry: this.entryPointSection === index }));
+			return this.headers.SectionHeaders.map((header, index) => ({ header, analysis: this.summaryData.sectionEntropy[index] }));
 		},
 		hasNotableImports() { return Object.keys(this.imports.notable).length > 0; },
 	},
@@ -206,18 +227,14 @@ const ViewSummary = Vue.defineComponent({
 			<li v-for="item in mitigations" :key="item.name" :class="{ 'view-summary__mitigation--enabled': item.enabled }">{{ item.name }} <span>{{ item.enabled ? 'Yes' : 'No' }}</span></li>
 		</ul>
 		<h2>Sections</h2>
-		<div v-if="sections.length" class="view-summary__sections">
-			<table aria-label="Section summary">
-				<thead><tr><th scope="col">Name</th><th scope="col">RVA</th><th scope="col">Virtual size</th><th scope="col">Raw size</th><th scope="col">Permissions</th><th scope="col">Entropy</th><th scope="col">Distribution</th><th scope="col">Entry</th></tr></thead>
-				<tbody><tr v-for="(section, index) in sections" :key="index">
-					<td>{{ section.header.Name }}</td><td data-kind="rva">{{ formatSummaryHex(section.header.VirtualAddress) }}</td><td>{{ formatSummaryHex(section.header.VirtualSize) }}</td><td>{{ formatSummaryHex(section.header.SizeOfRawData) }}</td><td>{{ permissions(section.header.Characteristics) }}</td><td>{{ section.analysis.entropy?.toFixed(2) ?? '—' }}</td>
-					<td><div class="view-summary__entropy" aria-label="Entropy distribution, scale 0 to 8"><span v-for="(entropy, sample) in section.analysis.samples" :key="sample" :style="{ height: (entropy / 8 * 100) + '%' }" :title="entropy.toFixed(2)"></span></div></td><td>{{ section.entry ? '← Entry point' : '' }}</td>
-				</tr></tbody>
-			</table>
-		</div>
+		<property-grid v-if="sections.length" class="view-summary__sections" :list="sections" :interpretations="sectionColumns" label="Section summary" auto-layout>
+			<template #distribution="{ value }">
+				<section-entropy :samples="value.analysis.samples"></section-entropy>
+			</template>
+		</property-grid>
 		<p v-else class="view-summary__muted">No sections.</p>
 		<h2>Imports <span class="view-summary__muted">{{ imports.functions }} functions · {{ imports.libraries }} libraries</span></h2>
-		<property-grid v-if="imports.by_library.length" :list="imports.by_library" :interpretations="importInterpretations" label="Import summary"></property-grid>
+		<property-grid v-if="imports.by_library.length" :list="imports.by_library" :interpretations="importInterpretations" label="Import summary" spacer></property-grid>
 		<p v-else class="view-summary__muted">No parsed imports.</p>
 		<details v-if="hasNotableImports" class="view-summary__notable">
 			<summary>Notable imports</summary>
@@ -243,15 +260,7 @@ const ViewSummary = Vue.defineComponent({
 .view-summary__mitigations li { padding: 7px 10px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
 .view-summary__mitigations span { margin-left: 12px; font-weight: 600; }
 .view-summary__mitigation--enabled span { color: var(--color-secondary); }
-.view-summary__sections { overflow-x: auto; max-width: 100%; }
-.view-summary__sections table { width: max-content; border-collapse: collapse; border: 1px solid var(--color-border); font-size: 12px; }
-.view-summary__sections th { padding: 9px 14px; background: var(--color-surface); color: var(--color-muted); font-weight: 600; white-space: nowrap; }
-.view-summary__sections td { padding: 7px 14px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
-.view-summary__sections th, .view-summary__sections td { border-bottom: 1px solid var(--color-border); text-align: right; }
-.view-summary__sections th:first-child, .view-summary__sections td:first-child { text-align: left; }
-.view-summary__sections tbody tr:hover { background: var(--color-surface); }
-.view-summary__entropy { display: flex; align-items: flex-end; gap: 2px; width: 96px; height: 20px; border-bottom: 1px solid var(--color-border); }
-.view-summary__entropy span { flex: 1; min-height: 1px; background: var(--color-secondary); }
+.view-summary__sections :is(th, td) { white-space: nowrap; }
 .view-summary__notable { margin-top: 16px; font-size: 12px; }
 .view-summary__notable summary { width: max-content; cursor: pointer; font-weight: 600; user-select: none; }
 .view-summary__notable summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

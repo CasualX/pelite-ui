@@ -15,8 +15,8 @@ const SecurityCertificate = Vue.defineComponent({
 	data() {
 		return {
 			columns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '160px' }, format: (value, field) => String(field) },
-				{ title: 'Value', style: { minWidth: '120px' }, format: formatPropertyGridHex },
+				{ title: 'Field', width: '10rem', format: (value, field) => String(field) },
+				{ title: 'Value', width: '8rem', style: { textAlign: 'right' }, format: formatPropertyGridHex },
 			]),
 			copyStatus: '',
 		};
@@ -49,7 +49,7 @@ const SecurityCertificate = Vue.defineComponent({
 
 <template id="security-certificate">
 	<div>
-		<property-grid :list="entry.image" :interpretations="columns" :label="'Certificate ' + entryNumber + ' header'"></property-grid>
+		<property-grid :list="entry.image" :interpretations="columns" :label="'Certificate ' + entryNumber + ' header'" spacer></property-grid>
 		<div class="security-certificate__payload-header">
 			<h3>{{ payloadTitle }}</h3>
 			<button v-if="entry.payload" type="button" :aria-label="'Copy text for certificate ' + entryNumber" @click="copyPayload">Copy text</button>

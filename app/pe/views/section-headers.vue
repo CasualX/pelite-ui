@@ -1,3 +1,5 @@
+<link rel="component" href="../../components/property-grid.vue">
+<link rel="component" href="section-entropy.vue">
 
 <script>
 /** @typedef {{ headers: import('./deps/pelite.js').PeSectionHeader[], characteristics: string[][], entropy: import('./deps/pelite.js').SectionEntropy[] }} SectionHeadersViewData */
@@ -17,10 +19,34 @@ function prepareSectionHeadersView(context, existingHeaders) {
 
 const ViewSectionHeaders = Vue.defineComponent({
 	template: '#view-section-headers',
+	components: { SectionEntropy },
 	props: { data: { type: Object, required: true } },
 	computed: {
 		sectionData() { return /** @type {SectionHeadersViewData} */ (/** @type {unknown} */ (this.data)); },
-		fields() { return /** @type {(keyof import('./deps/pelite.js').PeSectionHeader)[]} */ (Object.keys(this.sectionData.headers[0] ?? {})); },
+		/** @returns {PropertyGridColumn[]} */
+		columns() {
+			const order = /** @type {(keyof import('./deps/pelite.js').PeSectionHeader)[]} */ (['Name', 'VirtualAddress', 'VirtualSize', 'PointerToRawData', 'SizeOfRawData']);
+			const fields = /** @type {typeof order} */ (Object.keys(this.sectionData.headers[0] ?? {}));
+			const orderedFields = [...order.filter(field => fields.includes(field)), ...fields.filter(field => !order.includes(field))];
+			const numericStyle = { textAlign: 'right' };
+			return [
+				{ title: '#', width: '1%', style: numericStyle, format: (_header, index) => String(Number(index) + 1) },
+				...orderedFields.map(/** @returns {PropertyGridColumn} */ field => ({
+					title: field,
+					width: '1%',
+					style: field === 'Name' ? undefined : numericStyle,
+					kind: field === 'VirtualAddress' ? 'rva' : field === 'PointerToRawData' ? value =>
+						(/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value)).PointerToRawData !== 0 ? 'fo' : undefined : undefined,
+					slot: field === 'Characteristics' ? 'characteristics' : undefined,
+					format: value => this.formatValue((/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value))[field]),
+				})),
+				{ title: 'Perms', label: 'Permissions', width: '1%', style: numericStyle,
+					format: value => this.permissions((/** @type {import('./deps/pelite.js').PeSectionHeader} */ (value)).Characteristics) },
+				{ title: 'Entropy', width: '1%', style: numericStyle,
+					format: (_header, index) => this.sectionData.entropy[Number(index)].entropy?.toFixed(2) ?? '—' },
+				{ title: 'Distribution', slot: 'distribution' },
+			];
+		},
 	},
 	methods: {
 		/** @param {string | number} value @returns {string} */
@@ -33,38 +59,19 @@ const ViewSectionHeaders = Vue.defineComponent({
 
 <template id="view-section-headers">
 	<section class="view-section-headers">
-		<div v-if="sectionData.headers.length" class="view-section-headers__table-wrap">
-			<table aria-label="Section headers">
-				<thead><tr>
-					<th scope="col">#</th>
-					<th v-for="field in fields" :key="field" scope="col" :class="{ 'view-section-headers__name': field === 'Name' }">{{ field }}</th>
-					<th scope="col">Permissions</th><th scope="col">Entropy</th><th scope="col">Distribution</th><th scope="col" class="view-section-headers__interpretation">Characteristics interpretation</th>
-				</tr></thead>
-				<tbody><tr v-for="(header, index) in sectionData.headers" :key="index">
-					<td>{{ index + 1 }}</td>
-					<td v-for="field in fields" :key="field" :class="{ 'view-section-headers__name': field === 'Name' }"
-						:data-kind="field === 'VirtualAddress' ? 'rva' : field === 'PointerToRawData' && header.PointerToRawData !== 0 ? 'fo' : undefined">{{ formatValue(header[field]) }}</td>
-					<td>{{ permissions(header.Characteristics) }}</td>
-					<td>{{ sectionData.entropy[index].entropy?.toFixed(2) ?? '—' }}</td>
-					<td><div class="view-section-headers__entropy" aria-label="Entropy distribution, scale 0 to 8"><span v-for="(entropy, sample) in sectionData.entropy[index].samples" :key="sample" :style="{ height: (entropy / 8 * 100) + '%' }" :title="entropy.toFixed(2)"></span></div></td>
-					<td class="view-section-headers__interpretation">{{ sectionData.characteristics[index].join('\n') }}</td>
-				</tr></tbody>
-			</table>
-		</div>
+		<property-grid v-if="sectionData.headers.length" class="view-section-headers__grid" :list="sectionData.headers" :interpretations="columns" label="Section headers" auto-layout>
+			<template #characteristics="{ value, index }">
+				<span :title="sectionData.characteristics[index].join('\n')">{{ formatValue(value.Characteristics) }}</span>
+			</template>
+			<template #distribution="{ index }">
+				<section-entropy :samples="sectionData.entropy[index].samples"></section-entropy>
+			</template>
+		</property-grid>
 		<p v-else class="view-section-headers__empty">No section headers.</p>
 	</section>
 </template>
 
 <style>
 .view-section-headers__empty { margin: 0; color: var(--color-muted); font-size: 13px; }
-.view-section-headers__table-wrap { max-width: 100%; overflow-x: auto; }
-.view-section-headers table { width: max-content; border: 1px solid var(--color-border); border-collapse: collapse; font-size: 12px; }
-.view-section-headers th { padding: 9px 14px; background: var(--color-surface); color: var(--color-muted); font-weight: 600; white-space: nowrap; }
-.view-section-headers td { padding: 9px 14px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; white-space: nowrap; }
-.view-section-headers th, .view-section-headers td { border-bottom: 1px solid var(--color-border); text-align: right; vertical-align: top; }
-.view-section-headers .view-section-headers__name, .view-section-headers .view-section-headers__interpretation { text-align: left; }
-.view-section-headers td.view-section-headers__interpretation { white-space: pre-wrap; }
-.view-section-headers tbody tr:hover { background: var(--color-surface); }
-.view-section-headers__entropy { display: flex; align-items: flex-end; gap: 2px; width: 96px; height: 20px; border-bottom: 1px solid var(--color-border); }
-.view-section-headers__entropy span { flex: 1; min-height: 1px; background: var(--color-secondary); }
+.view-section-headers__grid :is(th, td) { white-space: nowrap; }
 </style>

@@ -18,8 +18,8 @@ const ViewDosHeader = Vue.defineComponent({
 	data() {
 		return {
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', format: (value, name) => String(name) },
-				{ title: 'Value', kind: (value, field) => value && (field === 'e_lfarlc' || field === 'e_lfanew') ? 'fo' : undefined,
+				{ title: 'Field', width: '9rem', format: (value, name) => String(name) },
+				{ title: 'Value', width: '8rem', kind: (value, field) => value && (field === 'e_lfarlc' || field === 'e_lfanew') ? 'fo' : undefined,
 					style: { textAlign: 'right' }, format: formatPropertyGridHex },
 			]),
 		};
@@ -30,11 +30,10 @@ const ViewDosHeader = Vue.defineComponent({
 <template id="view-dos-header">
 	<section class="view-dos-header">
 		<p class="view-dos-header__description">IMAGE_DOS_HEADER</p>
-		<property-grid :list="data.header" :interpretations="interpretations" label="DOS header fields"></property-grid>
+		<property-grid :list="data.header" :interpretations="interpretations" label="DOS header fields" spacer></property-grid>
 	</section>
 </template>
 
 <style>
-.view-dos-header { max-width: 1100px; }
 .view-dos-header__description { margin: 0 0 26px; color: var(--color-muted); font-size: 13px; }
 </style>

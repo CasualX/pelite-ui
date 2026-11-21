@@ -22,25 +22,25 @@ const ViewImports = Vue.defineComponent({
 	data() {
 		return {
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'IAT RVA', kind: 'rva', style: { minWidth: '120px', textAlign: 'right' }, format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
-				{ title: 'Name', style: { minWidth: '260px' }, format: value => {
+				{ title: 'IAT RVA', width: '9rem', kind: 'rva', style: { textAlign: 'right' }, format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
+				{ title: 'Name', format: value => {
 					const symbol = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import;
 					return symbol === null ? 'Unavailable' : symbol.ByName?.name ?? '—';
 				} },
-				{ title: 'Ordinal', style: { minWidth: '80px', textAlign: 'right' }, format: value => {
+				{ title: 'Ordinal', width: '5.5rem', style: { textAlign: 'right' }, format: value => {
 					const ordinal = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import?.ByOrdinal?.ord;
 					return ordinal === undefined ? '' : String(ordinal);
 				} },
-				{ title: 'Hint', style: { minWidth: '80px', textAlign: 'right' }, format: value => {
+				{ title: 'Hint', width: '5rem', style: { textAlign: 'right' }, format: value => {
 					const hint = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import?.ByName?.hint;
 					return hint === undefined ? '' : String(hint);
 				} },
 			]),
 			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', style: { minWidth: '240px' }, format: (value, name) => String(name) },
+				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['OriginalFirstThunk', 'Name', 'FirstThunk'].includes(String(field)) ? 'rva' : undefined,
-					style: { minWidth: '140px', textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
-				{ title: 'Interpretation', style: { minWidth: '240px' }, format: (value, name) => {
+					width: 'max(7.5rem, 18.5cqi)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
+				{ title: 'Interpretation', format: (value, name) => {
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);
 					if (timestamp === 0) return 'Not bound';
@@ -78,9 +78,9 @@ const ViewImports = Vue.defineComponent({
 			<h2>{{ group.descriptor.dll_name ?? 'DLL name unavailable' }}</h2>
 			<details class="view-imports__header">
 				<summary>Directory descriptor</summary>
-				<property-grid :list="group.descriptor.image" :interpretations="headerInterpretations" label="Import directory descriptor"></property-grid>
+				<property-grid :list="group.descriptor.image" :interpretations="headerInterpretations" min-width="27rem" label="Import directory descriptor"></property-grid>
 			</details>
-			<property-grid v-if="group.rows?.length" :list="group.rows" :interpretations="interpretations" :label="'Imports from ' + (group.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
+			<property-grid v-if="group.rows?.length" :list="group.rows" :interpretations="interpretations" min-width="30rem" :label="'Imports from ' + (group.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
 			<p v-else class="view-imports__empty">{{ group.rows === null ? 'The import lookup table could not be parsed.' : 'No imported symbols.' }}</p>
 		</section>
 		<p v-if="!filteredDescriptors.length" class="view-imports__empty">{{ data.descriptors.length ? 'No matching entries.' : 'The import directory is empty.' }}</p>

@@ -1,3 +1,5 @@
+<link rel="component" href="../../components/property-grid.vue">
+
 <script>
 /** @typedef {{ tree: import('./deps/pelite.js').PeResourceTreeEntry[], state: { expanded: Set<string> } }} ResourcesViewData */
 /** @typedef {{ entry: import('./deps/pelite.js').PeResourceTreeEntry, key: string, depth: number }} ResourceTreeRow */
@@ -13,6 +15,24 @@ function prepareResourcesView(context) {
 const ViewResources = Vue.defineComponent({
 	template: '#view-resources',
 	props: { data: { type: Object, required: true } },
+	data() {
+		const numericStyle = { textAlign: 'right' };
+		return {
+			columns: /** @type {PropertyGridColumn[]} */ ([
+				{ title: 'Resource', slot: 'resource' },
+				{ title: 'RVA', width: '120px', style: numericStyle,
+					kind: value => (/** @type {ResourceTreeRow} */ (value)).entry.data ? 'rva' : undefined,
+					format: value => {
+						const data = (/** @type {ResourceTreeRow} */ (value)).entry.data;
+						return data ? formatPropertyGridHex(data.image.OffsetToData) : '';
+					} },
+				{ title: 'Size (bytes)', width: '120px', style: numericStyle,
+					format: value => String((/** @type {ResourceTreeRow} */ (value)).entry.data?.size ?? '') },
+				{ title: 'Code page', width: '120px', style: numericStyle,
+					format: value => String((/** @type {ResourceTreeRow} */ (value)).entry.data?.code_page ?? '') },
+			]),
+		};
+	},
 	computed: {
 		resourcesData() { return /** @type {ResourcesViewData} */ (/** @type {unknown} */ (this.data)); },
 		state() { return this.resourcesData.state; },
@@ -51,8 +71,8 @@ const ViewResources = Vue.defineComponent({
 		},
 		/** @param {import('./deps/pelite.js').PeResourceTreeEntry} entry @returns {string} */
 		name(entry) { return typeof entry.name === 'number' ? `#${entry.name}` : entry.name ?? 'Name unavailable'; },
-		/** @param {number} value @returns {string} */
-		hex(value) { return value === 0 ? '0' : `0x${value.toString(16)}`; },
+		/** @param {ResourceTreeRow} row */
+		rowKey(row) { return row.key; },
 	},
 });
 </script>
@@ -63,30 +83,22 @@ const ViewResources = Vue.defineComponent({
 			<button type="button" @click="expandAll">Expand all</button>
 			<button type="button" @click="state.expanded.clear()">Collapse all</button>
 		</div>
-		<div v-if="rows.length" class="view-resources__tree">
-			<table aria-label="Resource tree">
-				<thead><tr><th scope="col">Resource</th><th scope="col">RVA</th><th scope="col">Size (bytes)</th><th scope="col">Code page</th></tr></thead>
-				<tbody>
-					<tr v-for="row in rows" :key="row.key">
-						<td :style="{ paddingLeft: (12 + row.depth * 20) + 'px' }">
-							<button v-if="row.entry.directory" type="button" class="view-resources__branch" :aria-expanded="state.expanded.has(row.key)" @click="toggle(row.key)">
-								<svg class="view-resources__chevron" :class="{ 'view-resources__chevron--expanded': state.expanded.has(row.key) }" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" /></svg>
-								<svg class="view-resources__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h5l2 2h5v7H2Z" /></svg>
-								{{ name(row.entry) }}
-							</button>
-							<span v-else class="view-resources__leaf">
-								<svg class="view-resources__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h5l3 3v9H4ZM9 2v4h3" /></svg>
-								{{ name(row.entry) }}
-								<span v-if="!row.entry.data" class="view-resources__unavailable">Unavailable</span>
-							</span>
-						</td>
-						<td :data-kind="row.entry.data ? 'rva' : undefined">{{ row.entry.data ? hex(row.entry.data.image.OffsetToData) : '' }}</td>
-						<td>{{ row.entry.data?.size }}</td>
-						<td>{{ row.entry.data?.code_page }}</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
+		<property-grid v-if="rows.length" class="view-resources__tree" :list="rows" :interpretations="columns" :row-key="rowKey" label="Resource tree" min-width="680px" auto-layout>
+			<template #resource="{ value: row }">
+				<div :style="{ paddingInlineStart: row.depth * 20 + 'px' }">
+					<button v-if="row.entry.directory" type="button" class="view-resources__branch" :aria-expanded="state.expanded.has(row.key)" @click="toggle(row.key)">
+						<svg class="view-resources__chevron" :class="{ 'view-resources__chevron--expanded': state.expanded.has(row.key) }" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" /></svg>
+						<svg class="view-resources__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h5l2 2h5v7H2Z" /></svg>
+						{{ name(row.entry) }}
+					</button>
+					<span v-else class="view-resources__leaf">
+						<svg class="view-resources__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2h5l3 3v9H4ZM9 2v4h3" /></svg>
+						{{ name(row.entry) }}
+						<span v-if="!row.entry.data" class="view-resources__unavailable">Unavailable</span>
+					</span>
+				</div>
+			</template>
+		</property-grid>
 		<p v-else class="view-resources__empty">No resource entries.</p>
 	</section>
 </template>
@@ -95,14 +107,7 @@ const ViewResources = Vue.defineComponent({
 .view-resources__toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
 .view-resources__toolbar button { padding: 5px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-size: 12px; cursor: pointer; user-select: none; }
 .view-resources__toolbar button:hover { background: var(--color-border); }
-.view-resources__tree { max-width: 100%; overflow-x: auto; }
-.view-resources__tree table { width: max-content; min-width: 680px; border: 1px solid var(--color-border); border-collapse: collapse; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
-.view-resources__tree th { padding: 9px 12px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); font-family: inherit; font-weight: 600; text-align: right; white-space: nowrap; }
-.view-resources__tree th:first-child { min-width: 320px; text-align: left; }
-.view-resources__tree th:not(:first-child) { min-width: 120px; }
-.view-resources__tree td { padding: 4px 12px; border-bottom: 1px solid var(--color-border); text-align: right; white-space: nowrap; }
-.view-resources__tree td:first-child { text-align: left; }
-.view-resources__tree tbody tr:hover { background: var(--color-surface); }
+.view-resources__tree :is(th, td) { white-space: nowrap; }
 .view-resources__branch, .view-resources__leaf { display: flex; align-items: center; gap: 6px; min-height: 24px; }
 .view-resources__branch { width: 100%; padding: 0; border: 0; background: transparent; color: var(--color-text); font: inherit; text-align: left; cursor: pointer; user-select: none; }
 .view-resources__leaf { padding-left: 22px; }
