@@ -1,7 +1,8 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @typedef {{ descriptors: import('./deps/pelite.js').PeImportDescriptor[], state: { query: string } }} ImportsViewData */
+/** @typedef {{ descriptors: import('./deps/pelite.js').PeImportDescriptor[], state: { query: string, selectedIndex: number | null } }} ImportsViewData */
+/** @typedef {{ descriptor: import('./deps/pelite.js').PeImportDescriptor, index: number, rows: import('./deps/pelite.js').PeImportEntry[] | null }} ImportModule */
 
 /** @param {number} value @returns {string} */
 function formatImportHex(value) {
@@ -13,7 +14,7 @@ function prepareImportsView(context) {
 	const result = context.peFile.imports();
 	if (result instanceof Error) throw result;
 	if (result === null) throw new Error('The import directory is unavailable.');
-	return { component: 'view-imports', data: { descriptors: result, state: { query: '' } } };
+	return { component: 'view-imports', data: { descriptors: result, state: { query: '', selectedIndex: null } } };
 }
 
 const ViewImports = Vue.defineComponent({
@@ -21,8 +22,16 @@ const ViewImports = Vue.defineComponent({
 	props: { data: { type: Object, required: true } },
 	data() {
 		return {
+			libraryColumns: /** @type {PropertyGridColumn[]} */ ([
+				{ title: 'Library', slot: 'library' },
+				{ title: '#', label: 'Functions', width: 'calc(3.125rem + var(--workspace-view-inline-padding))', style: { textAlign: 'right' }, format: value => {
+					const rows = (/** @type {ImportModule} */ (value)).rows;
+					return rows?.length.toLocaleString() ?? '—';
+				} },
+			]),
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'IAT RVA', width: '9rem', kind: 'rva', style: { textAlign: 'right' }, format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
+				{ title: 'IAT RVA', width: 'calc(5.5rem + var(--workspace-view-inline-padding))', kind: 'rva',
+					format: value => formatImportHex((/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).address) },
 				{ title: 'Name', format: value => {
 					const symbol = (/** @type {import('./deps/pelite.js').PeImportEntry} */ (value)).import;
 					return symbol === null ? 'Unavailable' : symbol.ByName?.name ?? '—';
@@ -53,6 +62,7 @@ const ViewImports = Vue.defineComponent({
 	computed: {
 		importsData() { return /** @type {ImportsViewData} */ (/** @type {unknown} */ (this.data)); },
 		state() { return this.importsData.state; },
+		/** @returns {ImportModule[]} */
 		filteredDescriptors() {
 			const query = this.state.query.trim().toLowerCase();
 			return this.importsData.descriptors.map((descriptor, index) => {
@@ -65,6 +75,9 @@ const ViewImports = Vue.defineComponent({
 				return { descriptor, index, rows, visible: dllMatches || !!rows?.length };
 			}).filter(group => group.visible);
 		},
+		selectedModule() {
+			return this.filteredDescriptors.find(group => group.index === this.state.selectedIndex) ?? this.filteredDescriptors[0];
+		},
 	},
 });
 </script>
@@ -74,27 +87,47 @@ const ViewImports = Vue.defineComponent({
 		<label class="view-imports__search">Search
 			<input v-model="state.query" type="search" placeholder="DLL, name, ordinal, hint, or IAT RVA" spellcheck="false" autocomplete="off">
 		</label>
-		<section v-for="group in filteredDescriptors" :key="group.index" class="view-imports__dll">
-			<h2>{{ group.descriptor.dll_name ?? 'DLL name unavailable' }}</h2>
-			<details class="view-imports__header">
-				<summary>Directory descriptor</summary>
-				<property-grid :list="group.descriptor.image" :interpretations="headerInterpretations" min-width="27rem" label="Import directory descriptor"></property-grid>
-			</details>
-			<property-grid v-if="group.rows?.length" :list="group.rows" :interpretations="interpretations" min-width="30rem" :label="'Imports from ' + (group.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
-			<p v-else class="view-imports__empty">{{ group.rows === null ? 'The import lookup table could not be parsed.' : 'No imported symbols.' }}</p>
-		</section>
-		<p v-if="!filteredDescriptors.length" class="view-imports__empty">{{ data.descriptors.length ? 'No matching entries.' : 'The import directory is empty.' }}</p>
+		<div v-if="selectedModule" class="view-imports__layout">
+			<property-grid class="view-imports__libraries" :list="filteredDescriptors" :interpretations="libraryColumns" :row-key="library => library.index" label="Imported libraries">
+				<template #library="{ value: library }">
+					<button type="button" class="view-imports__library" :title="library.descriptor.dll_name ?? 'DLL name unavailable'"
+						:aria-current="library.index === selectedModule.index ? 'true' : undefined" @click="state.selectedIndex = library.index">{{ library.descriptor.dll_name ?? 'DLL name unavailable' }}</button>
+				</template>
+			</property-grid>
+			<section class="view-imports__details" :aria-label="'Imports from ' + (selectedModule.descriptor.dll_name ?? 'unknown DLL')">
+				<h2>Directory descriptor</h2>
+				<property-grid :list="selectedModule.descriptor.image" :interpretations="headerInterpretations" min-width="27rem" label="Import directory descriptor"></property-grid>
+				<h2>Functions</h2>
+				<property-grid v-if="selectedModule.rows?.length" :list="selectedModule.rows" :interpretations="interpretations" min-width="30rem" :label="'Imports from ' + (selectedModule.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
+				<p v-else class="view-imports__empty">{{ selectedModule.rows === null ? 'The import lookup table could not be parsed.' : 'No imported symbols.' }}</p>
+			</section>
+		</div>
+		<p v-else class="view-imports__empty">{{ importsData.descriptors.length ? 'No matching entries.' : 'The import directory is empty.' }}</p>
 	</section>
 </template>
 
 <style>
+.workspace-area__view:has(> .view-imports) { padding-block-end: 0; }
+.view-imports { display: flex; flex-direction: column; min-block-size: 100%; }
 .view-imports__search { display: flex; flex-direction: column; gap: 8px; max-width: 540px; margin-bottom: 24px; font-size: 12px; }
 .view-imports__search input { min-width: 0; height: 36px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
 .view-imports__search input::placeholder { color: color-mix(in srgb, var(--color-muted) 55%, var(--color-surface)); }
-.view-imports__search input:focus-visible, .view-imports__header summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.view-imports__dll + .view-imports__dll { margin-top: 32px; }
-.view-imports__dll h2 { margin: 0 0 16px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 15px; }
-.view-imports__header { margin-bottom: 16px; }
-.view-imports__header summary { width: max-content; margin-bottom: 12px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
+.view-imports__search input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.view-imports__layout { display: grid; flex: 1; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); margin-inline: calc(-1 * var(--workspace-view-inline-padding)); border-block-start: 1px solid var(--color-border); }
+.view-imports__layout .property-grid { margin-inline: 0; }
+.view-imports__libraries { --workspace-view-inline-padding: 12px; align-self: start; }
+.view-imports__libraries .property-grid__table tbody td:first-child { padding: 0; }
+.view-imports__libraries tr:has(.view-imports__library[aria-current="true"]) { background: color-mix(in srgb, var(--color-accent) 13%, var(--color-background)); }
+.view-imports__library { display: block; width: 100%; padding: 6px 12px 6px var(--workspace-view-inline-padding); border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.view-imports__library:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.view-imports__details { min-width: 0; padding-block: 10px 24px; border-inline-start: 1px solid var(--color-border); }
+.view-imports__details h2, .view-imports__details > p { padding-inline: var(--workspace-view-inline-padding); }
+.view-imports__details h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
+.view-imports__details .property-grid + h2 { margin-top: 20px; }
 .view-imports__empty { margin: 0; color: var(--color-muted); font-size: 12px; }
+@container (width < 44rem) {
+	.view-imports__layout { grid-template-columns: minmax(0, 1fr); align-content: start; gap: 20px; }
+	.view-imports__libraries { max-height: 40dvh; }
+	.view-imports__details { padding-block-start: 0; border-inline-start: 0; }
+}
 </style>
