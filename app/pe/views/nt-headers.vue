@@ -16,9 +16,9 @@ function ntHeaderInterpretations(table, details) {
 		? { ImageBase: 'va', AddressOfEntryPoint: 'rva', BaseOfCode: 'rva', BaseOfData: 'rva' }
 		: table === 'FileHeader' ? { PointerToSymbolTable: 'fo' } : {});
 	return [
-		{ title: 'Field', width: 'max(10rem, 26.5cqi)', format: (value, name) => String(name) },
+		{ title: 'Field', width: '13.5rem', format: (value, name) => String(name) },
 		{ title: 'Value', kind: (value, field) => value !== 0 || field === 'ImageBase' ? addresses[field] : undefined,
-			width: 'max(6.75rem, 18.5cqi)', style: { textAlign: 'right' }, format: formatNtHeaderValue },
+			width: '10rem', style: { textAlign: 'right' }, format: formatNtHeaderValue },
 		{ title: 'Interpretation', format: (value, name) => {
 			if (table === 'FileHeader' && name === 'TimeDateStamp') {
 				const timestamp = Number(value);
@@ -82,11 +82,11 @@ const ViewNtHeaders = Vue.defineComponent({
 <template id="view-nt-headers">
 	<section class="view-nt-headers">
 		<p class="view-nt-headers__description">IMAGE_NT_HEADERS</p>
-		<property-grid :list="{ Signature: data.header.Signature }" :interpretations="signatureInterpretations" min-width="22rem" label="NT signature"></property-grid>
+		<property-grid :list="{ Signature: data.header.Signature }" :interpretations="signatureInterpretations" min-width="31rem" label="NT signature"></property-grid>
 		<h2 class="view-nt-headers__section-title">File header</h2>
-		<property-grid :list="data.header.FileHeader" :interpretations="fileInterpretations" min-width="22rem" label="NT file header"></property-grid>
+		<property-grid :list="data.header.FileHeader" :interpretations="fileInterpretations" min-width="31rem" label="NT file header"></property-grid>
 		<h2 class="view-nt-headers__section-title">Optional header</h2>
-		<property-grid :list="data.header.OptionalHeader" :interpretations="optionalInterpretations" min-width="22rem" label="NT optional header"></property-grid>
+		<property-grid :list="data.header.OptionalHeader" :interpretations="optionalInterpretations" min-width="31rem" label="NT optional header"></property-grid>
 		<h2 class="view-nt-headers__section-title">Data directory</h2>
 		<property-grid v-if="data.dataDirectory.length" :list="data.dataDirectory" :interpretations="directoryInterpretations" min-width="24.25rem" label="Data directory" spacer></property-grid>
 		<p v-else class="view-nt-headers__description">No data directories.</p>
