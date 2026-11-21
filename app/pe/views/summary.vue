@@ -1,11 +1,10 @@
 <link rel="component" href="../../components/property-grid.vue">
-<link rel="component" href="section-entropy.vue">
+<link rel="component" href="section-headers-table.vue">
 
 <script>
 /** @typedef {{ fileSize: number, hashes: PeLite.PeHashes, sectionEntropy: PeLite.SectionEntropy[], imports: SummaryImports, headers: PeLite.PeHeaders, tls: PeLite.Result<PeLite.PeTls | null>, pdbFileName: PeLite.Result<string | null> }} SummaryViewData */
 
 /** @typedef {{ libraries: number, functions: number, by_library: { name: string, functions: number }[], notable: Record<string, string[]>, complete: boolean }} SummaryImports */
-/** @typedef {{ header: PeLite.PeSectionHeader, analysis: PeLite.SectionEntropy }} SummarySection */
 
 const summaryImportCategories = {
 	'process execution': ['CreateProcessA', 'CreateProcessW', 'ShellExecuteA', 'ShellExecuteW', 'WinExec'],
@@ -68,7 +67,7 @@ function formatSummarySize(value) { return `${value.toLocaleString()} bytes`; }
 
 const ViewSummary = Vue.defineComponent({
 	template: '#view-summary',
-	components: { SectionEntropy },
+	components: { SectionHeadersTable },
 	props: { data: { type: Object, required: true } },
 	data() {
 		return {
@@ -83,24 +82,6 @@ const ViewSummary = Vue.defineComponent({
 		};
 	},
 	computed: {
-		/** @returns {PropertyGridColumn[]} */
-		sectionColumns() {
-			const numericStyle = { textAlign: 'right' };
-			return [
-				{ title: 'Name', width: '1%', format: value => (/** @type {SummarySection} */ (value)).header.Name },
-				{ title: 'RVA', width: '1%', kind: 'rva', style: numericStyle,
-					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.VirtualAddress) },
-				{ title: 'Virtual size', width: '1%', style: numericStyle,
-					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.VirtualSize) },
-				{ title: 'Raw size', width: '1%', style: numericStyle,
-					format: value => formatSummaryHex((/** @type {SummarySection} */ (value)).header.SizeOfRawData) },
-				{ title: 'Perms', label: 'Permissions', width: '1%', style: numericStyle,
-					format: value => this.permissions((/** @type {SummarySection} */ (value)).header.Characteristics) },
-				{ title: 'Entropy', width: '1%', style: numericStyle,
-					format: value => (/** @type {SummarySection} */ (value)).analysis.entropy?.toFixed(2) ?? '—' },
-				{ title: 'Distribution', slot: 'distribution' },
-			];
-		},
 		summaryData() { return /** @type {SummaryViewData} */ (/** @type {unknown} */ (this.data)); },
 		imports() { return this.summaryData.imports; },
 		headers() { return this.summaryData.headers; },
@@ -146,7 +127,8 @@ const ViewSummary = Vue.defineComponent({
 			if (this.hasNotableImports) {
 				findings.push({ level: 'note', message: 'Notable imports suggest capabilities worth reviewing; imports alone do not prove behavior' });
 			}
-			for (const { header, analysis } of this.sections) {
+			for (const [index, header] of this.headers.SectionHeaders.entries()) {
+				const analysis = this.summaryData.sectionEntropy[index];
 				if ((header.Characteristics & 0x20000000) && (header.Characteristics & 0x80000000)) {
 					findings.push({ level: 'warning', message: `Section ${header.Name} is both writable and executable` });
 				}
@@ -201,15 +183,7 @@ const ViewSummary = Vue.defineComponent({
 			return [{ name: 'ASLR', flag: 0x40 }, { name: 'DEP / NX', flag: 0x100 }, { name: 'CFG', flag: 0x4000 }, { name: 'High-entropy VA', flag: 0x20 }]
 				.map(item => ({ name: item.name, enabled: !!(this.optional.DllCharacteristics & item.flag) }));
 		},
-		sections() {
-			return this.headers.SectionHeaders.map((header, index) => ({ header, analysis: this.summaryData.sectionEntropy[index] }));
-		},
 		hasNotableImports() { return Object.keys(this.imports.notable).length > 0; },
-	},
-	methods: {
-		formatSummaryHex, formatSummarySize,
-		/** @param {number} flags @returns {string} */
-		permissions(flags) { return [[0x40000000, 'R'], [0x80000000, 'W'], [0x20000000, 'X']].map(([flag, letter]) => flags & Number(flag) ? letter : '—').join(''); },
 	},
 });
 </script>
@@ -227,12 +201,8 @@ const ViewSummary = Vue.defineComponent({
 			<li v-for="item in mitigations" :key="item.name" :class="{ 'view-summary__mitigation--enabled': item.enabled }">{{ item.name }} <span>{{ item.enabled ? 'Yes' : 'No' }}</span></li>
 		</ul>
 		<h2>Sections</h2>
-		<property-grid v-if="sections.length" class="view-summary__sections" :list="sections" :interpretations="sectionColumns" label="Section summary" auto-layout>
-			<template #distribution="{ value }">
-				<section-entropy :samples="value.analysis.samples"></section-entropy>
-			</template>
-		</property-grid>
-		<p v-else class="view-summary__muted">No sections.</p>
+		<section-headers-table :headers="headers.SectionHeaders" :characteristics="headers.details['SectionHeaders.Characteristics']"
+			:entropy="summaryData.sectionEntropy"></section-headers-table>
 		<h2>Imports <span class="view-summary__muted">{{ imports.functions }} functions · {{ imports.libraries }} libraries</span></h2>
 		<property-grid v-if="imports.by_library.length" :list="imports.by_library" :interpretations="importInterpretations" label="Import summary" spacer></property-grid>
 		<p v-else class="view-summary__muted">No parsed imports.</p>
@@ -260,7 +230,6 @@ const ViewSummary = Vue.defineComponent({
 .view-summary__mitigations li { padding: 7px 10px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
 .view-summary__mitigations span { margin-left: 12px; font-weight: 600; }
 .view-summary__mitigation--enabled span { color: var(--color-secondary); }
-.view-summary__sections :is(th, td) { white-space: nowrap; }
 .view-summary__notable { margin-top: 16px; font-size: 12px; }
 .view-summary__notable summary { width: max-content; cursor: pointer; font-weight: 600; user-select: none; }
 .view-summary__notable summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
