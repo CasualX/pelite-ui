@@ -9,6 +9,7 @@ class ViewModel {
 		this.kind = definition.id;
 		this.sidebarKey = definition.sidebarKey ?? definition.id;
 		this.title = definition.title;
+		this.icon = definition.icon;
 		this.content = content;
 	}
 

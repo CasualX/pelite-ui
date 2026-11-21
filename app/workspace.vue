@@ -53,6 +53,7 @@ const AppWorkspace = Vue.defineComponent({
 			return this.model.views.map(view => ({
 				id: view.id,
 				title: view.displayTitle,
+				icon: view.icon,
 				preferredWindowSize: view.content.preferredWindowSize,
 			}));
 		},

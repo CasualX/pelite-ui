@@ -5,10 +5,10 @@
 <link rel="component" href="window.vue">
 
 <script>
-/** @typedef {{ id: number, title: string, preferredWindowSize?: WorkspaceSize }} WorkspaceViewInfo */
+/** @typedef {{ id: number, title: string, icon?: string, preferredWindowSize?: WorkspaceSize }} WorkspaceViewInfo */
 /** @typedef {{ target: string, tab: boolean, visible: boolean }} WorkspaceViewPlacement */
 
-/** Render a reactive WorkspaceLayout with host-provided titles and a `view({ id })` slot.
+/** Render a reactive WorkspaceLayout with host-provided view info and a `view({ id })` slot.
  * The host handles `close-view` by removing the view and calling `layout.close(id)`.
  * For `duplicate-view`, the host creates a fresh view and calls `layout.open(newId, sourceId)`.
  */
@@ -32,7 +32,7 @@ const WorkspaceArea = Vue.defineComponent({
 		};
 	},
 	computed: {
-		titles() { return new Map(this.views.map(view => [view.id, view.title])); },
+		viewsById() { return new Map(this.views.map(view => [view.id, view])); },
 		tabDragType() { return `application/x-workspace-tab-${this.prefix.toLowerCase()}`; },
 		placements() {
 			const placements = new Map(/** @type {[number, WorkspaceViewPlacement][]} */ ([]));
@@ -126,7 +126,7 @@ const WorkspaceArea = Vue.defineComponent({
 		},
 		/** @param {number} id */
 		floatView(id) {
-			const size = this.views.find(view => view.id === id)?.preferredWindowSize;
+			const size = this.viewsById.get(id)?.preferredWindowSize;
 			if (this.layout.float(id, size)) this.focusControl();
 		},
 		/** @param {number} id */
@@ -151,7 +151,7 @@ const WorkspaceArea = Vue.defineComponent({
 	<section class="workspace-area" aria-label="Workspace" @dragover="rejectTabDrop">
 		<div class="workspace-area__docked">
 			<workspace-split :node="layout.root" v-slot="{ pane }">
-				<workspace-pane :pane="pane" :titles="titles" :prefix="prefix" :tab-drag-type="tabDragType" :can-close="layout.root.type === 'split'"
+				<workspace-pane :pane="pane" :views-by-id="viewsById" :prefix="prefix" :tab-drag-type="tabDragType" :can-close="layout.root.type === 'split'"
 					:focused="layout.focused.type === 'pane' && layout.focused.id === pane.id" @focus-pane="layout.focusPane(pane.id)"
 					@select="layout.activate($event)" @close="requestClose" @split="(id, direction) => splitPane(pane.id, id, direction)"
 					@move-tab="(id, index) => moveTab(pane.id, id, index)" @duplicate="requestDuplicate"
@@ -161,7 +161,7 @@ const WorkspaceArea = Vue.defineComponent({
 			</workspace-split>
 		</div>
 		<workspace-window v-for="floating in layout.windows" :key="floating.viewId" :id="prefix + '-window-' + floating.viewId"
-			:title="titles.get(floating.viewId) ?? ''" :layer="floating.layer" :bounds="boundWindow(floating.bounds)"
+			:title="viewsById.get(floating.viewId)?.title ?? ''" :layer="floating.layer" :bounds="boundWindow(floating.bounds)"
 			:focused="layout.focused.type === 'window' && layout.focused.id === floating.viewId"
 			@focus-window="layout.focusWindow(floating)" @bounds="(bounds, action) => updateBounds(floating, bounds, action)"
 			@dock="dockView(floating.viewId)" @close="requestClose(floating.viewId)">
@@ -195,7 +195,7 @@ const WorkspaceArea = Vue.defineComponent({
 .workspace-area__docked { position: relative; z-index: 0; display: flex; flex: 1; min-width: 0; min-height: 0; }
 .workspace-area__outlet { container-type: inline-size; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }
 .workspace-area__view { flex: 1; min-width: 0; min-height: 0; overflow: auto; padding: var(--workspace-view-padding, 0); }
-.workspace-area__view:focus-visible, .workspace-tab__select:focus-visible, .workspace-control:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
+.workspace-area__view:focus-visible, .workspace-control:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
 .workspace-control { min-width: 24px; height: 24px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: var(--workspace-muted); font: 17px/1 system-ui, sans-serif; cursor: pointer; }
 .workspace-control:hover { background: var(--workspace-border); color: var(--workspace-text); }
 </style>

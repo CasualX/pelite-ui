@@ -6,7 +6,7 @@ const WorkspaceTabBar = Vue.defineComponent({
 	props: {
 		tabs: { type: /** @type {new () => number[]} */ (/** @type {unknown} */ (Array)), required: true },
 		selected: Number,
-		titles: { type: /** @type {new () => ReadonlyMap<number, string>} */ (/** @type {unknown} */ (Object)), required: true },
+		viewsById: { type: /** @type {new () => ReadonlyMap<number, WorkspaceViewInfo>} */ (/** @type {unknown} */ (Object)), required: true },
 		prefix: { type: String, required: true },
 		tabDragType: { type: String, required: true },
 	},
@@ -204,15 +204,18 @@ const WorkspaceTabBar = Vue.defineComponent({
 				@mousedown.middle.prevent @auxclick.middle.prevent="$emit('close', id)">
 				<button :id="prefix + '-tab-' + id" class="workspace-tab__select" type="button" role="tab"
 					:aria-controls="prefix + '-panel-' + id" :aria-selected="selected === id" :tabindex="selected === id ? 0 : -1"
-					aria-haspopup="menu" :aria-expanded="menuTab === id" :title="titles.get(id)" draggable="true"
+					aria-haspopup="menu" :aria-expanded="menuTab === id" :title="viewsById.get(id)?.title" draggable="true"
 					@click="$emit('select', id)" @contextmenu="openMenu($event, id)" @keydown="navigate($event, index)"
-					@dragstart="startDrag($event, id)">{{ titles.get(id) }}</button>
+					@dragstart="startDrag($event, id)">
+					<svg v-if="viewsById.get(id)?.icon" class="workspace-tab__icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path :d="viewsById.get(id).icon" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
+					<span class="workspace-tab__title">{{ viewsById.get(id)?.title }}</span>
+				</button>
 				<button class="workspace-tab__close workspace-control" type="button" tabindex="-1"
-					:aria-label="'Close ' + titles.get(id)" @click="$emit('close', id)">×</button>
+					:aria-label="'Close ' + viewsById.get(id)?.title" @click="$emit('close', id)"><span aria-hidden="true">×</span></button>
 			</div>
 		</div>
 		<div v-if="dropMarker !== null" class="workspace-tab-bar__insertion" :style="{ left: dropMarker + 'px' }" aria-hidden="true"></div>
-		<div ref="menu" class="workspace-tab-bar__menu" popover="manual" role="menu" :aria-label="'Actions for ' + titles.get(menuTab)"
+		<div ref="menu" class="workspace-tab-bar__menu" popover="manual" role="menu" :aria-label="'Actions for ' + viewsById.get(menuTab)?.title"
 			@contextmenu.prevent.stop @keydown.esc.prevent.stop="closeMenu(true)" @keydown.tab="closeMenu(true)"
 			@keydown.up.prevent="navigateMenu" @keydown.down.prevent="navigateMenu" @keydown.home.prevent="navigateMenu" @keydown.end.prevent="navigateMenu">
 			<button type="button" role="menuitem" tabindex="-1" @click="choose('duplicate')">Duplicate tab</button>
@@ -226,15 +229,23 @@ const WorkspaceTabBar = Vue.defineComponent({
 
 <style>
 .workspace-tab-bar { position: relative; display: flex; flex: 1; min-width: 0; }
-.workspace-tab-bar__tabs { display: flex; flex: 1; min-width: 0; overflow: auto hidden; scrollbar-width: thin; scrollbar-color: var(--workspace-border) transparent; }
-.workspace-tab-bar__tabs:hover { scrollbar-color: var(--workspace-muted) transparent; }
+.workspace-tab-bar__tabs { display: flex; flex: 1; min-width: 0; overflow: auto hidden; scrollbar-width: none; }
 .workspace-tab-bar__insertion { position: absolute; top: 3px; bottom: 3px; width: 2px; border-radius: 1px; background: var(--workspace-accent); pointer-events: none; }
 .workspace-tab { display: flex; align-items: center; flex: 0 0 auto; min-width: 0; max-width: 100%; border-right: 1px solid var(--workspace-border); }
-.workspace-tab--selected { background: var(--workspace-background); box-shadow: inset 0 -2px var(--workspace-border); color: var(--workspace-text); }
-.workspace-pane--focused .workspace-tab--selected { box-shadow: inset 0 -2px var(--workspace-accent); }
-.workspace-tab__select { align-self: stretch; min-width: 0; max-width: 220px; overflow: hidden; padding: 0 8px 0 12px; border: 0; background: transparent; color: inherit; font: inherit; text-overflow: ellipsis; white-space: nowrap; cursor: pointer; }
+.workspace-tab:has(> .workspace-tab__select:focus-visible) { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
+.workspace-tab--selected { background: var(--workspace-background); box-shadow: inset 0 2px var(--workspace-border); color: var(--workspace-text); }
+.workspace-pane--focused .workspace-tab--selected { box-shadow: inset 0 2px var(--workspace-accent); }
+.workspace-tab:not(.workspace-tab--selected):hover { --tab-hover-tint: light-dark(#fff8, #fff1); background-image: linear-gradient(var(--tab-hover-tint), var(--tab-hover-tint)); }
+.workspace-tab__select { display: flex; align-items: center; align-self: stretch; gap: 6px; min-width: 0; max-width: 220px; padding: 0 2px 0 12px; border: 0; background: transparent; color: inherit; font: inherit; cursor: pointer; }
+.workspace-tab__icon { flex-shrink: 0; width: 16px; height: 16px; }
+.workspace-tab__title { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .workspace-tab__select:hover { color: var(--workspace-text); }
+.workspace-tab__select:focus-visible { outline: none; }
 .workspace-tab__close { flex-shrink: 0; margin-right: 3px; }
+.workspace-tab__close > span { display: inline-block; translate: -1px -1px; }
+.workspace-tab:not(.workspace-tab--selected, :hover) > .workspace-tab__close { visibility: hidden; }
+.workspace-tab--selected > .workspace-tab__close { color: inherit; }
+.workspace-tab--selected > .workspace-tab__close:hover { background: color-mix(in srgb, var(--workspace-accent) 24%, var(--workspace-background)); }
 .workspace-tab-bar__menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--workspace-border); background: var(--workspace-surface); color: var(--workspace-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
 .workspace-tab-bar__menu hr { margin: 4px 0; border: 0; border-block-start: 1px solid var(--workspace-border); }
 .workspace-tab-bar__menu button { display: block; width: 100%; padding: 6px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
