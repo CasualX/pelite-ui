@@ -125,7 +125,7 @@ app.mount('#app');
 </template>
 
 <style>
-* { box-sizing: border-box; }
+* { box-sizing: border-box; scrollbar-width: thin; }
 body { margin: 0; background: var(--color-background); color: var(--color-text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button, input { font: inherit; }
 .app-main { height: 100vh; height: 100dvh; display: flex; flex-direction: column; }
