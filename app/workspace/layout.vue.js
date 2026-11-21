@@ -61,6 +61,14 @@ class WorkspaceLayout {
 		this.focusPane(pane.id);
 	}
 
+	/** @param {number} viewId @param {WorkspaceSize} [size] */
+	openWindow(viewId, { width, height } = { width: 640, height: 460 }) {
+		if (this.activate(viewId)) return;
+		const offset = 24 + this.windows.length % 6 * 24;
+		this.windows.push({ viewId, bounds: { x: offset, y: offset, width, height }, layer: 0 });
+		this.focusWindow(this.windows[this.windows.length - 1]);
+	}
+
 	/** @param {number} viewId */
 	activate(viewId) {
 		const pane = this.panes.find(item => item.tabs.includes(viewId));
@@ -114,16 +122,13 @@ class WorkspaceLayout {
 	}
 
 	/** @param {number} viewId @param {WorkspaceSize} [size] */
-	float(viewId, { width, height } = { width: 640, height: 460 }) {
+	float(viewId, size) {
 		const pane = this.panes.find(item => item.tabs.includes(viewId));
 		if (!pane) return false;
-		const offset = 24 + this.windows.length % 6 * 24;
-		const floating = { viewId, bounds: { x: offset, y: offset, width, height }, layer: 0 };
 		this.focusPane(pane.id);
 		this.removeTab(pane, viewId);
 		this.closeEmptyPane(pane.id);
-		this.windows.push(floating);
-		this.focusWindow(this.windows[this.windows.length - 1]);
+		this.openWindow(viewId, size);
 		return true;
 	}
 

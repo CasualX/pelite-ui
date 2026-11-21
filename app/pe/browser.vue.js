@@ -1,5 +1,5 @@
 /** @typedef {(context: PeDocument, headers: import('./deps/pelite.js').PeHeaders | undefined) => boolean} ViewAvailability */
-/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, isAvailable?: ViewAvailability, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
+/** @typedef {{ id: string, title: string, icon: string, singleton: boolean, sidebarKey?: string, target?: 'tab' | 'window', isAvailable?: ViewAvailability, prepare?: (context: PeDocument, data?: unknown) => ViewContent }} ViewDefinition */
 /** @typedef {{ id: string, title: string | undefined, views: ViewDefinition[] }} ViewGroup */
 /** @typedef {ViewDefinition & { available: boolean }} ViewMenuEntry */
 /** @typedef {{ id: string, title: string | undefined, views: ViewMenuEntry[] }} ViewMenuGroup */
@@ -74,7 +74,7 @@ const workspaceViewGroups = [
 	] },
 	{ id: 'analysis', title: 'Analysis', views: [
 		{ id: 'facts', title: 'Facts', singleton: true, icon: workspaceIcons.resources, prepare: prepareFactsView },
-		{ id: 'address-converter', title: 'Address Converter', singleton: true, icon: workspaceIcons.imports, prepare: prepareAddressConverterView },
+		{ id: 'address-converter', title: 'Address Converter', singleton: true, target: 'window', icon: workspaceIcons.imports, prepare: prepareAddressConverterView },
 		{ id: 'hex-dump', title: 'Hex Dump', singleton: false, icon: workspaceIcons.sections, prepare: prepareHexDumpView },
 		{ id: 'disasm', title: 'Disassembly', singleton: false, icon: workspaceIcons.document, isAvailable: isDisasmAvailable, prepare: prepareDisasmView },
 		{ id: 'scanner', title: 'Scanner', singleton: false, icon: workspaceIcons.scanner, prepare: prepareScannerView },

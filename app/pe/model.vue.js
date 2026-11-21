@@ -7,8 +7,8 @@ class ViewModel {
 	constructor(id, definition, content) {
 		this.id = id;
 		this.kind = definition.id;
+		this.sidebarKey = definition.sidebarKey ?? definition.id;
 		this.title = definition.title;
-		this.icon = definition.icon;
 		this.content = content;
 	}
 
@@ -37,7 +37,8 @@ class PeWorkspaceModel {
 		const content = definition.prepare(context, data);
 		const view = new ViewModel(this.nextViewId++, definition, content);
 		this.views.push(view);
-		this.layout.open(view.id, afterViewId);
+		if (afterViewId === undefined && definition.target === 'window') this.layout.openWindow(view.id, content.preferredWindowSize);
+		else this.layout.open(view.id, afterViewId);
 		return view;
 	}
 
