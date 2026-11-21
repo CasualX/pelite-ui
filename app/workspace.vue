@@ -82,6 +82,7 @@ const AppWorkspace = Vue.defineComponent({
 			try {
 				const existing = definition.singleton && afterViewId === undefined ? this.model.views.find(view => view.kind === kind) : undefined;
 				if (existing) {
+					if (data !== undefined && definition.prepare) existing.content = definition.prepare(this.peDocument, data);
 					this.activateView(existing.id);
 					return;
 				}

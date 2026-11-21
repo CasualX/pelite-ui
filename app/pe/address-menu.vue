@@ -1,4 +1,5 @@
 <link rel="component" href="address.vue.js">
+<link rel="component" href="browser.vue.js">
 
 <script>
 const PeAddressMenu = Vue.defineComponent({
@@ -6,9 +7,18 @@ const PeAddressMenu = Vue.defineComponent({
 	emits: ['context-action'],
 	data() {
 		return {
-			address: /** @type {{ text: string, rva: number | null, disassembly: boolean } | null} */ (null),
+			address: /** @type {{ kind: WorkspaceAddressValue['kind'], text: string, rva: number | null, disassembly: boolean } | null} */ (null),
 			copyStatus: '',
+			icons: workspaceIcons,
 		};
+	},
+	computed: {
+		addressTitle() {
+			if (!this.address) return '';
+			const { kind, text } = this.address;
+			const label = kind === 'fo' ? 'File offset' : kind.toUpperCase();
+			return label + ' ' + text;
+		},
 	},
 	methods: {
 		/** @param {MouseEvent} event @param {PeDocument} openedDocument */
@@ -38,7 +48,7 @@ const PeAddressMenu = Vue.defineComponent({
 			const disassembly = rva !== null && [0x14c, 0x8664].includes(FileHeader.Machine)
 				&& !(openedDocument.peFile.sliceBytes(rva, 1) instanceof Error);
 			event.preventDefault();
-			this.address = { text, rva, disassembly };
+			this.address = /** @satisfies {NonNullable<typeof this.address>} */ ({ kind, text, rva, disassembly });
 			const address = this.address;
 			this.$nextTick(() => {
 				const menu = this.$refs.menu;
@@ -66,12 +76,14 @@ const PeAddressMenu = Vue.defineComponent({
 			}
 			if (this.address === address) this.dismiss();
 		},
-		/** @param {'hex-dump' | 'disasm'} viewer */
+		/** @param {'address-converter' | 'hex-dump' | 'disasm'} viewer */
 		choose(viewer) {
 			const address = this.address;
-			if (!address || address.rva === null || (viewer === 'disasm' && !address.disassembly)) return;
+			if (!address) return;
+			if (viewer !== 'address-converter' && (address.rva === null || (viewer === 'disasm' && !address.disassembly))) return;
+			const data = viewer === 'address-converter' ? { kind: address.kind, text: address.text } : { rva: address.rva };
 			this.dismiss();
-			this.$emit('context-action', { action: 'open-view', viewer, data: { rva: address.rva } });
+			this.$emit('context-action', { action: 'open-view', viewer, data });
 		},
 		/** @param {PointerEvent} event */
 		outsidePointerDown(event) {
@@ -105,19 +117,35 @@ const PeAddressMenu = Vue.defineComponent({
 </script>
 
 <template id="pe-address-menu">
-	<div ref="menu" class="pe-address-menu" popover="manual" role="menu" aria-label="Address actions" tabindex="-1"
+	<div ref="menu" class="pe-address-menu" popover="manual" role="menu" :aria-label="addressTitle || 'Address actions'" tabindex="-1"
 		@keydown.down.prevent="navigate" @keydown.up.prevent="navigate" @keydown.home.prevent="navigate" @keydown.end.prevent="navigate" @keydown.tab="dismiss">
-		<button type="button" role="menuitem" tabindex="-1" @click="copy">Copy</button>
+		<div class="pe-address-menu__address" aria-hidden="true">{{ addressTitle }}</div>
+		<button type="button" role="menuitem" tabindex="-1" @click="choose('address-converter')">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path :d="icons.imports" /></svg>
+			Open in Address Converter
+		</button>
+		<button type="button" role="menuitem" tabindex="-1" :disabled="address?.rva == null" @click="choose('hex-dump')">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path :d="icons.sections" /></svg>
+			Open in Hex dump
+		</button>
+		<button type="button" role="menuitem" tabindex="-1" :disabled="!address?.disassembly" @click="choose('disasm')">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><path :d="icons.document" /></svg>
+			Open in Disassembly
+		</button>
 		<hr role="separator">
-		<button type="button" role="menuitem" tabindex="-1" :disabled="address?.rva == null" @click="choose('hex-dump')">Open Hex Dump</button>
-		<button type="button" role="menuitem" tabindex="-1" :disabled="!address?.disassembly" @click="choose('disasm')">Open Disassembly</button>
+		<button type="button" role="menuitem" tabindex="-1" @click="copy">
+			<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="8" y="8" width="13" height="13" rx="2" /><path d="M16 3H5a2 2 0 0 0-2 2v11" /></svg>
+			Copy address
+		</button>
 		<p class="pe-address-menu__status" role="status">{{ copyStatus }}</p>
 	</div>
 </template>
 
 <style>
-.pe-address-menu { position: fixed; inset: auto; margin: 0; width: max-content; padding: 4px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
-.pe-address-menu button { display: block; width: 100%; padding: 7px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; text-align: left; white-space: nowrap; font: 12px system-ui, sans-serif; cursor: pointer; }
+.pe-address-menu { position: fixed; inset: auto; margin: 0; width: max-content; max-width: calc(100vw - 16px); padding: 4px 0; border: 1px solid var(--color-border); border-radius: 0; background: var(--color-surface); color: var(--color-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
+.pe-address-menu__address { padding: 7px 12px 5px; overflow: hidden; color: var(--color-muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
+.pe-address-menu button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; text-align: left; white-space: nowrap; font: 12px system-ui, sans-serif; cursor: pointer; }
+.pe-address-menu button svg { width: 16px; height: 16px; flex-shrink: 0; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
 .pe-address-menu button:not(:disabled):is(:hover, :focus-visible) { background: var(--color-accent); color: var(--color-on-accent); outline: none; }
 .pe-address-menu button:disabled { color: var(--color-muted); opacity: .6; cursor: default; }
 .pe-address-menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--color-border); }

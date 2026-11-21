@@ -2,16 +2,19 @@
 
 <script>
 /** @typedef {WorkspaceAddressValue['kind']} AddressConverterKind */
-/** @typedef {{ document: PeDocument, imageSize: number }} AddressConverterData */
+/** @typedef {{ kind: AddressConverterKind, text: string }} AddressConverterInput */
+/** @typedef {{ document: PeDocument, imageSize: number, input: AddressConverterInput }} AddressConverterData */
 /** @typedef {{ values: Record<AddressConverterKind, string>, invalid: boolean }} AddressConversion */
 
-/** @param {PeDocument} document @returns {ViewContent} */
-function prepareAddressConverterView(document) {
+/** @param {PeDocument} document @param {unknown} [data] @returns {ViewContent} */
+function prepareAddressConverterView(document, data) {
 	const header = document.peFile.optionalHeader();
 	if (header instanceof Error) throw header;
+	const address = /** @type {AddressConverterInput | undefined} */ (data);
+	const input = { kind: address?.kind ?? 'rva', text: address?.text ?? '' };
 	return {
 		component: 'view-address-converter',
-		data: { document, imageSize: header.SizeOfImage },
+		data: { document, imageSize: header.SizeOfImage, input },
 		preferredWindowSize: { width: 272, height: 188 },
 	};
 }
@@ -28,21 +31,19 @@ const ViewAddressConverter = Vue.defineComponent({
 	data() {
 		return {
 			fields: addressConverterFields,
-			source: /** @type {AddressConverterKind} */ ('rva'),
-			input: '',
 		};
 	},
 	computed: {
 		converterData() { return /** @type {AddressConverterData} */ (/** @type {unknown} */ (this.data)); },
 		/** @returns {AddressConversion} */
 		conversion() {
-			const { source, input } = this;
-			const values = { rva: '', va: '', fo: '', [source]: input };
-			const text = input.trim();
+			const { document, imageSize, input } = this.converterData;
+			const { kind: source, text: inputText } = input;
+			const values = { rva: '', va: '', fo: '', [source]: inputText };
+			const text = inputText.trim();
 			if (!text) return { values, invalid: false };
 
 			const invalid = { values, invalid: true };
-			const { document, imageSize } = this.converterData;
 			try {
 				if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) return invalid;
 				const value = BigInt(text);
@@ -70,8 +71,7 @@ const ViewAddressConverter = Vue.defineComponent({
 		/** @param {AddressConverterKind} kind @param {Event} event */
 		edit(kind, event) {
 			const field = /** @type {HTMLInputElement} */ (event.target);
-			this.source = kind;
-			this.input = field.value;
+			this.converterData.input = { kind, text: field.value };
 		},
 	},
 });
@@ -83,7 +83,7 @@ const ViewAddressConverter = Vue.defineComponent({
 			<span>{{ field.label }}</span>
 			<input type="text" :value="conversion.values[field.kind]"
 				:data-kind="!conversion.invalid && conversion.values[field.kind] ? field.kind : undefined"
-				:aria-invalid="source === field.kind && conversion.invalid ? 'true' : undefined"
+				:aria-invalid="converterData.input.kind === field.kind && conversion.invalid ? 'true' : undefined"
 				autocomplete="off" autocapitalize="off" spellcheck="false" @input="edit(field.kind, $event)">
 		</label>
 	</section>
