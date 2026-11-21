@@ -52,11 +52,12 @@ const ViewDisasm = Vue.defineComponent({
 		state() { return this.disasmData.state; },
 	},
 	methods: {
+		isWorkspaceAddressText,
 		/** @param {number} rva */
 		hex(rva) { return `0x${rva.toString(16).padStart(8, '0')}`; },
 		go() {
 			const text = this.state.address.trim();
-			if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) {
+			if (!isWorkspaceAddressText(text)) {
 				this.state.error = 'Enter an RVA in decimal or 0xhex.';
 				return;
 			}
@@ -130,7 +131,7 @@ const ViewDisasm = Vue.defineComponent({
 	<section class="view-disasm">
 		<div class="view-disasm__body">
 			<form class="view-disasm__toolbar" @submit.prevent="go">
-				<label>RVA <input v-model="state.address" data-kind="rva" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
+				<label>RVA <input v-model="state.address" :data-kind="isWorkspaceAddressText(state.address) ? 'rva' : undefined" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
 			</form>
 			<p v-if="state.error" class="view-disasm__error" role="alert">{{ state.error }}</p>
 			<p class="view-disasm__help">Place the cursor in an instruction and press Enter to start decoding there.</p>

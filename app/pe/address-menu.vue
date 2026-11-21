@@ -30,7 +30,7 @@ const PeAddressMenu = Vue.defineComponent({
 			const kind = element?.getAttribute('data-kind');
 			if (!element || (kind !== 'rva' && kind !== 'va' && kind !== 'fo')) return;
 			const text = (element instanceof HTMLInputElement ? element.value : element.textContent)?.trim() ?? '';
-			if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) return;
+			if (!isWorkspaceAddressText(text)) return;
 
 			const value = BigInt(text);
 			const headers = openedDocument.peFile.headers();
@@ -142,6 +142,9 @@ const PeAddressMenu = Vue.defineComponent({
 </template>
 
 <style>
+.app-workspace__area :is([data-kind="rva"], [data-kind="va"], [data-kind="fo"]) { text-decoration: underline dotted; text-underline-offset: .18em; }
+.app-workspace__area :is([data-kind="rva"], [data-kind="va"], [data-kind="fo"]):hover { text-decoration-style: solid; }
+
 .pe-address-menu { position: fixed; inset: auto; margin: 0; width: max-content; max-width: calc(100vw - 16px); padding: 4px 0; border: 1px solid var(--color-border); border-radius: 0; background: var(--color-surface); color: var(--color-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
 .pe-address-menu__address { padding: 7px 12px 5px; overflow: hidden; color: var(--color-muted); font: 11px/1.4 ui-monospace, SFMono-Regular, Consolas, monospace; text-overflow: ellipsis; white-space: nowrap; }
 .pe-address-menu button { display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; text-align: left; white-space: nowrap; font: 12px system-ui, sans-serif; cursor: pointer; }

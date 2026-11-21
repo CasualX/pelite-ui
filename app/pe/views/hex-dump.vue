@@ -81,6 +81,7 @@ const ViewHexDump = Vue.defineComponent({
 		},
 	},
 	methods: {
+		isWorkspaceAddressText,
 		/** @param {number} rva @returns {string} */
 		hex(rva) { return `0x${rva.toString(16).padStart(8, '0')}`; },
 		/** @param {number} offset @returns {boolean} */
@@ -99,7 +100,7 @@ const ViewHexDump = Vue.defineComponent({
 		},
 		go() {
 			const text = this.state.address.trim();
-			if (!/^(?:0x[\da-f]+|\d+)$/i.test(text)) {
+			if (!isWorkspaceAddressText(text)) {
 				this.state.error = 'Enter an RVA in decimal or 0xhex.';
 				return;
 			}
@@ -210,7 +211,7 @@ const ViewHexDump = Vue.defineComponent({
 	<section class="view-hex-dump">
 		<div class="view-hex-dump__body">
 			<form class="view-hex-dump__toolbar" @submit.prevent="go">
-				<label>RVA <input v-model="state.address" data-kind="rva" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
+				<label>RVA <input v-model="state.address" :data-kind="isWorkspaceAddressText(state.address) ? 'rva' : undefined" aria-label="Go to RVA" spellcheck="false" autocomplete="off"></label><button type="submit">Go</button>
 				<button class="view-hex-dump__inspect" type="button" @click="inspectByte">Inspect</button>
 			</form>
 			<p v-if="state.error" class="view-hex-dump__error" role="alert">{{ state.error }}</p>

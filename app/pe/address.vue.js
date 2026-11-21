@@ -1,5 +1,8 @@
 /** @typedef {{ kind: 'rva' | 'va' | 'fo', value: number | bigint }} WorkspaceAddressValue */
 
+/** @param {string} text @returns {boolean} */
+function isWorkspaceAddressText(text) { return /^(?:0x[\da-f]+|\d+)$/i.test(text.trim()); }
+
 /** Resolve a typed address for viewers that work in the virtual image.
  * @param {PeDocument} openedDocument @param {WorkspaceAddressValue} address @returns {number}
  */
