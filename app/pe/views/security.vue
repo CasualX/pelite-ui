@@ -21,11 +21,13 @@ const ViewSecurity = Vue.defineComponent({
 	components: { SecurityCertificate },
 	props: { data: { type: Object, required: true } },
 	data() {
-		return { columns: /** @type {PropertyGridColumn[]} */ ([
-			{ title: 'Field', width: '10rem', format: (value, field) => String(field) },
-			{ title: 'Value', width: '8rem', kind: (value, field) => field === 'File offset' ? 'fo' : undefined,
-				style: { textAlign: 'right' }, format: formatPropertyGridHex },
-		]) };
+		return {
+			columns: /** @type {PropertyGridColumn[]} */ ([
+				{ title: 'Field', width: '10rem', format: (value, field) => String(field) },
+				{ title: 'Value', width: '8rem', kind: (value, field) => field === 'FileOffset' ? 'fo' : undefined,
+					style: { textAlign: 'right' }, format: formatPropertyGridHex },
+			]),
+		};
 	},
 });
 </script>
@@ -35,9 +37,11 @@ const ViewSecurity = Vue.defineComponent({
 		<property-grid :list="data.fields" :interpretations="columns" label="Certificate table" spacer></property-grid>
 		<ol v-if="data.certificates.length" class="view-security__certificates" role="list" aria-label="Certificates">
 			<li v-for="(certificate, index) in data.certificates" :key="index">
-				<h2 class="view-security__title">Certificate {{ index + 1 }}</h2>
-				<p v-if="'$error' in certificate" class="view-security__note">Unable to read certificate entry ({{ certificate.$error }}).</p>
-				<security-certificate v-else :certificate="certificate" :entry-number="index + 1"></security-certificate>
+				<details class="view-security__certificate" :open="index === 0">
+					<summary>Certificate {{ index + 1 }}</summary>
+					<p v-if="'$error' in certificate" class="view-security__note view-security__error">Unable to read certificate entry ({{ certificate.$error }}).</p>
+					<security-certificate v-else :certificate="certificate" :entry-number="index + 1"></security-certificate>
+				</details>
 			</li>
 		</ol>
 		<p v-else class="view-security__note view-security__empty">No certificates.</p>
@@ -45,9 +49,29 @@ const ViewSecurity = Vue.defineComponent({
 </template>
 
 <style>
-.view-security__certificates { margin: 0; padding: 0; list-style: none; }
-.view-security__certificates > li + li { margin-top: 24px; border-top: 1px solid var(--color-border); }
-.view-security__title { margin: 24px 0 12px; font-size: 14px; font-weight: 600; }
+.view-security__certificates {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: 12px;
+	margin: 0 calc(-1 * var(--workspace-view-inline-padding, 0px));
+	padding: 0;
+	list-style: none;
+}
+.view-security__certificate {
+	--certificate-inline-padding: max(12px, var(--workspace-view-inline-padding, 0px));
+	background: color-mix(in srgb, var(--color-surface) 65%, var(--color-background));
+}
+.view-security__certificate .property-grid { margin-inline: 0; }
+.view-security__certificate > summary {
+	padding: 10px var(--certificate-inline-padding);
+	background: color-mix(in srgb, var(--color-surface) 80%, var(--color-border));
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+.view-security__certificate > summary::marker { color: var(--color-muted); }
+.view-security__certificate > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .view-security__note { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
+.view-security__error { margin: 0; padding: 12px var(--certificate-inline-padding); }
 .view-security__empty { margin-top: 12px; }
 </style>
