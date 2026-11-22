@@ -6,11 +6,11 @@ function prepareLoadConfigView(context) {
 	const config = context.peFile.loadConfig();
 	if (config instanceof Error) throw config;
 	if (config === null) throw new Error('The directory is unavailable.');
-	const image = Object.fromEntries(Object.entries(config.image).flatMap(([field, value]) =>
-		value !== null && typeof value === 'object'
+	const image = Object.fromEntries(Object.entries(config.image)
+		.filter(([field]) => config.offsets[/** @type {keyof PeLite.PeLoadConfigImage} */ (field)] < config.size)
+		.flatMap(([field, value]) => value !== null && typeof value === 'object'
 			? Object.entries(value).map(([member, memberValue]) => [`${field}.${member}`, memberValue])
-			: [[field, value]]
-	));
+			: [[field, value]]));
 	return { component: 'view-load-config', data: {
 		image,
 		securityCookie: config.security_cookie === null ? 'Unavailable' : formatPropertyGridHex(config.security_cookie),
@@ -46,7 +46,6 @@ const ViewLoadConfig = Vue.defineComponent({
 
 <template id="view-load-config">
 	<section>
-		<p class="view-load-config__note">pelite zero-fills fields beyond the size of the load configuration structure.</p>
 		<property-grid :list="data.image" :interpretations="headerColumns" label="Load configuration header" spacer></property-grid>
 		<h2 class="view-load-config__title">Security cookie value</h2>
 		<p class="view-load-config__cookie"><code>{{ data.securityCookie }}</code></p>

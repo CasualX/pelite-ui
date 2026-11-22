@@ -108,7 +108,7 @@ const ViewImports = Vue.defineComponent({
 
 <style>
 .workspace-area__view:has(> .view-imports) { padding-block-end: 0; overflow: clip; }
-.view-imports { display: flex; flex-direction: column; block-size: 100%; }
+.view-imports { display: flex; flex-direction: column; block-size: 100%; padding-block-start: 24px; }
 .view-imports__search { display: flex; flex: none; flex-direction: column; gap: 8px; max-width: 540px; margin-bottom: 24px; font-size: 12px; }
 .view-imports__search input { min-width: 0; height: 36px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
 .view-imports__search input::placeholder { color: color-mix(in srgb, var(--color-muted) 55%, var(--color-surface)); }

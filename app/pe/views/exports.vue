@@ -96,6 +96,7 @@ const ViewExports = Vue.defineComponent({
 </template>
 
 <style>
+.view-exports { padding-block-start: 24px; }
 .view-exports__dll { display: block; margin-bottom: 24px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 15px; }
 .view-exports__header { margin-bottom: 24px; }
 .view-exports__header summary { width: max-content; margin-bottom: 12px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }

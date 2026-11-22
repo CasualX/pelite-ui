@@ -218,7 +218,7 @@ const ViewSummary = Vue.defineComponent({
 </template>
 
 <style>
-.view-summary { container-type: inline-size; }
+.view-summary { container-type: inline-size; padding-block-start: 24px; }
 .view-summary__identity { margin: 0 0 20px; font-size: 15px; font-weight: 600; }
 .view-summary h2 { margin: 26px 0 12px; font-size: 13px; font-weight: 600; }
 .view-summary h2 span { margin-left: 12px; font-size: 12px; font-weight: 400; }

@@ -663,9 +663,11 @@ export type PeLoadConfigImage = {
 };
 /**
  * Missing fields in older load-config revisions are zero-filled in image.
+ * Offsets are byte offsets from the start of the load configuration directory.
  */
 export type PeLoadConfig = {
     image: PeLoadConfigImage;
+    offsets: Record<keyof PeLoadConfigImage, number>;
     size: number;
     security_cookie: number | null;
     se_handler_table: number[] | null;

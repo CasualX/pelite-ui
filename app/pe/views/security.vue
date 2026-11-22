@@ -11,7 +11,7 @@ function prepareSecurityView(context) {
 	if (headers instanceof Error) throw headers;
 	const directory = headers.DataDirectory[4];
 	return { component: 'view-security', data: {
-		fields: { 'File offset': directory.VirtualAddress, 'Table size': directory.Size },
+		fields: { 'FileOffset': directory.VirtualAddress, 'Size': directory.Size },
 		certificates,
 	} };
 }

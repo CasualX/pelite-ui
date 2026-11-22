@@ -31,13 +31,16 @@ function ntHeaderInterpretations(table, details) {
 }
 
 /** @param {PeDocument} context @returns {ViewContent} */
-function prepareNtHeadersView(context) {
-	const result = context.peFile.headers();
-	if (result instanceof Error) throw result;
-	const headers = result;
+function prepareHeadersView(context) {
+	const headers = context.peFile.headers();
+	if (headers instanceof Error) throw headers;
+	const dosHeader = Object.fromEntries(Object.entries(headers.DosHeader).filter(([name]) =>
+		name !== 'e_res' && name !== 'e_res2'
+	));
 	return {
-		component: 'view-nt-headers',
+		component: 'view-headers',
 		data: {
+			dosHeader,
 			header: headers.NtHeaders,
 			dataDirectory: headers.DataDirectory,
 			directoryNames: headers.details['DataDirectory.Names'],
@@ -47,10 +50,18 @@ function prepareNtHeadersView(context) {
 	};
 }
 
-const ViewNtHeaders = Vue.defineComponent({
-	template: '#view-nt-headers',
+const ViewHeaders = Vue.defineComponent({
+	template: '#view-headers',
 	props: { data: { type: Object, required: true } },
 	computed: {
+		/** @returns {PropertyGridColumn[]} */
+		dosInterpretations() {
+			return [
+				{ title: 'Field', width: '13.5rem', format: (value, name) => String(name) },
+				{ title: 'Value', width: '10rem', kind: (value, field) => value && (field === 'e_lfarlc' || field === 'e_lfanew') ? 'fo' : undefined,
+					style: { textAlign: 'right' }, format: formatPropertyGridHex },
+			];
+		},
 		signatureInterpretations() {
 			return ntHeaderInterpretations('NtHeaders', /** @type {Record<string, unknown>} */ (this.data.details));
 		},
@@ -79,23 +90,13 @@ const ViewNtHeaders = Vue.defineComponent({
 });
 </script>
 
-<template id="view-nt-headers">
-	<section class="view-nt-headers">
-		<p class="view-nt-headers__description">IMAGE_NT_HEADERS</p>
+<template id="view-headers">
+	<section>
+		<property-grid :list="data.dosHeader" :interpretations="dosInterpretations" min-width="31rem" label="DOS header fields" spacer></property-grid>
 		<property-grid :list="{ Signature: data.header.Signature }" :interpretations="signatureInterpretations" min-width="31rem" label="NT signature"></property-grid>
-		<h2 class="view-nt-headers__section-title">File header</h2>
 		<property-grid :list="data.header.FileHeader" :interpretations="fileInterpretations" min-width="31rem" label="NT file header"></property-grid>
-		<h2 class="view-nt-headers__section-title">Optional header</h2>
 		<property-grid :list="data.header.OptionalHeader" :interpretations="optionalInterpretations" min-width="31rem" label="NT optional header"></property-grid>
-		<h2 class="view-nt-headers__section-title">Data directory</h2>
 		<property-grid v-if="data.dataDirectory.length" :list="data.dataDirectory" :interpretations="directoryInterpretations" min-width="24.25rem" label="Data directory" spacer></property-grid>
-		<p v-else class="view-nt-headers__description">No data directories.</p>
-		<h2 class="view-nt-headers__section-title">Section headers</h2>
 		<view-section-headers :data="data.sections"></view-section-headers>
 	</section>
 </template>
-
-<style>
-.view-nt-headers__description { margin: 0 0 26px; color: var(--color-muted); font-size: 13px; }
-.view-nt-headers__section-title { margin: 26px 0 12px; font-size: 14px; font-weight: 600; }
-</style>

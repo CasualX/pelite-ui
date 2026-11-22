@@ -53,8 +53,7 @@ const workspaceViewGroups = [
 		{ id: 'summary', title: 'Summary', singleton: true, icon: workspaceIcons.summary, prepare: prepareSummaryView },
 	] },
 	{ id: 'headers', title: 'Headers', views: [
-		{ id: 'dos', title: 'DOS Header', singleton: true, icon: workspaceIcons.document, prepare: prepareDosHeaderView },
-		{ id: 'nt', title: 'NT Headers', singleton: true, icon: workspaceIcons.document, prepare: prepareNtHeadersView },
+		{ id: 'headers', title: 'Headers', singleton: true, icon: workspaceIcons.document, prepare: prepareHeadersView },
 		{ id: 'sections', title: 'Section Headers', singleton: true, icon: workspaceIcons.sections, prepare: context => prepareSectionHeadersView(context) },
 		{ id: 'rich', title: 'Rich Structure', singleton: true, icon: workspaceIcons.document, isAvailable: isRichStructureAvailable, prepare: prepareRichStructureView },
 		{ id: 'exports', title: 'Exports', singleton: true, icon: workspaceIcons.imports, isAvailable: createIsDirectoryAvailable(peDirectoryIndex.exports), prepare: prepareExportsView },

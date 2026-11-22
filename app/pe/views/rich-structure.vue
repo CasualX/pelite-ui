@@ -108,7 +108,6 @@ const ViewRichStructure = Vue.defineComponent({
 <template id="view-rich-structure">
 	<section class="view-rich-structure">
 		<template v-if="data.rich">
-			<p class="view-rich-structure__description">Decoded product identifiers, build numbers, and object counts recorded by the toolchain.</p>
 			<property-grid :list="{ xor_key: data.rich.xor_key, checksum: data.rich.checksum }" :interpretations="summaryInterpretations" label="Rich structure summary"></property-grid>
 			<div class="view-rich-structure__records-header">
 				<h2>Records</h2>

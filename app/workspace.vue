@@ -2,8 +2,7 @@
 <link rel="component" href="workspace/area.vue">
 <link rel="component" href="pe/address-menu.vue">
 <link rel="component" href="pe/views/summary.vue" dynamic>
-<link rel="component" href="pe/views/dos-header.vue" dynamic>
-<link rel="component" href="pe/views/nt-headers.vue" dynamic>
+<link rel="component" href="pe/views/headers.vue" dynamic>
 <link rel="component" href="pe/views/section-headers.vue" dynamic>
 <link rel="component" href="pe/views/rich-structure.vue" dynamic>
 <link rel="component" href="pe/views/exports.vue" dynamic>
@@ -172,7 +171,7 @@ const AppWorkspace = Vue.defineComponent({
 }
 :where(.app-workspace__area) .workspace-area__view {
 	--workspace-view-inline-padding: clamp(12px, 4cqi, 32px);
-	--workspace-view-padding: 24px var(--workspace-view-inline-padding);
+	--workspace-view-padding: 0 var(--workspace-view-inline-padding) 24px;
 }
 .app-workspace__error { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-danger); background: var(--color-surface); font-size: 13px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {
