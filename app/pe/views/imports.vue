@@ -1,4 +1,5 @@
 <link rel="component" href="../../components/property-grid.vue">
+<link rel="component" href="filter-toolbar.vue">
 
 <script>
 const importSearchFields = /** @type {const} */ (['DLL', 'Name', 'Ordinal', 'Hint', 'IAT RVA']);
@@ -29,6 +30,7 @@ function prepareImportsView(context) {
 
 const ViewImports = Vue.defineComponent({
 	template: '#view-imports',
+	components: { PeFilterToolbar },
 	props: { data: { type: Object, required: true } },
 	data() {
 		return {
@@ -90,29 +92,13 @@ const ViewImports = Vue.defineComponent({
 			return this.filteredDescriptors.find(group => group.index === this.state.selectedIndex) ?? this.filteredDescriptors[0];
 		},
 	},
-	methods: {
-		/** @param {ImportSearchField} field */
-		toggleSearchField(field) {
-			const fields = this.state.matchFields;
-			if (!fields.includes(field)) fields.push(field);
-			else if (fields.length > 1) this.state.matchFields = fields.filter(selected => selected !== field);
-		},
-	},
 });
 </script>
 
 <template id="view-imports">
 	<section class="view-imports">
-		<div class="view-imports__toolbar">
-			<div class="view-imports__search">
-				<input v-model="state.query" type="search" aria-label="Filter imports" placeholder="Filter imports" spellcheck="false" autocomplete="off">
-			</div>
-			<div class="view-imports__filters" role="group" aria-label="Match in">
-				<span aria-hidden="true">Match in</span>
-				<button v-for="field in searchFields" :key="field" type="button" :aria-pressed="state.matchFields.includes(field)"
-					:disabled="state.matchFields.length === 1 && state.matchFields.includes(field)" @click="toggleSearchField(field)">{{ field }}</button>
-			</div>
-		</div>
+		<pe-filter-toolbar label="Filter imports" :fields="searchFields" v-model:query="state.query"
+			v-model:match-fields="state.matchFields"></pe-filter-toolbar>
 		<div v-if="selectedModule" class="view-imports__layout">
 			<property-grid class="view-imports__libraries" :list="filteredDescriptors" :interpretations="libraryColumns" :row-key="library => library.index" label="Imported libraries">
 				<template #library="{ value: library }">
@@ -135,21 +121,7 @@ const ViewImports = Vue.defineComponent({
 <style>
 .workspace-area__view:has(> .view-imports) { padding-block-end: 0; overflow: clip; }
 .view-imports { display: flex; flex-direction: column; block-size: 100%; }
-.view-imports__toolbar, .view-imports__layout { margin-inline: calc(-1 * var(--workspace-view-inline-padding)); }
-.view-imports__toolbar { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 7px var(--workspace-view-inline-padding); border-block-end: 1px solid var(--color-border); background: var(--color-surface); }
-.view-imports__search { position: relative; flex: 0 1 16rem; max-inline-size: 100%; }
-.view-imports__search::before, .view-imports__search::after { content: ''; position: absolute; color: var(--color-muted); pointer-events: none; }
-.view-imports__search::before { inset-block-start: 9px; inset-inline-start: 10px; inline-size: 9px; block-size: 9px; border: 1px solid; border-radius: 50%; }
-.view-imports__search::after { inset-block-start: 17px; inset-inline-start: 17px; inline-size: 5px; border-block-start: 1px solid; transform: rotate(45deg); transform-origin: left; }
-.view-imports__search input { display: block; inline-size: 100%; block-size: 30px; padding: 4px 8px 4px 28px; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-background); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
-.view-imports__search input::placeholder { color: var(--color-muted); }
-.view-imports__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-inline-size: 0; color: var(--color-muted); font-size: 12px; }
-.view-imports__filters > span { margin-inline-end: 4px; }
-.view-imports__filters button { padding: 3px 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; white-space: nowrap; cursor: pointer; }
-.view-imports__filters button[aria-pressed="true"] { border-color: var(--color-border); background: var(--color-background); color: var(--color-text); }
-.view-imports__filters button:hover:enabled { border-color: var(--color-accent); color: var(--color-accent-hover); }
-.view-imports__filters button:disabled { cursor: default; }
-.view-imports__search input:focus-visible, .view-imports__filters button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.view-imports__layout { margin-inline: calc(-1 * var(--workspace-view-inline-padding)); }
 .view-imports__layout { display: grid; flex: 1; min-block-size: 0; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); }
 .view-imports__layout .property-grid { margin-inline: 0; }
 .view-imports__libraries, .view-imports__details { overflow: auto; overscroll-behavior: contain; }
