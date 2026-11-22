@@ -1,7 +1,9 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
-/** @typedef {{ descriptors: PeLite.PeImportDescriptor[], state: { query: string, selectedIndex: number | null } }} ImportsViewData */
+const importSearchFields = /** @type {const} */ (['DLL', 'Name', 'Ordinal', 'Hint', 'IAT RVA']);
+/** @typedef {(typeof importSearchFields)[number]} ImportSearchField */
+/** @typedef {{ descriptors: PeLite.PeImportDescriptor[], state: { query: string, matchFields: ImportSearchField[], selectedIndex: number | null } }} ImportsViewData */
 /** @typedef {{ descriptor: PeLite.PeImportDescriptor, index: number, rows: PeLite.PeImportEntry[] | null }} ImportModule */
 
 /** @param {number} value @returns {string} */
@@ -9,12 +11,20 @@ function formatImportHex(value) {
 	return value === 0 ? '0' : `0x${value.toString(16)}`;
 }
 
+/** @type {Record<Exclude<ImportSearchField, 'DLL'>, (row: PeLite.PeImportEntry) => string>} */
+const importSearchValues = {
+	Name: row => row.import?.ByName?.name ?? '',
+	Ordinal: row => String(row.import?.ByOrdinal?.ord ?? ''),
+	Hint: row => String(row.import?.ByName?.hint ?? ''),
+	'IAT RVA': row => formatImportHex(row.address),
+};
+
 /** @param {PeDocument} context @returns {ViewContent} */
 function prepareImportsView(context) {
 	const result = context.peFile.imports();
 	if (result instanceof Error) throw result;
 	if (result === null) throw new Error('The import directory is unavailable.');
-	return { component: 'view-imports', data: { descriptors: result, state: { query: '', selectedIndex: null } } };
+	return { component: 'view-imports', data: { descriptors: result, state: { query: '', matchFields: ['DLL', 'Name'], selectedIndex: null } } };
 }
 
 const ViewImports = Vue.defineComponent({
@@ -22,6 +32,7 @@ const ViewImports = Vue.defineComponent({
 	props: { data: { type: Object, required: true } },
 	data() {
 		return {
+			searchFields: importSearchFields,
 			libraryColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Library', slot: 'library' },
 				{ title: '#', label: 'Functions', width: 'calc(3.125rem + var(--workspace-view-inline-padding))', style: { textAlign: 'right' }, format: value => {
@@ -65,12 +76,12 @@ const ViewImports = Vue.defineComponent({
 		/** @returns {ImportModule[]} */
 		filteredDescriptors() {
 			const query = this.state.query.trim().toLowerCase();
+			const matchDll = this.state.matchFields.includes('DLL');
+			const rowFields = this.state.matchFields.filter(field => field !== 'DLL');
 			return this.importsData.descriptors.map((descriptor, index) => {
-				const dllMatches = !query || (descriptor.dll_name ?? '').toLowerCase().includes(query);
+				const dllMatches = !query || (matchDll && (descriptor.dll_name ?? '').toLowerCase().includes(query));
 				const rows = dllMatches ? descriptor.imports : descriptor.imports?.filter(row =>
-					[formatImportHex(row.address), row.import?.ByName?.name ?? '',
-						String(row.import?.ByName?.hint ?? ''), String(row.import?.ByOrdinal?.ord ?? '')]
-						.some(value => value.toLowerCase().includes(query))
+					rowFields.some(field => importSearchValues[field](row).toLowerCase().includes(query))
 				) ?? null;
 				return { descriptor, index, rows, visible: dllMatches || !!rows?.length };
 			}).filter(group => group.visible);
@@ -79,14 +90,29 @@ const ViewImports = Vue.defineComponent({
 			return this.filteredDescriptors.find(group => group.index === this.state.selectedIndex) ?? this.filteredDescriptors[0];
 		},
 	},
+	methods: {
+		/** @param {ImportSearchField} field */
+		toggleSearchField(field) {
+			const fields = this.state.matchFields;
+			if (!fields.includes(field)) fields.push(field);
+			else if (fields.length > 1) this.state.matchFields = fields.filter(selected => selected !== field);
+		},
+	},
 });
 </script>
 
 <template id="view-imports">
 	<section class="view-imports">
-		<label class="view-imports__search">Search
-			<input v-model="state.query" type="search" placeholder="DLL, name, ordinal, hint, or IAT RVA" spellcheck="false" autocomplete="off">
-		</label>
+		<div class="view-imports__toolbar">
+			<div class="view-imports__search">
+				<input v-model="state.query" type="search" aria-label="Filter imports" placeholder="Filter imports" spellcheck="false" autocomplete="off">
+			</div>
+			<div class="view-imports__filters" role="group" aria-label="Match in">
+				<span aria-hidden="true">Match in</span>
+				<button v-for="field in searchFields" :key="field" type="button" :aria-pressed="state.matchFields.includes(field)"
+					:disabled="state.matchFields.length === 1 && state.matchFields.includes(field)" @click="toggleSearchField(field)">{{ field }}</button>
+			</div>
+		</div>
 		<div v-if="selectedModule" class="view-imports__layout">
 			<property-grid class="view-imports__libraries" :list="filteredDescriptors" :interpretations="libraryColumns" :row-key="library => library.index" label="Imported libraries">
 				<template #library="{ value: library }">
@@ -108,12 +134,23 @@ const ViewImports = Vue.defineComponent({
 
 <style>
 .workspace-area__view:has(> .view-imports) { padding-block-end: 0; overflow: clip; }
-.view-imports { display: flex; flex-direction: column; block-size: 100%; padding-block-start: 24px; }
-.view-imports__search { display: flex; flex: none; flex-direction: column; gap: 8px; max-width: 540px; margin-bottom: 24px; font-size: 12px; }
-.view-imports__search input { min-width: 0; height: 36px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
-.view-imports__search input::placeholder { color: color-mix(in srgb, var(--color-muted) 55%, var(--color-surface)); }
-.view-imports__search input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.view-imports__layout { display: grid; flex: 1; min-block-size: 0; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); margin-inline: calc(-1 * var(--workspace-view-inline-padding)); border-block-start: 1px solid var(--color-border); }
+.view-imports { display: flex; flex-direction: column; block-size: 100%; }
+.view-imports__toolbar, .view-imports__layout { margin-inline: calc(-1 * var(--workspace-view-inline-padding)); }
+.view-imports__toolbar { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 6px 14px; padding: 7px var(--workspace-view-inline-padding); border-block-end: 1px solid var(--color-border); background: var(--color-surface); }
+.view-imports__search { position: relative; flex: 0 1 16rem; max-inline-size: 100%; }
+.view-imports__search::before, .view-imports__search::after { content: ''; position: absolute; color: var(--color-muted); pointer-events: none; }
+.view-imports__search::before { inset-block-start: 9px; inset-inline-start: 10px; inline-size: 9px; block-size: 9px; border: 1px solid; border-radius: 50%; }
+.view-imports__search::after { inset-block-start: 17px; inset-inline-start: 17px; inline-size: 5px; border-block-start: 1px solid; transform: rotate(45deg); transform-origin: left; }
+.view-imports__search input { display: block; inline-size: 100%; block-size: 30px; padding: 4px 8px 4px 28px; border: 1px solid var(--color-border); border-radius: 5px; background: var(--color-background); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; }
+.view-imports__search input::placeholder { color: var(--color-muted); }
+.view-imports__filters { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; min-inline-size: 0; color: var(--color-muted); font-size: 12px; }
+.view-imports__filters > span { margin-inline-end: 4px; }
+.view-imports__filters button { padding: 3px 8px; border: 1px solid transparent; border-radius: 4px; background: transparent; color: inherit; white-space: nowrap; cursor: pointer; }
+.view-imports__filters button[aria-pressed="true"] { border-color: var(--color-border); background: var(--color-background); color: var(--color-text); }
+.view-imports__filters button:hover:enabled { border-color: var(--color-accent); color: var(--color-accent-hover); }
+.view-imports__filters button:disabled { cursor: default; }
+.view-imports__search input:focus-visible, .view-imports__filters button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
+.view-imports__layout { display: grid; flex: 1; min-block-size: 0; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); }
 .view-imports__layout .property-grid { margin-inline: 0; }
 .view-imports__libraries, .view-imports__details { overflow: auto; overscroll-behavior: contain; }
 .view-imports__libraries { --workspace-view-inline-padding: 12px; }
@@ -127,6 +164,7 @@ const ViewImports = Vue.defineComponent({
 .view-imports__details h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
 .view-imports__details .property-grid + h2 { margin-top: 20px; }
 .view-imports__empty { margin: 0; color: var(--color-muted); font-size: 12px; }
+.view-imports > .view-imports__empty { margin-block-start: 12px; }
 @container (width < 44rem) {
 	.view-imports__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(40%) minmax(0, 1fr); gap: 20px; }
 	.view-imports__details { padding-block-start: 0; border-inline-start: 0; }
