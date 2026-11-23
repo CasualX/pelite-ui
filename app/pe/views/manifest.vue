@@ -20,13 +20,24 @@ const ViewManifest = Vue.defineComponent({
 </script>
 
 <template id="view-manifest">
-	<section class="view-manifest">
-		<pre class="view-manifest__source" aria-label="Manifest XML"><code>{{ data.manifest }}</code></pre>
-	</section>
+	<textarea class="view-manifest" aria-label="Manifest XML" :value="data.manifest" readonly spellcheck="false"></textarea>
 </template>
 
 <style>
-.view-manifest { min-width: 0; padding: 0 var(--workspace-gutter) 24px; }
-.view-manifest__source { margin: 0; padding: 16px 20px; overflow-x: auto; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.7; tab-size: 4; }
-.view-manifest__source code { font: inherit; }
+.view-manifest {
+	display: block;
+	width: 100%;
+	height: 100%;
+	margin: 0;
+	padding: 12px;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+	tab-size: 4;
+	overflow-wrap: anywhere;
+	resize: none;
+}
+.view-manifest:focus { outline: none; }
 </style>
