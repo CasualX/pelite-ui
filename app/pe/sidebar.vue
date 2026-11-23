@@ -84,15 +84,15 @@ const WorkspaceSidebar = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-sidebar { min-width: 0; min-height: 0; overflow-y: auto; padding-block: 6px 8px; border-right: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
-.workspace-sidebar__dot, .workspace-sidebar__count { flex-shrink: 0; margin-inline-start: auto; }
-.workspace-sidebar__dot { width: 6px; height: 6px; margin-inline-end: 4px; border-radius: 50%; background: var(--color-accent); }
+.workspace-sidebar { min-width: 0; min-height: 0; overflow-y: auto; padding: 6px 0 8px; border-right: 1px solid var(--color-border); background: var(--color-surface); font-size: 12px; }
+.workspace-sidebar__dot, .workspace-sidebar__count { flex-shrink: 0; margin-left: auto; }
+.workspace-sidebar__dot { width: 6px; height: 6px; margin-right: 4px; border-radius: 50%; background: var(--color-accent); }
 .workspace-sidebar__count { color: var(--color-muted); font-size: 11px; font-weight: 500; font-variant-numeric: tabular-nums; }
 .workspace-sidebar__list { list-style: none; margin: 0; padding: 0; }
 .workspace-sidebar__row { display: flex; align-items: center; gap: 9px; min-height: 29px; padding: 5px 8px; border-radius: 4px; color: var(--color-text); cursor: pointer; user-select: none; }
 .workspace-sidebar__view-button { width: 100%; border: 0; background: transparent; font: inherit; text-align: left; }
 .workspace-sidebar__open-row { position: relative; }
-.workspace-sidebar__child-row > .workspace-sidebar__view-button { padding-inline: 54px 32px; }
+.workspace-sidebar__child-row > .workspace-sidebar__view-button { padding-left: 54px; padding-right: 32px; }
 .workspace-sidebar__close { position: absolute; top: 3px; right: 4px; display: grid; place-items: center; width: 23px; height: 23px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: var(--color-muted); cursor: pointer; opacity: 0; pointer-events: none; }
 .workspace-sidebar__open-row:hover > .workspace-sidebar__close, .workspace-sidebar__close:focus-visible { opacity: 1; pointer-events: auto; }
 .workspace-sidebar__open-row:is(:hover, :has(> .workspace-sidebar__close:focus-visible)) .workspace-sidebar__dot { opacity: 0; }
@@ -116,7 +116,7 @@ const WorkspaceSidebar = Vue.defineComponent({
 .workspace-sidebar__row--nested { padding-left: 27px; }
 .workspace-sidebar--compact .workspace-sidebar__row, .workspace-sidebar--compact .workspace-sidebar__group-toggle { min-height: 44px; }
 .workspace-sidebar--compact .workspace-sidebar__close { top: 4px; width: 36px; height: 36px; }
-.workspace-sidebar--compact .workspace-sidebar__child-row > .workspace-sidebar__view-button { padding-inline-end: 46px; }
+.workspace-sidebar--compact .workspace-sidebar__child-row > .workspace-sidebar__view-button { padding-right: 46px; }
 @media (hover: none) {
 	.workspace-sidebar__child-row > .workspace-sidebar__close { opacity: 1; pointer-events: auto; }
 }

@@ -218,15 +218,16 @@ const ViewSummary = Vue.defineComponent({
 </template>
 
 <style>
-.view-summary { container-type: inline-size; padding-block-start: 24px; }
-.view-summary__identity { margin: 0 0 20px; font-size: 15px; font-weight: 600; }
-.view-summary h2 { margin: 26px 0 12px; font-size: 13px; font-weight: 600; }
+.view-summary { container-type: inline-size; padding: 24px 0; }
+.view-summary > :is(h2, p, dl, ul, details) { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
+.view-summary__identity { margin-top: 0; margin-bottom: 20px; font-size: 15px; font-weight: 600; }
+.view-summary h2 { margin-top: 26px; margin-bottom: 12px; font-size: 13px; font-weight: 600; }
 .view-summary h2 span { margin-left: 12px; font-size: 12px; font-weight: 400; }
-.view-summary__image { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; max-width: 1120px; margin: 0; }
+.view-summary__image { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 32px; max-width: 1120px; margin-top: 0; margin-bottom: 0; }
 .view-summary__image div { display: grid; grid-template-columns: min(42%, 180px) minmax(0, 1fr); gap: 12px; font-size: 12px; }
 .view-summary dt { color: var(--color-muted); }
 .view-summary dd { margin: 0; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; }
-.view-summary__mitigations { display: flex; flex-wrap: wrap; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.view-summary__mitigations { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 0; margin-bottom: 0; padding: 0; list-style: none; font-size: 12px; }
 .view-summary__mitigations li { padding: 7px 10px; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); }
 .view-summary__mitigations span { margin-left: 12px; font-weight: 600; }
 .view-summary__mitigation--enabled span { color: var(--color-secondary); }
@@ -235,7 +236,7 @@ const ViewSummary = Vue.defineComponent({
 .view-summary__notable summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 .view-summary__notable dl div + div { margin-top: 12px; }
 .view-summary__notable dt { margin-bottom: 4px; }
-.view-summary__findings { max-width: 1120px; margin: 0; padding: 0; list-style: none; font-size: 12px; }
+.view-summary__findings { max-width: 1120px; margin-top: 0; margin-bottom: 0; padding: 0; list-style: none; font-size: 12px; }
 .view-summary__findings li { display: flex; gap: 16px; padding: 9px 0; border-bottom: 1px solid var(--color-border); line-height: 1.5; }
 .view-summary__findings li > span { flex: 0 0 56px; color: var(--color-muted); }
 .view-summary__findings .view-summary__warning { color: var(--color-warning); }

@@ -152,22 +152,21 @@ const ViewDisasm = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-area__view:has(> .view-disasm) { --workspace-view-padding: 0; }
 .view-disasm { --disasm-toolbar-height: 44px; container-type: inline-size; }
-.view-disasm__body { --disasm-gutter: clamp(12px, 4cqi, 32px); min-inline-size: min-content; }
-.view-disasm__toolbar { position: sticky; inset-block-start: 0; inset-inline-start: 0; z-index: 2; display: flex; align-items: center; gap: 12px; inline-size: 100cqi; height: var(--disasm-toolbar-height); padding-inline: var(--disasm-gutter); background: var(--color-background); font-size: 12px; }
+.view-disasm__body { --disasm-gutter: clamp(12px, 4cqi, 32px); min-width: min-content; }
+.view-disasm__toolbar { position: sticky; top: 0; left: 0; z-index: 2; display: flex; align-items: center; gap: 12px; width: 100cqi; height: var(--disasm-toolbar-height); padding: 0 var(--disasm-gutter); background: var(--color-background); font-size: 12px; }
 .view-disasm__toolbar label { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .view-disasm__toolbar input { width: 140px; min-width: 0; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, monospace; }
 .view-disasm__toolbar button { padding: 7px 14px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .view-disasm__toolbar button:hover { background: var(--color-border); }
 .view-disasm__toolbar input:focus-visible, .view-disasm__toolbar button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
-.view-disasm__help, .view-disasm__error { max-inline-size: calc(100cqi - 2 * var(--disasm-gutter)); margin: 0 var(--disasm-gutter) 12px; font-size: 12px; }
+.view-disasm__help, .view-disasm__error { max-width: calc(100cqi - 2 * var(--disasm-gutter)); margin: 0 var(--disasm-gutter) 12px; font-size: 12px; }
 .view-disasm__help { color: var(--color-muted); }
 .view-disasm__error { color: var(--color-danger); }
 .view-disasm__grid { margin: 0 var(--disasm-gutter) 16px; border: 1px solid var(--color-border); font: 12px/22px ui-monospace, SFMono-Regular, Consolas, monospace; }
-.view-disasm__columns, .view-disasm__row { display: grid; grid-template-columns: 8ch 10ch minmax(24ch, 44ch) minmax(30ch, 1fr); gap: 12px; padding-inline: 12px; }
-.view-disasm__columns { position: sticky; top: var(--disasm-toolbar-height); z-index: 1; padding-block: 4px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); white-space: pre; }
-.view-disasm__row > span { scroll-margin-block-start: calc(var(--disasm-toolbar-height) + 31px); }
+.view-disasm__columns, .view-disasm__row { display: grid; grid-template-columns: 8ch 10ch minmax(24ch, 44ch) minmax(30ch, 1fr); gap: 12px; padding: 0 12px; }
+.view-disasm__columns { position: sticky; top: var(--disasm-toolbar-height); z-index: 1; padding-top: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); white-space: pre; }
+.view-disasm__row > span { scroll-margin-top: calc(var(--disasm-toolbar-height) + 31px); }
 .view-disasm__dump:focus { outline: none; }
 .view-disasm__dump { white-space: pre; cursor: text; caret-color: var(--color-text); }
 .view-disasm__section { overflow: hidden; text-overflow: ellipsis; color: var(--color-muted); }
@@ -179,6 +178,6 @@ const ViewDisasm = Vue.defineComponent({
 
 @container (width < 42rem) {
 	.view-disasm__grid { font-size: 11px; }
-	.view-disasm__columns, .view-disasm__row { gap: 8px; padding-inline: 8px; }
+	.view-disasm__columns, .view-disasm__row { gap: 8px; padding-left: 8px; padding-right: 8px; }
 }
 </style>

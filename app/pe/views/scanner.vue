@@ -118,10 +118,12 @@ const ViewScanner = Vue.defineComponent({
 </template>
 
 <style>
+.view-scanner { padding-bottom: 24px; }
+.view-scanner__heading, .view-scanner__description, .view-scanner__form, .view-scanner__error, .view-scanner__results { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
 .view-scanner__heading { display: flex; align-items: center; gap: 24px; }
 .view-scanner__heading a { color: var(--color-accent); font-size: 12px; text-decoration: none; }
 .view-scanner__heading a:hover { text-decoration: underline; }
-.view-scanner__description { margin: 8px 0 26px; color: var(--color-muted); font-size: 13px; }
+.view-scanner__description { margin-top: 8px; margin-bottom: 26px; color: var(--color-muted); font-size: 13px; }
 .view-scanner__form { display: grid; grid-template-columns: minmax(180px, 1fr) 190px 110px auto; gap: 12px; align-items: end; }
 .view-scanner__form label { display: flex; flex-direction: column; gap: 8px; color: var(--color-text); font-size: 12px; }
 .view-scanner__form input, .view-scanner__form select { width: 100%; min-width: 0; height: 36px; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-size: 12px; }
@@ -131,7 +133,7 @@ const ViewScanner = Vue.defineComponent({
 .view-scanner__scan { height: 36px; padding: 7px 18px; border: 1px solid var(--color-accent-hover); border-radius: 4px; background: var(--color-accent); color: var(--color-on-accent); font-size: 12px; cursor: pointer; }
 .view-scanner__scan:hover { background: var(--color-accent-hover); }
 .view-scanner input:focus-visible, .view-scanner select:focus-visible, .view-scanner button:focus-visible, .view-scanner a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.view-scanner__error { margin: 24px 0 0; color: var(--color-danger); font-size: 13px; }
-.view-scanner__results { display: flex; flex-wrap: wrap; gap: 10px 20px; margin: 28px 0 16px; color: var(--color-muted); font-size: 12px; }
+.view-scanner__error { margin-top: 24px; margin-bottom: 0; color: var(--color-danger); font-size: 13px; }
+.view-scanner__results { display: flex; flex-wrap: wrap; gap: 10px 20px; margin-top: 28px; margin-bottom: 16px; color: var(--color-muted); font-size: 12px; }
 .view-scanner__results strong { color: var(--color-text); font-weight: 600; }
 </style>

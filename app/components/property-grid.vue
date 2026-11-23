@@ -66,13 +66,13 @@ const PropertyGrid = Vue.defineComponent({
 </template>
 
 <style>
-.property-grid { container-type: inline-size; margin-inline: calc(-1 * var(--workspace-view-inline-padding, 0px)); overflow-x: auto; }
+.property-grid { container-type: inline-size; overflow-x: auto; }
 .property-grid__table { width: 100%; border-collapse: collapse; font-size: 12px; line-height: 16px; }
 .property-grid__table :is(th, td) { padding: 6px 12px; border-bottom: 1px solid color-mix(in srgb, var(--color-border) 55%, var(--color-background)); vertical-align: top; overflow-wrap: anywhere; }
-.property-grid__table :is(th, td):first-child { padding-inline-start: max(12px, var(--workspace-view-inline-padding, 0px)); }
-.property-grid__table :is(th, td):last-child { padding-inline-end: max(12px, var(--workspace-view-inline-padding, 0px)); }
-.property-grid__table th { padding-block: 7px; border-bottom-color: var(--color-border); background: var(--color-surface); color: var(--color-muted); font-weight: 500; text-align: left; }
+.property-grid__table :is(th, td):first-child { padding-left: var(--property-grid-gutter, var(--workspace-gutter, 12px)); }
+.property-grid__table :is(th, td):last-child { padding-right: var(--property-grid-gutter, var(--workspace-gutter, 12px)); }
+.property-grid__table th { padding-top: 7px; padding-bottom: 7px; border-bottom-color: var(--color-border); background: var(--color-surface); color: var(--color-muted); font-weight: 500; text-align: left; }
 .property-grid__table td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; }
 .property-grid__table tbody tr:hover { background: var(--color-surface); }
-.property-grid__table .property-grid__spacer:last-child { padding-inline: 0; }
+.property-grid__table .property-grid__spacer:last-child { padding: 0; }
 </style>

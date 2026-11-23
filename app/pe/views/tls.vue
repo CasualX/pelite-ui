@@ -27,7 +27,7 @@ const ViewTls = Vue.defineComponent({
 </script>
 
 <template id="view-tls">
-	<section>
+	<section class="view-tls">
 		<property-grid :list="data.fields" :interpretations="headerColumns" label="TLS directory header" spacer></property-grid>
 		<h2 class="view-tls__title">TLS callbacks</h2>
 		<property-grid v-if="data.directory.callbacks?.length" :list="data.directory.callbacks" :interpretations="callbackColumns" label="TLS callbacks" spacer></property-grid>
@@ -41,7 +41,8 @@ const ViewTls = Vue.defineComponent({
 </template>
 
 <style>
-.view-tls__title { margin: 24px 0 12px; font-size: 14px; font-weight: 600; }
-.view-tls__note { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
-.view-tls__payload { display: block; width: min(100%, 560px); min-height: 90px; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
+.view-tls { padding-bottom: 24px; }
+.view-tls__title { margin: 24px var(--workspace-gutter) 12px; font-size: 14px; font-weight: 600; }
+.view-tls__note { margin: 0 var(--workspace-gutter) 12px; color: var(--color-muted); font-size: 13px; }
+.view-tls__payload { display: block; width: min(calc(100% - 2 * var(--workspace-gutter)), 560px); margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); min-height: 90px; padding: 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; resize: vertical; }
 </style>

@@ -43,5 +43,5 @@ const WorkspacePane = Vue.defineComponent({
 .workspace-pane:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
 .workspace-pane__bar { display: flex; flex: 0 0 33px; min-width: 0; box-shadow: inset 0 -1px var(--workspace-border); background: var(--workspace-surface); color: var(--workspace-muted); font-size: 12px; user-select: none; }
 .workspace-pane__empty { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: var(--workspace-muted); text-align: center; font-size: 13px; pointer-events: none; }
-.workspace-pane__close { position: absolute; inset-block-start: 6px; inset-inline-end: 4px; }
+.workspace-pane__close { position: absolute; top: 6px; right: 4px; }
 </style>

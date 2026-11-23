@@ -16,5 +16,9 @@ const ViewExceptions = Vue.defineComponent({
 </script>
 
 <template id="view-exceptions">
-	<p>Exception entries for machine type {{ data.machine }} are unsupported.</p>
+	<p class="view-exceptions">Exception entries for machine type {{ data.machine }} are unsupported.</p>
 </template>
+
+<style>
+.view-exceptions { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
+</style>

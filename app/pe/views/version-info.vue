@@ -73,8 +73,9 @@ const ViewVersionInfo = Vue.defineComponent({
 </template>
 
 <style>
+.view-version-info { padding-bottom: 24px; }
 .view-version-info__strings, .view-version-info__fixed { margin-bottom: 24px; }
-.view-version-info h2 { margin: 0 0 12px; font-size: 13px; font-weight: 600; }
-.view-version-info__fixed summary { width: max-content; margin-bottom: 12px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
+.view-version-info h2 { margin: 0 var(--workspace-gutter) 12px; font-size: 13px; font-weight: 600; }
+.view-version-info__fixed summary { width: max-content; margin: 0 var(--workspace-gutter) 12px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
 .view-version-info__fixed summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 </style>

@@ -125,12 +125,14 @@ const ViewRichStructure = Vue.defineComponent({
 </template>
 
 <style>
-.view-rich-structure__description { margin: 0 0 26px; color: var(--color-muted); font-size: 13px; }
-.view-rich-structure__records-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 26px 0 12px; }
+.view-rich-structure { padding-bottom: 24px; }
+.view-rich-structure__description, .view-rich-structure__records-header, .view-rich-structure__error { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
+.view-rich-structure__description { margin-top: 0; margin-bottom: 26px; color: var(--color-muted); font-size: 13px; }
+.view-rich-structure__records-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 26px; margin-bottom: 12px; }
 .view-rich-structure__records-header h2 { margin: 0; font-size: 14px; font-weight: 600; }
 .view-rich-structure__records-header button { padding: 5px 9px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-size: 12px; cursor: pointer; }
 .view-rich-structure__records-header button:disabled { color: var(--color-muted); cursor: wait; }
 .view-rich-structure__records-header a { color: var(--color-accent-hover); font-size: 12px; }
 .view-rich-structure__records-header button:focus-visible, .view-rich-structure__records-header a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.view-rich-structure__error { margin: 0 0 12px; color: var(--color-danger); font-size: 13px; }
+.view-rich-structure__error { margin-top: 0; margin-bottom: 12px; color: var(--color-danger); font-size: 13px; }
 </style>

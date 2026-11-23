@@ -238,32 +238,31 @@ const ViewHexDump = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-area__view:has(> .view-hex-dump) { --workspace-view-padding: 0; }
 .view-hex-dump { --hex-toolbar-height: 44px; container-type: inline-size; }
-.view-hex-dump__body { --hex-gutter: clamp(12px, 4cqi, 32px); min-inline-size: min-content; }
-.view-hex-dump__toolbar { position: sticky; inset-block-start: 0; inset-inline-start: 0; z-index: 2; display: flex; align-items: center; gap: 12px; inline-size: 100cqi; height: var(--hex-toolbar-height); padding-inline: var(--hex-gutter); background: var(--color-background); font-size: 12px; }
+.view-hex-dump__body { --hex-gutter: clamp(12px, 4cqi, 32px); min-width: min-content; }
+.view-hex-dump__toolbar { position: sticky; top: 0; left: 0; z-index: 2; display: flex; align-items: center; gap: 12px; width: 100cqi; height: var(--hex-toolbar-height); padding: 0 var(--hex-gutter); background: var(--color-background); font-size: 12px; }
 .view-hex-dump__toolbar label { display: flex; align-items: center; gap: 8px; min-width: 0; }
 .view-hex-dump__toolbar input { width: 140px; min-width: 0; padding: 7px 10px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, monospace; }
 .view-hex-dump__toolbar button { padding: 7px 14px; border: 1px solid var(--color-border); border-radius: 3px; background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .view-hex-dump__toolbar button:hover { background: var(--color-border); }
 .view-hex-dump__inspect { display: none; }
-.view-hex-dump__help, .view-hex-dump__error { max-inline-size: calc(100cqi - 2 * var(--hex-gutter)); margin: 0 var(--hex-gutter) 12px; font-size: 12px; }
+.view-hex-dump__help, .view-hex-dump__error { max-width: calc(100cqi - 2 * var(--hex-gutter)); margin: 0 var(--hex-gutter) 12px; font-size: 12px; }
 .view-hex-dump__help { color: var(--color-muted); }
 .view-hex-dump__error { color: var(--color-danger); }
 .view-hex-dump__layout { display: grid; grid-template-columns: max-content minmax(0, 16rem); align-items: start; gap: 16px; padding: 0 var(--hex-gutter) 16px; }
 .view-hex-dump__grid { grid-area: 1 / 1; width: max-content; border: 1px solid var(--color-border); font: 12px/22px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .view-hex-dump__columns, .view-hex-dump__row { display: grid; grid-template-columns: 8ch 10ch 48ch 16ch; gap: 12px; padding: 0 12px; }
-.view-hex-dump__columns { position: sticky; top: var(--hex-toolbar-height); z-index: 1; padding-block: 4px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); white-space: pre; }
+.view-hex-dump__columns { position: sticky; top: var(--hex-toolbar-height); z-index: 1; padding-top: 4px; padding-bottom: 4px; border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); white-space: pre; }
 .view-hex-dump__dump:focus { outline: none; }
 .view-hex-dump__dump { cursor: text; caret-color: var(--color-text); white-space: nowrap; }
 .view-hex-dump__toolbar input:focus-visible, .view-hex-dump__toolbar button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 .view-hex-dump__section { overflow: hidden; text-overflow: ellipsis; color: var(--color-muted); }
 .view-hex-dump__rva { color: var(--color-muted); }
 .view-hex-dump__bytes, .view-hex-dump__ascii { white-space: pre; }
-.view-hex-dump__value { color: var(--hex-byte-color); scroll-margin-block-start: calc(var(--hex-toolbar-height) + 31px); }
+.view-hex-dump__value { color: var(--hex-byte-color); scroll-margin-top: calc(var(--hex-toolbar-height) + 31px); }
 .view-hex-dump__cursor { position: relative; }
 .view-hex-dump__cursor::before { content: ''; position: absolute; left: -2px; top: 1px; width: 1px; height: 14px; background: var(--color-accent); pointer-events: none; }
-.view-hex-dump__inspector { grid-area: 1 / 2; position: sticky; top: var(--hex-toolbar-height); min-width: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 12px; scroll-margin-block-start: var(--hex-toolbar-height); }
+.view-hex-dump__inspector { grid-area: 1 / 2; position: sticky; top: var(--hex-toolbar-height); min-width: 0; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; font-size: 12px; scroll-margin-top: var(--hex-toolbar-height); }
 .view-hex-dump__inspector-heading { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .view-hex-dump__inspector h2 { margin: 0; font: 600 13px ui-monospace, monospace; }
 .view-hex-dump__format { display: flex; align-items: center; gap: 8px; }
@@ -279,13 +278,13 @@ const ViewHexDump = Vue.defineComponent({
 @container (width < 62rem) {
 	.view-hex-dump__inspect { display: block; }
 	.view-hex-dump__layout { grid-template-columns: minmax(max-content, 1fr); }
-	.view-hex-dump__inspector { grid-area: 1 / 1; position: static; max-inline-size: calc(100cqi - 2 * var(--hex-gutter)); }
+	.view-hex-dump__inspector { grid-area: 1 / 1; position: static; max-width: calc(100cqi - 2 * var(--hex-gutter)); }
 	.view-hex-dump__grid { grid-area: 2 / 1; }
 	.view-hex-dump__numeric-values { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 8rem), 1fr)); column-gap: 16px; }
 }
 
 @container (width < 42rem) {
 	.view-hex-dump__grid { font-size: 11px; }
-	.view-hex-dump__columns, .view-hex-dump__row { gap: 8px; padding-inline: 8px; }
+	.view-hex-dump__columns, .view-hex-dump__row { gap: 8px; padding-left: 8px; padding-right: 8px; }
 }
 </style>

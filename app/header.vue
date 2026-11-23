@@ -40,7 +40,7 @@ const AppHeader = Vue.defineComponent({
 .app-header__close { display: grid; place-items: center; flex-shrink: 0; width: 24px; height: 24px; padding: 0; border: 0; border-radius: 4px; background: transparent; color: var(--color-muted); cursor: pointer; }
 .app-header__close:hover { background: var(--color-border); color: var(--color-text); }
 .app-header__close:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.app-header__views { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 30px; margin-inline-start: auto; padding: 0; border: 1px solid var(--color-border); border-radius: 4px; background: transparent; color: var(--color-text); cursor: pointer; }
+.app-header__views { display: grid; place-items: center; flex-shrink: 0; width: 34px; height: 30px; margin-left: auto; padding: 0; border: 1px solid var(--color-border); border-radius: 4px; background: transparent; color: var(--color-text); cursor: pointer; }
 .app-header__views[aria-expanded="true"] { background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface)); color: var(--color-accent); }
 .app-header__views:hover { border-color: var(--color-accent); }
 .app-header__views:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }

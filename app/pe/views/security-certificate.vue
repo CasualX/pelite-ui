@@ -193,16 +193,16 @@ const SecurityCertificate = Vue.defineComponent({
 </template>
 
 <style>
-.security-certificate__body { padding: 12px var(--certificate-inline-padding, 12px); }
+.security-certificate__body { padding: 12px var(--workspace-gutter, 12px); }
 .security-certificate__payload-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
 .security-certificate__payload-header h3 { margin: 0; font-size: 13px; font-weight: 600; }
-.security-certificate__encoding { display: inline-block; margin-inline-start: 4px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border)); border-radius: 3px; color: var(--color-accent); font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
+.security-certificate__encoding { display: inline-block; margin-left: 4px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border)); border-radius: 3px; color: var(--color-accent); font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .security-certificate__actions { display: flex; flex-wrap: wrap; gap: 4px; }
 .security-certificate__actions button { padding: 4px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--color-muted); font-size: 12px; }
 .security-certificate__actions button:hover:enabled { background: var(--color-surface); color: var(--color-text); cursor: pointer; }
 .security-certificate__actions button:disabled { opacity: 0.55; }
 .security-certificate__actions button:focus-visible, .security-certificate__payload:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.security-certificate__payload { display: block; inline-size: 100%; height: min(38dvh, 20rem); min-height: 12rem; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-background); color: var(--color-text); font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; resize: vertical; }
+.security-certificate__payload { display: block; width: 100%; height: min(38dvh, 20rem); min-height: 12rem; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-background); color: var(--color-text); font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; resize: vertical; }
 .security-certificate__note { margin: 0; color: var(--color-muted); font-size: 13px; }
 .security-certificate__copy-status { margin: 8px 0 0; color: var(--color-muted); font-size: 13px; }
 .security-certificate__copy-status:empty { margin: 0; }

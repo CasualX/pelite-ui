@@ -53,17 +53,15 @@ const ViewSecurity = Vue.defineComponent({
 	display: grid;
 	grid-template-columns: minmax(0, 1fr);
 	gap: 12px;
-	margin: 0 calc(-1 * var(--workspace-view-inline-padding, 0px));
+	margin: 0;
 	padding: 0;
 	list-style: none;
 }
 .view-security__certificate {
-	--certificate-inline-padding: max(12px, var(--workspace-view-inline-padding, 0px));
 	background: color-mix(in srgb, var(--color-surface) 65%, var(--color-background));
 }
-.view-security__certificate .property-grid { margin-inline: 0; }
 .view-security__certificate > summary {
-	padding: 10px var(--certificate-inline-padding);
+	padding: 10px var(--workspace-gutter);
 	background: color-mix(in srgb, var(--color-surface) 80%, var(--color-border));
 	font-size: 14px;
 	font-weight: 600;
@@ -72,6 +70,6 @@ const ViewSecurity = Vue.defineComponent({
 .view-security__certificate > summary::marker { color: var(--color-muted); }
 .view-security__certificate > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .view-security__note { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
-.view-security__error { margin: 0; padding: 12px var(--certificate-inline-padding); }
-.view-security__empty { margin-top: 12px; }
+.view-security__error { margin: 0; padding: 12px var(--workspace-gutter); }
+.view-security__empty { margin: 12px var(--workspace-gutter); }
 </style>

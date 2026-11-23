@@ -288,7 +288,7 @@ const ViewFacts = Vue.defineComponent({
 </template>
 
 <style>
-.view-facts { font-size: 12px; }
+.view-facts { padding: 0 var(--workspace-gutter) 24px; font-size: 12px; }
 .view-facts button, .view-facts input, .view-facts select, .view-facts textarea { border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-background); color: var(--color-text); padding: 7px 9px; font: inherit; min-width: 0; }
 .view-facts button { cursor: pointer; white-space: nowrap; }
 .view-facts button:hover:enabled { background: var(--color-surface); border-color: var(--color-accent); }
@@ -322,9 +322,9 @@ const ViewFacts = Vue.defineComponent({
 .view-facts__editor .view-facts__help { margin: 0; }
 .view-facts__editor code { display: block; margin: 6px 0; }
 .view-facts__editor summary { cursor: pointer; }
-.view-facts__table-wrap { margin-inline: 0; border: 1px solid var(--color-border); border-radius: 4px; }
+.view-facts__table-wrap { border: 1px solid var(--color-border); border-radius: 4px; }
 .view-facts__table-wrap .property-grid__table :is(th, td) { padding: 3px 8px; border: 0; vertical-align: middle; line-height: 18px; }
-.view-facts__table-wrap .property-grid__table th { padding-block: 6px; white-space: nowrap; }
+.view-facts__table-wrap .property-grid__table th { padding-top: 6px; padding-bottom: 6px; white-space: nowrap; }
 .view-facts__table-wrap .property-grid__table td { font-family: inherit; white-space: normal; }
 .view-facts__table-wrap .property-grid__table :is(th, td):last-child { white-space: nowrap; }
 .view-facts__table-wrap tbody tr:nth-child(even) { background: color-mix(in srgb, var(--color-surface) 55%, var(--color-background)); }
@@ -351,7 +351,7 @@ const ViewFacts = Vue.defineComponent({
 .view-facts__inspection-layers > span { color: var(--color-muted); }
 .view-facts__inspection-layers label { flex-direction: row; align-items: center; gap: 6px; }
 .view-facts input[type="checkbox"] { accent-color: var(--color-accent); }
-.view-facts__layers-table .property-grid__table td { padding-block: 5px; }
+.view-facts__layers-table .property-grid__table td { padding-top: 5px; padding-bottom: 5px; }
 .view-facts__layers-table tbody tr:has(.view-facts__layer-select[aria-pressed="true"]) { background: color-mix(in srgb, var(--color-accent) 9%, var(--color-background)); }
 .view-facts button.view-facts__layer-select { border: 0; padding: 3px 0; background: transparent; text-align: left; }
 .view-facts__layer-select[aria-pressed="true"] { color: var(--color-accent); font-weight: 600; }

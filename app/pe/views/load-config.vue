@@ -45,7 +45,7 @@ const ViewLoadConfig = Vue.defineComponent({
 </script>
 
 <template id="view-load-config">
-	<section>
+	<section class="view-load-config">
 		<property-grid :list="data.image" :interpretations="headerColumns" label="Load configuration header" spacer></property-grid>
 		<h2 class="view-load-config__title">Security cookie value</h2>
 		<p class="view-load-config__cookie"><code>{{ data.securityCookie }}</code></p>
@@ -56,7 +56,8 @@ const ViewLoadConfig = Vue.defineComponent({
 </template>
 
 <style>
-.view-load-config__title { margin: 24px 0 12px; font-size: 14px; font-weight: 600; }
-.view-load-config__note { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
-.view-load-config__cookie { margin: 0; font-size: 12px; }
+.view-load-config { padding-bottom: 24px; }
+.view-load-config__title { margin: 24px var(--workspace-gutter) 12px; font-size: 14px; font-weight: 600; }
+.view-load-config__note { margin: 0 var(--workspace-gutter) 12px; color: var(--color-muted); font-size: 13px; }
+.view-load-config__cookie { margin: 0 var(--workspace-gutter); font-size: 12px; }
 </style>

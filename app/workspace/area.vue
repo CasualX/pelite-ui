@@ -194,7 +194,7 @@ const WorkspaceArea = Vue.defineComponent({
 .workspace-area { position: relative; isolation: isolate; display: flex; flex: 1; min-width: 0; min-height: 0; overflow: hidden; background: var(--workspace-background); color: var(--workspace-text); }
 .workspace-area__docked { position: relative; z-index: 0; display: flex; flex: 1; min-width: 0; min-height: 0; }
 .workspace-area__outlet { container-type: inline-size; display: flex; flex: 1; flex-direction: column; min-width: 0; min-height: 0; }
-.workspace-area__view { flex: 1; min-width: 0; min-height: 0; overflow: auto; padding: var(--workspace-view-padding, 0); }
+.workspace-area__view { flex: 1; min-width: 0; min-height: 0; overflow: auto; }
 .workspace-area__view:focus-visible, .workspace-control:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
 .workspace-control { min-width: 24px; height: 24px; padding: 0; border: 0; border-radius: 3px; background: transparent; color: var(--workspace-muted); font: 17px/1 system-ui, sans-serif; cursor: pointer; }
 .workspace-control:hover { background: var(--workspace-border); color: var(--workspace-text); }

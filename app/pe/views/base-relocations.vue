@@ -14,5 +14,9 @@ const ViewBaseRelocations = Vue.defineComponent({
 </script>
 
 <template id="view-base-relocations">
-	<p>{{ data.count.toLocaleString() }} base relocation {{ data.count === 1 ? 'record' : 'records' }}</p>
+	<p class="view-base-relocations">{{ data.count.toLocaleString() }} base relocation {{ data.count === 1 ? 'record' : 'records' }}</p>
 </template>
+
+<style>
+.view-base-relocations { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
+</style>

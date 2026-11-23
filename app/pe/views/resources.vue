@@ -85,7 +85,7 @@ const ViewResources = Vue.defineComponent({
 		</div>
 		<property-grid v-if="rows.length" class="view-resources__tree" :list="rows" :interpretations="columns" :row-key="rowKey" label="Resource tree" min-width="680px" auto-layout>
 			<template #resource="{ value: row }">
-				<div :style="{ paddingInlineStart: row.depth * 20 + 'px' }">
+				<div :style="{ paddingLeft: row.depth * 20 + 'px' }">
 					<button v-if="row.entry.directory" type="button" class="view-resources__branch" :aria-expanded="state.expanded.has(row.key)" @click="toggle(row.key)">
 						<svg class="view-resources__chevron" :class="{ 'view-resources__chevron--expanded': state.expanded.has(row.key) }" viewBox="0 0 16 16" aria-hidden="true"><path d="m6 4 4 4-4 4" /></svg>
 						<svg class="view-resources__icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4h5l2 2h5v7H2Z" /></svg>
@@ -104,6 +104,8 @@ const ViewResources = Vue.defineComponent({
 </template>
 
 <style>
+.view-resources { padding-bottom: 24px; }
+.view-resources__toolbar, .view-resources__empty { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
 .view-resources__toolbar { display: flex; gap: 8px; margin-bottom: 16px; }
 .view-resources__toolbar button { padding: 5px 10px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-size: 12px; cursor: pointer; user-select: none; }
 .view-resources__toolbar button:hover { background: var(--color-border); }

@@ -29,7 +29,7 @@ const AppStatus = Vue.defineComponent({
 .app-status__dot { flex-shrink: 0; width: 6px; height: 6px; border-radius: 50%; }
 .app-status__text { flex-shrink: 0; }
 .app-status__hint { min-width: 0; overflow-wrap: anywhere; margin-left: 5px; padding-left: 14px; border-left: 1px solid var(--color-border); color: var(--color-muted); }
-.app-status__github { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; margin-inline-start: auto; color: var(--color-muted); text-decoration: none; }
+.app-status__github { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; margin-left: auto; color: var(--color-muted); text-decoration: none; }
 .app-status__github:hover { color: var(--color-accent-hover); }
 .app-status__github:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 3px; border-radius: 2px; }
 @media (max-width: 440px) {

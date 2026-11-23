@@ -247,7 +247,7 @@ const WorkspaceTabBar = Vue.defineComponent({
 .workspace-tab--selected > .workspace-tab__close { color: inherit; }
 .workspace-tab--selected > .workspace-tab__close:hover { background: color-mix(in srgb, var(--workspace-accent) 24%, var(--workspace-background)); }
 .workspace-tab-bar__menu { position: fixed; inset: auto; margin: 0; padding: 4px; border: 1px solid var(--workspace-border); background: var(--workspace-surface); color: var(--workspace-text); box-shadow: 0 0 4px #0004, 0 2.5px 8px #0006; }
-.workspace-tab-bar__menu hr { margin: 4px 0; border: 0; border-block-start: 1px solid var(--workspace-border); }
+.workspace-tab-bar__menu hr { margin: 4px 0; border: 0; border-top: 1px solid var(--workspace-border); }
 .workspace-tab-bar__menu button { display: block; width: 100%; padding: 6px 12px; border: 0; border-radius: 2px; background: transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
 .workspace-tab-bar__menu button:hover, .workspace-tab-bar__menu button:focus-visible { background: var(--workspace-background); outline: 1px solid var(--workspace-accent); }
 </style>

@@ -81,7 +81,7 @@ const ViewDebugDirectory = Vue.defineComponent({
 </script>
 
 <template id="view-debug-directory">
-	<section>
+	<section class="view-debug-directory">
 		<property-grid v-if="data.rows.length" :list="data.rows" :interpretations="entryColumns" min-width="29rem" label="Debug directory entries" spacer></property-grid>
 		<p v-else class="view-debug-directory__note">No debug entries.</p>
 		<div v-if="data.rows.length" class="view-debug-directory__entries">
@@ -106,11 +106,12 @@ const ViewDebugDirectory = Vue.defineComponent({
 </template>
 
 <style>
-.view-debug-directory__title { margin: 24px 0 12px; font-size: 14px; font-weight: 600; }
-.view-debug-directory__note { margin: 0 0 12px; color: var(--color-muted); font-size: 13px; }
+.view-debug-directory { padding-bottom: 24px; }
+.view-debug-directory__title { margin: 24px var(--workspace-gutter) 12px; font-size: 14px; font-weight: 600; }
+.view-debug-directory__note { margin: 0 var(--workspace-gutter) 12px; color: var(--color-muted); font-size: 13px; }
 .view-debug-directory__entries { margin-top: 20px; }
 .view-debug-directory__entry { border-bottom: 1px solid var(--color-border); }
-.view-debug-directory__entry > summary { padding: 10px 0; font-size: 13px; font-weight: 600; cursor: pointer; }
-.view-debug-directory__entry > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
+.view-debug-directory__entry > summary { padding: 10px var(--workspace-gutter); font-size: 13px; font-weight: 600; cursor: pointer; }
+.view-debug-directory__entry > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .view-debug-directory__details { padding-bottom: 12px; }
 </style>

@@ -62,5 +62,5 @@ const SectionHeadersTable = Vue.defineComponent({
 
 <style>
 .section-headers-table :is(th, td) { white-space: nowrap; }
-.section-headers-table__empty { margin: 0; color: var(--color-muted); font-size: 13px; }
+.section-headers-table__empty { margin: 0 var(--workspace-gutter); color: var(--color-muted); font-size: 13px; }
 </style>

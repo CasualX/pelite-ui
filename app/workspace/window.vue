@@ -72,7 +72,7 @@ const WorkspaceWindow = Vue.defineComponent({
 .workspace-window:focus-visible { outline: 2px solid var(--workspace-accent); outline-offset: -2px; }
 .workspace-window__header { display: flex; align-items: center; gap: 4px; flex: 0 0 35px; min-width: 0; padding: 0 4px 0 12px; border-bottom: 1px solid var(--workspace-border); background: var(--workspace-surface); cursor: move; touch-action: none; user-select: none; }
 .workspace-window__title { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; font-weight: 600; }
-.workspace-window__dock { padding-inline: 6px; font-size: 12px; }
+.workspace-window__dock { padding-left: 6px; padding-right: 6px; font-size: 12px; }
 .workspace-window__close { display: grid; place-items: center; }
 .workspace-window__close::before, .workspace-window__close::after { content: ''; grid-area: 1 / 1; width: 9px; border-top: 1px solid currentColor; translate: 0 -1px; }
 .workspace-window__close::before { transform: rotate(45deg); }

@@ -26,7 +26,7 @@ const ViewManifest = Vue.defineComponent({
 </template>
 
 <style>
-.view-manifest { min-width: 0; }
+.view-manifest { min-width: 0; padding: 0 var(--workspace-gutter) 24px; }
 .view-manifest__source { margin: 0; padding: 16px 20px; overflow-x: auto; border: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-text); font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.7; tab-size: 4; }
 .view-manifest__source code { font: inherit; }
 </style>

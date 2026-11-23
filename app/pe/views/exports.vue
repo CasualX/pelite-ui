@@ -104,12 +104,11 @@ const ViewExports = Vue.defineComponent({
 </template>
 
 <style>
-.view-exports__dll { display: block; padding-block: 14px; overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 15px; }
-.view-exports__header { margin-inline: calc(-1 * var(--workspace-view-inline-padding, 0px)); border-block: 1px solid var(--color-border); }
-.view-exports__header > summary { padding: 8px var(--workspace-view-inline-padding, 12px); background: var(--color-surface); font-size: 12px; font-weight: 600; cursor: pointer; }
+.view-exports__dll { display: block; padding: 14px var(--workspace-gutter); overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 15px; }
+.view-exports__header { border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
+.view-exports__header > summary { padding: 8px var(--workspace-gutter, 12px); background: var(--color-surface); font-size: 12px; font-weight: 600; cursor: pointer; }
 .view-exports__header > summary::marker { color: var(--color-muted); }
 .view-exports__header > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.view-exports__header .property-grid { margin-inline: 0; }
-.view-exports__count { margin-inline-start: auto; color: var(--color-muted); font-size: 12px; }
-.view-exports__empty { margin: 12px 0 0; color: var(--color-muted); font-size: 12px; }
+.view-exports__count { margin-left: auto; color: var(--color-muted); font-size: 12px; }
+.view-exports__empty { margin: 12px var(--workspace-gutter) 0; color: var(--color-muted); font-size: 12px; }
 </style>

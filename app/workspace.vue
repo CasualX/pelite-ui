@@ -149,15 +149,16 @@ const AppWorkspace = Vue.defineComponent({
 </template>
 
 <style>
-@property --workspace-view-inline-padding {
+/* Resolve container units at the view so nested containers inherit a length. */
+@property --workspace-gutter {
 	syntax: '<length>';
 	inherits: true;
-	initial-value: 0px;
+	initial-value: 12px;
 }
 .app-workspace { --workspace-sidebar-width: 240px; flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
-.app-workspace > .workspace-sidebar { flex: 0 0 var(--workspace-sidebar-width); transition: margin-inline-start 180ms ease; }
-.app-workspace:not(.app-workspace--sidebar-open) > .workspace-sidebar { margin-inline-start: calc(-1 * var(--workspace-sidebar-width)); }
-.app-workspace--compact > .workspace-sidebar { flex-basis: 100%; border-inline-end: 0; transition: none; }
+.app-workspace > .workspace-sidebar { flex: 0 0 var(--workspace-sidebar-width); transition: margin-left 180ms ease; }
+.app-workspace:not(.app-workspace--sidebar-open) > .workspace-sidebar { margin-left: calc(-1 * var(--workspace-sidebar-width)); }
+.app-workspace--compact > .workspace-sidebar { flex-basis: 100%; border-right: 0; transition: none; }
 .app-workspace--compact:not(.app-workspace--sidebar-open) > .workspace-sidebar,
 .app-workspace--compact.app-workspace--sidebar-open .app-workspace__content { display: none; }
 .app-workspace__content { flex: 1; display: flex; flex-direction: column; min-width: 0; min-height: 0; }
@@ -170,8 +171,7 @@ const AppWorkspace = Vue.defineComponent({
 	--workspace-accent: var(--color-accent);
 }
 :where(.app-workspace__area) .workspace-area__view {
-	--workspace-view-inline-padding: clamp(12px, 4cqi, 32px);
-	--workspace-view-padding: 0 var(--workspace-view-inline-padding) 24px;
+	--workspace-gutter: clamp(12px, 4cqi, 32px);
 }
 .app-workspace__error { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--color-border); color: var(--color-danger); background: var(--color-surface); font-size: 13px; overflow-wrap: anywhere; }
 @media (prefers-reduced-motion: reduce) {

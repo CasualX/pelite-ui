@@ -37,13 +37,13 @@ const ViewImports = Vue.defineComponent({
 			searchFields: importSearchFields,
 			libraryColumns: /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Library', slot: 'library' },
-				{ title: '#', label: 'Functions', width: 'calc(3.125rem + var(--workspace-view-inline-padding))', style: { textAlign: 'right' }, format: value => {
+				{ title: '#', label: 'Functions', width: 'calc(3.125rem + var(--property-grid-gutter))', style: { textAlign: 'right' }, format: value => {
 					const rows = (/** @type {ImportModule} */ (value)).rows;
 					return rows?.length.toLocaleString() ?? '—';
 				} },
 			]),
 			interpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'IAT RVA', width: 'calc(5.5rem + var(--workspace-view-inline-padding))', kind: 'rva',
+				{ title: 'IAT RVA', width: 'calc(5.5rem + var(--workspace-gutter))', kind: 'rva',
 					format: value => formatImportHex((/** @type {PeLite.PeImportEntry} */ (value)).address) },
 				{ title: 'Name', format: value => {
 					const symbol = (/** @type {PeLite.PeImportEntry} */ (value)).import;
@@ -119,26 +119,23 @@ const ViewImports = Vue.defineComponent({
 </template>
 
 <style>
-.workspace-area__view:has(> .view-imports) { padding-block-end: 0; overflow: clip; }
-.view-imports { display: flex; flex-direction: column; block-size: 100%; }
-.view-imports__layout { margin-inline: calc(-1 * var(--workspace-view-inline-padding)); }
-.view-imports__layout { display: grid; flex: 1; min-block-size: 0; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); }
-.view-imports__layout .property-grid { margin-inline: 0; }
+.view-imports { display: flex; flex-direction: column; height: 100%; overflow: clip; }
+.view-imports__layout { display: grid; flex: 1; min-height: 0; grid-template-columns: clamp(13rem, 27%, 20rem) minmax(0, 1fr); }
 .view-imports__libraries, .view-imports__details { overflow: auto; overscroll-behavior: contain; }
-.view-imports__libraries { --workspace-view-inline-padding: 12px; }
+.view-imports__libraries { --property-grid-gutter: 12px; }
 .view-imports__libraries .property-grid__table tbody td:first-child { padding: 0; }
 .view-imports__libraries tr:has(.view-imports__library[aria-current="true"]) { background: color-mix(in srgb, var(--color-accent) 13%, var(--color-background)); }
-.view-imports__library { display: block; width: 100%; padding: 6px 12px 6px var(--workspace-view-inline-padding); border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
+.view-imports__library { display: block; width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .view-imports__library:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.view-imports__details { min-width: 0; padding-block: 10px 24px; border-inline-start: 1px solid var(--color-border); }
+.view-imports__details { min-width: 0; padding: 10px 0 24px; border-left: 1px solid var(--color-border); }
 .view-imports__details .property-grid { overflow: visible; }
-.view-imports__details h2, .view-imports__details > p { padding-inline: var(--workspace-view-inline-padding); }
+.view-imports__details h2, .view-imports__details > p { padding-left: var(--workspace-gutter); padding-right: var(--workspace-gutter); }
 .view-imports__details h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
 .view-imports__details .property-grid + h2 { margin-top: 20px; }
 .view-imports__empty { margin: 0; color: var(--color-muted); font-size: 12px; }
-.view-imports > .view-imports__empty { margin-block-start: 12px; }
+.view-imports > .view-imports__empty { margin-top: 12px; padding-left: var(--workspace-gutter); padding-right: var(--workspace-gutter); }
 @container (width < 44rem) {
 	.view-imports__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(40%) minmax(0, 1fr); gap: 20px; }
-	.view-imports__details { padding-block-start: 0; border-inline-start: 0; }
+	.view-imports__details { padding-top: 0; border-left: 0; }
 }
 </style>
