@@ -8,7 +8,7 @@ const WorkspaceSidebar = Vue.defineComponent({
 	},
 	emits: ['open-view', 'activate-view', 'close-view'],
 	data() {
-		return { collapsedGroups: /** @type {Set<string>} */ (new Set()) };
+		return { groupPrefix: `sidebar-group-${Vue.useId()}`, collapsedGroups: /** @type {Set<string>} */ (new Set()) };
 	},
 	computed: {
 		groups() {
@@ -42,12 +42,12 @@ const WorkspaceSidebar = Vue.defineComponent({
 	<aside class="workspace-sidebar" aria-label="Workspace views">
 		<div v-for="group in groups" :key="group.id" class="workspace-sidebar__group">
 			<h2 v-if="group.title" class="workspace-sidebar__group-title">
-				<button class="workspace-sidebar__group-toggle" type="button" :aria-expanded="!collapsedGroups.has(group.id)" :aria-controls="'sidebar-group-' + group.id" @click="toggleGroup(group.id)">
+				<button class="workspace-sidebar__group-toggle" type="button" :aria-expanded="!collapsedGroups.has(group.id)" :aria-controls="groupPrefix + '-' + group.id" @click="toggleGroup(group.id)">
 					<svg class="workspace-sidebar__chevron" width="12" height="12" viewBox="0 0 16 16" fill="none" aria-hidden="true"><path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" /></svg>
 					{{ group.title }}
 				</button>
 			</h2>
-			<ul :id="'sidebar-group-' + group.id" v-show="!group.title || !collapsedGroups.has(group.id)" class="workspace-sidebar__list">
+			<ul :id="groupPrefix + '-' + group.id" v-show="!group.title || !collapsedGroups.has(group.id)" class="workspace-sidebar__list">
 				<li v-for="item in group.views" :key="item.id">
 					<div :class="{ 'workspace-sidebar__open-row': item.primary }">
 						<button class="workspace-sidebar__row workspace-sidebar__view-button"

@@ -34,6 +34,8 @@ const AppWorkspace = Vue.defineComponent({
 	components: { WorkspaceArea, WorkspaceSidebar, PeAddressMenu },
 	props: {
 		document: { type: Object, required: true },
+		active: Boolean,
+		sidebarId: { type: String, required: true },
 		compact: Boolean,
 		sidebarOpen: { type: Boolean, default: true },
 	},
@@ -45,6 +47,10 @@ const AppWorkspace = Vue.defineComponent({
 			viewGroups: createWorkspaceViewGroups(openedDocument),
 			viewError: '',
 		};
+	},
+	watch: {
+		/** @param {boolean} active */
+		active(active) { if (!active) this.$refs.contextMenu.dismiss(); },
 	},
 	computed: {
 		peDocument() { return /** @type {PeDocument} */ (/** @type {unknown} */ (this.document)); },
@@ -114,25 +120,18 @@ const AppWorkspace = Vue.defineComponent({
 		closeView(id) {
 			if (this.model.closeView(id)) this.clearViewError();
 		},
-		canClose() { return !this.peDocument.dirty || window.confirm('Facts have unsaved changes. Close the file and discard them? Export individual factmaps to keep your work.'); },
-		/** @param {BeforeUnloadEvent} event */
-		beforeUnload(event) { if (this.peDocument.dirty) { event.preventDefault(); event.returnValue = ''; } },
 		clearViewError() {
 			this.viewError = '';
 			this.$emit('status', new StatusModel('var(--color-success)', 'Ready', this.peDocument.file.name));
 		},
 	},
-	mounted() {
-		this.openView('summary');
-		window.addEventListener('beforeunload', this.beforeUnload);
-	},
-	beforeUnmount() { window.removeEventListener('beforeunload', this.beforeUnload); },
+	mounted() { this.openView('summary'); },
 });
 </script>
 
 <template id="app-workspace">
 	<div class="app-workspace" :class="{ 'app-workspace--compact': compact, 'app-workspace--sidebar-open': sidebarOpen }">
-		<workspace-sidebar id="pe-view-sidebar" :class="{ 'workspace-sidebar--compact': compact }" :inert="!sidebarOpen"
+		<workspace-sidebar :id="sidebarId" :class="{ 'workspace-sidebar--compact': compact }" :inert="!sidebarOpen"
 			:open-views="model.views" :view-groups="viewGroups" :active-view-id="model.activeViewId"
 			@open-view="openSidebarView" @activate-view="activateSidebarView" @close-view="closeView"></workspace-sidebar>
 		<div class="app-workspace__content">
@@ -155,7 +154,7 @@ const AppWorkspace = Vue.defineComponent({
 	inherits: true;
 	initial-value: 12px;
 }
-.app-workspace { --workspace-sidebar-width: 240px; flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
+.app-workspace { flex: 1; display: flex; min-width: 0; min-height: 0; overflow: hidden; }
 .app-workspace > .workspace-sidebar { flex: 0 0 var(--workspace-sidebar-width); transition: margin-left 180ms ease; }
 .app-workspace:not(.app-workspace--sidebar-open) > .workspace-sidebar { margin-left: calc(-1 * var(--workspace-sidebar-width)); }
 .app-workspace--compact > .workspace-sidebar { flex-basis: 100%; border-right: 0; transition: none; }
