@@ -15,7 +15,7 @@ function prepareAddressConverterView(document, data) {
 	return {
 		component: 'view-address-converter',
 		data: { document, imageSize: header.SizeOfImage, input },
-		preferredWindowSize: { width: 272, height: 188 },
+		preferredWindowSize: { width: 256, height: 175 },
 	};
 }
 
@@ -90,7 +90,7 @@ const ViewAddressConverter = Vue.defineComponent({
 </template>
 
 <style>
-.view-address-converter { display: grid; gap: 6px; max-inline-size: 19rem; }
+.view-address-converter { display: grid; gap: 6px; max-inline-size: 19rem; padding-block-start: 12px; }
 .view-address-converter__field { display: grid; grid-template-columns: 4rem minmax(0, 1fr); align-items: center; gap: 8px; font-size: 12px; }
 .view-address-converter__field input { width: 100%; min-width: 0; height: 30px; padding: 5px 8px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font: 12px ui-monospace, SFMono-Regular, Consolas, monospace; }
 .view-address-converter__field input:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
