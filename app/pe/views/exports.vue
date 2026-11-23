@@ -35,22 +35,24 @@ const ViewExports = Vue.defineComponent({
 	components: { PeFilterToolbar },
 	props: { data: { type: Object, required: true } },
 	data() {
-		return {
-			searchFields: exportSearchFields,
-			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
+		return { searchFields: exportSearchFields };
+	},
+	computed: {
+		/** @returns {PropertyGridColumn[]} */
+		headerInterpretations() {
+			return [
 				{ title: 'Field', width: 'clamp(11rem, 26.5cqi, 16rem)', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['Name', 'AddressOfFunctions', 'AddressOfNames', 'AddressOfNameOrdinals'].includes(String(field)) ? 'rva' : undefined,
 					width: 'clamp(7.5rem, 18.5cqi, 10rem)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
 				{ title: 'Interpretation', format: (value, name) => {
+					if (name === 'Name') return this.exportsData.directory.dll_name ?? 'DLL name unavailable';
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);
 					if (timestamp === 0 || timestamp === 0xffffffff) return 'Unspecified';
 					return new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
 				} },
-			]),
-		};
-	},
-	computed: {
+			];
+		},
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
 				{ title: 'Ordinal', width: '7rem', style: { textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
@@ -90,7 +92,6 @@ const ViewExports = Vue.defineComponent({
 
 <template id="view-exports">
 	<section class="view-exports">
-		<strong class="view-exports__dll">{{ data.directory.dll_name ?? 'DLL name unavailable' }}</strong>
 		<details class="view-exports__header">
 			<summary>Directory header</summary>
 			<property-grid :list="data.directory.image" :interpretations="headerInterpretations" min-width="27rem" label="Export directory header"></property-grid>
@@ -104,7 +105,6 @@ const ViewExports = Vue.defineComponent({
 </template>
 
 <style>
-.view-exports__dll { display: block; padding: 14px var(--workspace-gutter); overflow-wrap: anywhere; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 15px; }
 .view-exports__header { border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
 .view-exports__header > summary { padding: 8px var(--workspace-gutter, 12px); background: var(--color-surface); font-size: 12px; font-weight: 600; cursor: pointer; }
 .view-exports__header > summary::marker { color: var(--color-muted); }
