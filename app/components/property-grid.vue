@@ -39,6 +39,14 @@ const PropertyGrid = Vue.defineComponent({
 			return tracks.join(' ');
 		},
 	},
+	methods: {
+		/** @param {Event} event */
+		syncColumnHeaders(event) {
+			const body = /** @type {HTMLTableSectionElement} */ (event.currentTarget);
+			const header = body.closest('table')?.tHead;
+			if (header && header.scrollLeft !== body.scrollLeft) header.scrollLeft = body.scrollLeft;
+		},
+	},
 });
 </script>
 
@@ -56,7 +64,8 @@ const PropertyGrid = Vue.defineComponent({
 					<th v-if="spacer" class="property-grid__spacer" aria-hidden="true"></th>
 				</tr>
 			</thead>
-			<tbody :role="scrollRows ? 'rowgroup' : undefined" :tabindex="scrollRows ? 0 : undefined">
+			<tbody :role="scrollRows ? 'rowgroup' : undefined" :tabindex="scrollRows ? 0 : undefined"
+				@scroll.passive="scrollRows && syncColumnHeaders($event)">
 				<tr v-for="(value, index) in list" :key="rowKey ? rowKey(value, index) : index" :role="scrollRows ? 'row' : undefined">
 					<td v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :role="scrollRows ? 'cell' : undefined" :data-kind="typeof column.kind === 'function' ? column.kind(value, index) : column.kind">
 						<slot v-if="column.slot" :name="column.slot" :value="value" :index="index">{{ column.format?.(value, index) }}</slot>
