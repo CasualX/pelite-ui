@@ -92,7 +92,7 @@ const AppMain = Vue.defineComponent({
 		dropFiles(event) {
 			this.openFiles(Array.from(event.dataTransfer?.files ?? []));
 		},
-		/** @param {File[]} files */
+		/** @param {(File | ExampleBinary)[]} files */
 		async openFiles(files) {
 			const pelite = this.pelite;
 			if (!pelite || this.loadingFile !== null || !files.length) return;
@@ -102,10 +102,19 @@ const AppMain = Vue.defineComponent({
 			let lastOpenedId = null;
 			let failures = 0;
 			let firstError = '';
-			for (const file of files) {
-				this.loadingFile = file.name;
-				let error = `Unable to read ${file.name}.`;
+			for (const source of files) {
+				this.loadingFile = source.name;
+				let error = `Unable to read ${source.name}.`;
 				try {
+					let file;
+					if (source instanceof File) {
+						file = source;
+					} else {
+						error = `Unable to load the example ${source.name}. Try again.`;
+						const response = await fetch(source.url);
+						if (!response.ok) throw new Error(`HTTP ${response.status}`);
+						file = new File([await response.blob()], source.name);
+					}
 					const bytes = new Uint8Array(await file.arrayBuffer());
 					if (this.disposed) return;
 					error = `${file.name} is not a supported PE file.`;
@@ -198,7 +207,7 @@ app.mount('#app');
 		<main class="app-main__content">
 			<app-splash v-if="!pelite" @ready="onReady" @status="status = $event"></app-splash>
 			<app-input v-else-if="showInput" ref="input" :loading="loadingFile !== null" :error="openError"
-				@choose="chooseFiles" @files="openFiles" @error="openError = $event"></app-input>
+				@choose="chooseFiles" @files="openFiles" @example="openFiles([$event])" @error="openError = $event"></app-input>
 			<app-workspace v-for="binary in binaries" v-show="!showInput && binary.id === activeBinaryId" :key="binary.id"
 				:active="!showInput && binary.id === activeBinaryId" :sidebar-id="'pe-view-sidebar-' + binary.id"
 				:document="binary.document" :compact="compactWorkspace" :sidebar-open="sidebarOpen"
