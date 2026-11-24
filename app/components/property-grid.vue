@@ -27,38 +27,45 @@ const PropertyGrid = Vue.defineComponent({
 		autoLayout: Boolean,
 		rowKey: Function,
 		spacer: Boolean,
+		scrollRows: Boolean,
 	},
 	computed: {
 		columns() {
 			return /** @type {PropertyGridColumn[]} */ (this.interpretations);
+		},
+		rowTracks() {
+			const tracks = this.columns.map(column => column.width ?? 'minmax(0, 1fr)');
+			if (this.spacer) tracks.push('minmax(0, 1fr)');
+			return tracks.join(' ');
 		},
 	},
 });
 </script>
 
 <template id="property-grid">
-	<div class="property-grid">
-		<table class="property-grid__table" :aria-label="label" :style="{ minWidth, tableLayout: autoLayout ? 'auto' : 'fixed' }">
-			<colgroup>
+	<div class="property-grid" :class="{ 'property-grid--scroll-rows': scrollRows }">
+		<table class="property-grid__table" :aria-label="label" :role="scrollRows ? 'table' : undefined"
+			:style="{ minWidth, tableLayout: autoLayout ? 'auto' : 'fixed', '--property-grid-row-tracks': scrollRows ? rowTracks : undefined }">
+			<colgroup v-if="!scrollRows">
 				<col v-for="(column, index) in columns" :key="index" :style="{ width: column.width }">
 				<col v-if="spacer">
 			</colgroup>
-			<thead>
-				<tr>
-					<th v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :aria-label="column.label" :title="column.label" scope="col">{{ column.title }}</th>
+			<thead :role="scrollRows ? 'rowgroup' : undefined">
+				<tr :role="scrollRows ? 'row' : undefined">
+					<th v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :aria-label="column.label" :title="column.label" :role="scrollRows ? 'columnheader' : undefined" scope="col">{{ column.title }}</th>
 					<th v-if="spacer" class="property-grid__spacer" aria-hidden="true"></th>
 				</tr>
 			</thead>
-			<tbody>
-				<tr v-for="(value, index) in list" :key="rowKey ? rowKey(value, index) : index">
-					<td v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :data-kind="typeof column.kind === 'function' ? column.kind(value, index) : column.kind">
+			<tbody :role="scrollRows ? 'rowgroup' : undefined" :tabindex="scrollRows ? 0 : undefined">
+				<tr v-for="(value, index) in list" :key="rowKey ? rowKey(value, index) : index" :role="scrollRows ? 'row' : undefined">
+					<td v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :role="scrollRows ? 'cell' : undefined" :data-kind="typeof column.kind === 'function' ? column.kind(value, index) : column.kind">
 						<slot v-if="column.slot" :name="column.slot" :value="value" :index="index">{{ column.format?.(value, index) }}</slot>
 						<template v-else>{{ column.format(value, index) }}</template>
 					</td>
 					<td v-if="spacer" class="property-grid__spacer" aria-hidden="true"></td>
 				</tr>
-				<tr v-if="$slots.empty && Object.keys(list).length === 0">
-					<td :colspan="columns.length + Number(spacer)"><slot name="empty"></slot></td>
+				<tr v-if="$slots.empty && Object.keys(list).length === 0" :role="scrollRows ? 'row' : undefined">
+					<td :colspan="columns.length + Number(spacer)" :role="scrollRows ? 'cell' : undefined"><slot name="empty"></slot></td>
 				</tr>
 			</tbody>
 		</table>
@@ -75,4 +82,13 @@ const PropertyGrid = Vue.defineComponent({
 .property-grid__table td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; }
 .property-grid__table tbody tr:hover { background: var(--color-surface); }
 .property-grid__table .property-grid__spacer:last-child { padding: 0; }
+.property-grid--scroll-rows { display: flex; flex-direction: column; overflow: clip; }
+.property-grid--scroll-rows > .property-grid__table { display: grid; grid-template-rows: max-content minmax(0, 1fr); min-height: 0; border-collapse: separate; border-spacing: 0; }
+.property-grid--scroll-rows :is(thead, tbody) { display: block; scrollbar-gutter: stable; }
+.property-grid--scroll-rows thead { overflow: hidden; background: var(--color-surface); }
+.property-grid--scroll-rows tbody { overflow: auto; overscroll-behavior: contain; }
+.property-grid--scroll-rows tbody:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.property-grid--scroll-rows tr { display: grid; grid-template-columns: var(--property-grid-row-tracks); }
+.property-grid--scroll-rows :is(th, td) { min-width: 0; }
+.property-grid--scroll-rows td[colspan] { grid-column: 1 / -1; }
 </style>

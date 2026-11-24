@@ -107,9 +107,7 @@ const ViewImports = Vue.defineComponent({
 				</template>
 			</property-grid>
 			<section class="view-imports__details" tabindex="0" :aria-label="'Imports from ' + (selectedModule.descriptor.dll_name ?? 'unknown DLL')">
-				<h2>Directory descriptor</h2>
 				<property-grid :list="selectedModule.descriptor.image" :interpretations="headerInterpretations" min-width="27rem" label="Import directory descriptor"></property-grid>
-				<h2>Functions</h2>
 				<property-grid v-if="selectedModule.rows?.length" :list="selectedModule.rows" :interpretations="interpretations" min-width="30rem" :label="'Imports from ' + (selectedModule.descriptor.dll_name ?? 'unknown DLL')"></property-grid>
 				<p v-else class="view-imports__empty">{{ selectedModule.rows === null ? 'The import lookup table could not be parsed.' : 'No imported symbols.' }}</p>
 			</section>
@@ -127,15 +125,11 @@ const ViewImports = Vue.defineComponent({
 .view-imports__libraries tr:has(.view-imports__library[aria-current="true"]) { background: color-mix(in srgb, var(--color-accent) 13%, var(--color-background)); }
 .view-imports__library { display: block; width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .view-imports__library:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.view-imports__details { min-width: 0; padding: 10px 0 24px; border-left: 1px solid var(--color-border); }
+.view-imports__details { min-width: 0; border-left: 1px solid var(--color-border); }
 .view-imports__details .property-grid { overflow: visible; }
-.view-imports__details h2, .view-imports__details > p { padding-left: var(--workspace-gutter); padding-right: var(--workspace-gutter); }
-.view-imports__details h2 { margin: 0 0 10px; font-size: 13px; font-weight: 600; }
-.view-imports__details .property-grid + h2 { margin-top: 20px; }
-.view-imports__empty { margin: 0; color: var(--color-muted); font-size: 12px; }
-.view-imports > .view-imports__empty { margin-top: 12px; padding-left: var(--workspace-gutter); padding-right: var(--workspace-gutter); }
+.view-imports__empty { margin: 12px var(--workspace-gutter) 0; color: var(--color-muted); font-size: 12px; }
 @container (width < 44rem) {
 	.view-imports__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(40%) minmax(0, 1fr); gap: 20px; }
-	.view-imports__details { padding-top: 0; border-left: 0; }
+	.view-imports__details { border-left: 0; }
 }
 </style>

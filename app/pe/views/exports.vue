@@ -35,15 +35,15 @@ const ViewExports = Vue.defineComponent({
 	components: { PeFilterToolbar },
 	props: { data: { type: Object, required: true } },
 	data() {
-		return { searchFields: exportSearchFields };
+		return { searchFields: exportSearchFields, directoryId: Vue.useId(), directoryOpen: false };
 	},
 	computed: {
 		/** @returns {PropertyGridColumn[]} */
 		headerInterpretations() {
 			return [
-				{ title: 'Field', width: 'clamp(11rem, 26.5cqi, 16rem)', format: (value, name) => String(name) },
+				{ title: 'Field', width: 'clamp(0px, 37cqi, 16rem)', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['Name', 'AddressOfFunctions', 'AddressOfNames', 'AddressOfNameOrdinals'].includes(String(field)) ? 'rva' : undefined,
-					width: 'clamp(7.5rem, 18.5cqi, 10rem)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
+					width: 'clamp(0px, 26cqi, 10rem)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatExportHex(value) : String(value) },
 				{ title: 'Interpretation', format: (value, name) => {
 					if (name === 'Name') return this.exportsData.directory.dll_name ?? 'DLL name unavailable';
 					if (name !== 'TimeDateStamp') return '';
@@ -55,10 +55,10 @@ const ViewExports = Vue.defineComponent({
 		},
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Ordinal', width: '7rem', style: { textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
+				{ title: 'Ordinal', width: 'min(7rem, 23%)', style: { textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
 				{ title: 'Name', format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
 				{ title: 'RVA', kind: value => typeof (/** @type {ExportRow} */ (value)).target === 'number' ? 'rva' : undefined,
-					width: '8rem', style: { textAlign: 'right' }, format: value => {
+					width: 'min(8rem, 26%)', style: { textAlign: 'right' }, format: value => {
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },
@@ -91,24 +91,55 @@ const ViewExports = Vue.defineComponent({
 </script>
 
 <template id="view-exports">
-	<section class="view-exports">
-		<details class="view-exports__header">
-			<summary>Directory header</summary>
-			<property-grid :list="data.directory.image" :interpretations="headerInterpretations" min-width="27rem" label="Export directory header"></property-grid>
-		</details>
+	<section class="view-exports" :class="{ 'view-exports--directory-open': directoryOpen }">
 		<pe-filter-toolbar label="Filter exports" :fields="searchFields" v-model:query="state.query" v-model:match-fields="state.matchFields">
-			<span class="view-exports__count" role="status">{{ filteredRows.length.toLocaleString() }} {{ filteredRows.length === 1 ? 'export' : 'exports' }}</span>
+			<div class="view-exports__toolbar-end">
+				<span class="view-exports__count" role="status">{{ filteredRows.length.toLocaleString() }} {{ filteredRows.length === 1 ? 'export' : 'exports' }}</span>
+				<button class="view-exports__header" type="button" :aria-expanded="directoryOpen"
+					:aria-controls="directoryId" @click="directoryOpen = !directoryOpen">
+					Directory header
+					<svg viewBox="0 0 16 16" width="12" height="12" fill="none" aria-hidden="true">
+						<path d="m4 6 4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />
+					</svg>
+				</button>
+			</div>
 		</pe-filter-toolbar>
-		<property-grid v-if="filteredRows.length" :list="filteredRows" :interpretations="interpretations" min-width="30rem" label="Exports"></property-grid>
-		<p v-else class="view-exports__empty">{{ data.rows.length ? 'No matching entries.' : 'No exports.' }}</p>
+		<div class="view-exports__body">
+			<div :id="directoryId" class="view-exports__directory" :inert="!directoryOpen">
+				<property-grid :list="data.directory.image" :interpretations="headerInterpretations"
+					label="Export directory header" scroll-rows></property-grid>
+			</div>
+			<property-grid v-if="filteredRows.length" class="view-exports__results"
+				:list="filteredRows" :interpretations="interpretations" label="Exports" scroll-rows></property-grid>
+			<p v-else class="view-exports__empty">{{ data.rows.length ? 'No matching entries.' : 'No exports.' }}</p>
+		</div>
 	</section>
 </template>
 
 <style>
-.view-exports__header { border-top: 1px solid var(--color-border); border-bottom: 1px solid var(--color-border); }
-.view-exports__header > summary { padding: 8px var(--workspace-gutter, 12px); background: var(--color-surface); font-size: 12px; font-weight: 600; cursor: pointer; }
-.view-exports__header > summary::marker { color: var(--color-muted); }
-.view-exports__header > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.view-exports__count { margin-left: auto; color: var(--color-muted); font-size: 12px; }
+.view-exports { container: export-pane / size; display: flex; flex-direction: column; height: 100%; overflow: clip; }
+.view-exports__toolbar-end { display: flex; flex: none; align-items: center; gap: 12px; margin-inline-start: auto; white-space: nowrap; }
+.view-exports__count { padding-inline-end: 12px; border-inline-end: 1px solid var(--color-border); color: var(--color-muted); font-size: 12px; line-height: 18px; }
+.view-exports__header { display: flex; align-items: center; gap: 6px; min-height: 28px; padding: 4px 10px; border: 1px solid transparent; border-radius: 5px; background: transparent; color: var(--color-muted); font-size: 12px; cursor: pointer; }
+.view-exports__header:hover { border-color: var(--color-border); color: var(--color-text); }
+.view-exports__header[aria-expanded="true"] { border-color: color-mix(in srgb, var(--color-accent) 45%, var(--color-border)); background: color-mix(in srgb, var(--color-accent) 14%, var(--color-surface)); color: var(--color-accent-hover); }
+.view-exports__header[aria-expanded="true"] svg { transform: rotate(180deg); }
+.view-exports__body { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.view-exports__directory { display: grid; grid-template-rows: 0fr; flex: none; min-height: 0; overflow: clip; transition: grid-template-rows 180ms ease-out; }
+.view-exports--directory-open .view-exports__directory { grid-template-rows: 1fr; }
+.view-exports__directory > .property-grid { align-self: start; min-height: 0; background: var(--color-background); }
+.view-exports__results { flex: 1; min-height: 0; }
+.view-exports__header:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .view-exports__empty { margin: 12px var(--workspace-gutter) 0; color: var(--color-muted); font-size: 12px; }
+@container export-pane (height < 34rem) or (width < 22rem) {
+	/* Give the open directory the rows area when there is too little room for both tables. */
+	.view-exports__body { display: grid; grid-template-rows: minmax(0, 1fr); }
+	.view-exports__body > * { grid-area: 1 / 1; }
+	.view-exports__directory { z-index: 1; }
+	.view-exports__directory > .property-grid { align-self: stretch; }
+	.view-exports--directory-open :is(.view-exports__results, .view-exports__empty) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.view-exports__directory { transition: none; }
+}
 </style>
