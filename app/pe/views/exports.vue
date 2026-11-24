@@ -2,7 +2,7 @@
 <link rel="component" href="filter-toolbar.vue">
 
 <script>
-const exportSearchFields = /** @type {const} */ (['Name', 'Ordinal', 'RVA', 'Forwarder']);
+const exportSearchFields = /** @type {const} */ (['Name', 'Forwarder', 'Ord', 'RVA']);
 /** @typedef {(typeof exportSearchFields)[number]} ExportSearchField */
 /** @typedef {{ ordinal: number, target: number | null | string, names: string[] }} ExportRow */
 /** @typedef {{ directory: PeLite.PeExportDirectory, rows: ExportRow[], state: { query: string, matchFields: ExportSearchField[] } }} ExportsViewData */
@@ -26,7 +26,7 @@ function prepareExportsView(context) {
 	for (const [name, index] of Object.entries(directory.names)) rows[index].names.push(name);
 	return {
 		component: 'view-exports',
-		data: { directory, rows, state: { query: '', matchFields: [...exportSearchFields] } },
+		data: { directory, rows, state: { query: '', matchFields: ['Name', 'Forwarder'] } },
 	};
 }
 
@@ -55,13 +55,14 @@ const ViewExports = Vue.defineComponent({
 		},
 		interpretations() {
 			const columns = /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Ordinal', width: 'min(7rem, 23%)', style: { textAlign: 'right' }, format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
-				{ title: 'Name', format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
+				{ title: 'Ord', label: 'Ordinal', width: 'calc(3.1em + var(--workspace-gutter, 12px) + 12px)', style: { textAlign: 'right' },
+					format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
 				{ title: 'RVA', kind: value => typeof (/** @type {ExportRow} */ (value)).target === 'number' ? 'rva' : undefined,
 					width: 'min(8rem, 26%)', style: { textAlign: 'right' }, format: value => {
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },
+				{ title: 'Name', format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
 			]);
 			if (this.exportsData.rows.some(row => typeof row.target === 'string')) {
 				columns.push({ title: 'Forwarded to', format: value => {
@@ -81,7 +82,7 @@ const ViewExports = Vue.defineComponent({
 			const fields = this.state.matchFields;
 			return this.exportsData.rows.filter(({ ordinal, names, target }) => (
 				(fields.includes('Name') && names.some(name => name.toLowerCase().includes(query))) ||
-				(fields.includes('Ordinal') && String(ordinal).includes(query)) ||
+				(fields.includes('Ord') && String(ordinal).includes(query)) ||
 				(fields.includes('RVA') && typeof target !== 'string' && (target === null ? 'null' : formatExportHex(target)).includes(query)) ||
 				(fields.includes('Forwarder') && typeof target === 'string' && target.toLowerCase().includes(query))
 			));
