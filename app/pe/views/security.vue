@@ -57,12 +57,8 @@ const ViewSecurity = Vue.defineComponent({
 	padding: 0;
 	list-style: none;
 }
-.view-security__certificate {
-	background: color-mix(in srgb, var(--color-surface) 65%, var(--color-background));
-}
 .view-security__certificate > summary {
 	padding: 10px var(--workspace-gutter);
-	background: color-mix(in srgb, var(--color-surface) 80%, var(--color-border));
 	font-size: 14px;
 	font-weight: 600;
 	cursor: pointer;
