@@ -1,6 +1,9 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
+// The upstream JavaScript declarations still describe the older debug payloads.
+/** @typedef {{ PreVCPP: number, CCPP: number, GS: number, SDL: number, GuardN: number }} DebugVcFeature */
+/** @typedef {PeLite.PeDebugDirectoryEntry['entry'] | DebugVcFeature | { hash: string | null } | { bits: number, flags: string[] } | { $error: string }} DebugEntry */
 /** @typedef {PeLite.PeDebugDirectoryImage & { type: string, image: PeLite.PeDebugDirectoryImage, payload: ReturnType<typeof debugEntryDetails> }} DebugDirectoryRow */
 
 /** @param {unknown} row @param {string} field @returns {string} */
@@ -8,9 +11,10 @@ function formatDebugField(row, field) {
 	return formatPropertyGridHex((/** @type {Record<string, unknown>} */ (row))[field]);
 }
 
-/** @param {PeLite.PeDebugDirectoryEntry['entry']} entry */
+/** @param {DebugEntry} entry */
 function debugEntryDetails(entry) {
 	if (!entry) return null;
+	if ('$error' in entry) return { fields: { Error: entry.$error } };
 	if ('pdb_file_name' in entry) {
 		return { fields: { Format: entry.format, ...entry.image, 'PDB path': entry.pdb_file_name } };
 	}
@@ -18,10 +22,15 @@ function debugEntryDetails(entry) {
 		const name = Array.isArray(entry.name) ? entry.name.map(unit => String.fromCharCode(unit)).join('') : entry.name;
 		return { fields: { ...entry.image, Name: name } };
 	}
-	return {
-		fields: { 'PGO signature': entry.signature },
-		sections: entry.sections.map(section => section.Ok ?? { error: section.Err }),
-	};
+	if ('sections' in entry) {
+		return {
+			fields: { 'PGO signature': entry.signature },
+			sections: entry.sections.map(section => section.Ok ?? { error: section.Err }),
+		};
+	}
+	if ('hash' in entry) return { fields: { Hash: entry.hash ?? 'None (marker only)' } };
+	if ('bits' in entry) return { fields: { Bitmask: entry.bits, Flags: entry.flags.join('\n') || 'None' } };
+	return { fields: entry };
 }
 
 /** @param {PeDocument} context @returns {ViewContent} */
@@ -50,7 +59,7 @@ const ViewDebugDirectory = Vue.defineComponent({
 		return {
 			selectedEntryIndex: 0,
 			entryColumns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Type', width: firstColumnWidth, format: row => formatDebugField(row, 'type') },
+				{ title: 'Type', width: 'calc(10rem + var(--workspace-gutter, 12px) + 12px)', format: row => formatDebugField(row, 'type') },
 				{ title: 'Data RVA', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'AddressOfRawData') },
 				{ title: 'File offset', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
