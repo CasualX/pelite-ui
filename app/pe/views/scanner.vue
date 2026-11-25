@@ -136,8 +136,8 @@ const ViewScanner = Vue.defineComponent({
 				</span>
 			</div>
 		</div>
-		<property-grid v-if="state.results?.matches.length" class="view-scanner__matches"
-			:list="state.results.matches" :interpretations="interpretations" label="Scanner matches" spacer scroll-rows></property-grid>
+		<property-grid v-if="state.results?.matches.length" class="view-scanner__matches property-grid--scrollable" tabindex="0"
+			:list="state.results.matches" :interpretations="interpretations" label="Scanner matches" spacer></property-grid>
 	</section>
 </template>
 

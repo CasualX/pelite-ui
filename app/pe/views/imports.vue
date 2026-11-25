@@ -130,7 +130,6 @@ const ViewImports = Vue.defineComponent({
 .view-imports__library { display: block; width: 100%; padding: 6px 12px; border: 0; background: transparent; color: inherit; font: inherit; text-align: left; overflow-wrap: anywhere; cursor: pointer; }
 .view-imports__library:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
 .view-imports__details { min-width: 0; border-left: 1px solid var(--color-border); }
-.view-imports__details .property-grid { overflow: visible; }
 .view-imports__empty { margin: 12px var(--workspace-gutter) 0; color: var(--color-muted); font-size: 12px; }
 @container (width < 44rem) {
 	.view-imports__layout { grid-template-columns: minmax(0, 1fr); grid-template-rows: fit-content(40%) minmax(0, 1fr); gap: 20px; }

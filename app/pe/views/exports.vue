@@ -107,11 +107,11 @@ const ViewExports = Vue.defineComponent({
 		</pe-filter-toolbar>
 		<div class="view-exports__body">
 			<div :id="directoryId" class="view-exports__directory" :inert="!directoryOpen">
-				<property-grid :list="data.directory.image" :interpretations="headerInterpretations"
-					label="Export directory header" scroll-rows></property-grid>
+				<property-grid class="property-grid--scrollable" tabindex="0" :list="data.directory.image" :interpretations="headerInterpretations"
+					label="Export directory header"></property-grid>
 			</div>
-			<property-grid v-if="filteredRows.length" class="view-exports__results"
-				:list="filteredRows" :interpretations="interpretations" label="Exports" scroll-rows></property-grid>
+			<property-grid v-if="filteredRows.length" class="view-exports__results property-grid--scrollable" tabindex="0"
+				:list="filteredRows" :interpretations="interpretations" label="Exports"></property-grid>
 			<p v-else class="view-exports__empty">{{ data.rows.length ? 'No matching entries.' : 'No exports.' }}</p>
 		</div>
 	</section>
