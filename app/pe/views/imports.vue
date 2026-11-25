@@ -58,21 +58,25 @@ const ViewImports = Vue.defineComponent({
 					return hint === undefined ? '' : String(hint);
 				} },
 			]),
-			headerInterpretations: /** @type {PropertyGridColumn[]} */ ([
+		};
+	},
+	computed: {
+		/** @returns {PropertyGridColumn[]} */
+		headerInterpretations() {
+			return [
 				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['OriginalFirstThunk', 'Name', 'FirstThunk'].includes(String(field)) ? 'rva' : undefined,
 					width: 'max(7.5rem, 18.5cqi)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
 				{ title: 'Interpretation', format: (value, name) => {
+					if (name === 'Name') return this.selectedModule?.descriptor.dll_name ?? 'DLL name unavailable';
 					if (name !== 'TimeDateStamp') return '';
 					const timestamp = Number(value);
 					if (timestamp === 0) return 'Not bound';
 					if (timestamp === 0xffffffff) return 'See bound import directory';
 					return new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC');
 				} },
-			]),
-		};
-	},
-	computed: {
+			];
+		},
 		importsData() { return /** @type {ImportsViewData} */ (/** @type {unknown} */ (this.data)); },
 		state() { return this.importsData.state; },
 		/** @returns {ImportModule[]} */
