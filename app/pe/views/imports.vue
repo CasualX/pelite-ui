@@ -64,7 +64,7 @@ const ViewImports = Vue.defineComponent({
 		/** @returns {PropertyGridColumn[]} */
 		headerInterpretations() {
 			return [
-				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
+				{ title: 'Field', width: '11rem', format: (value, name) => String(name) },
 				{ title: 'Value', kind: (value, field) => value && ['OriginalFirstThunk', 'Name', 'FirstThunk'].includes(String(field)) ? 'rva' : undefined,
 					width: 'max(7.5rem, 18.5cqi)', style: { textAlign: 'right' }, format: value => typeof value === 'number' ? formatImportHex(value) : String(value) },
 				{ title: 'Interpretation', format: (value, name) => {

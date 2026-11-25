@@ -58,7 +58,7 @@ const ViewExports = Vue.defineComponent({
 				{ title: 'Ord', label: 'Ordinal', width: 'calc(3.1em + var(--workspace-gutter, 12px) + 12px)', style: { textAlign: 'right' },
 					format: value => String((/** @type {ExportRow} */ (value)).ordinal) },
 				{ title: 'RVA', kind: value => typeof (/** @type {ExportRow} */ (value)).target === 'number' ? 'rva' : undefined,
-					width: 'min(8rem, 26%)', style: { textAlign: 'right' }, format: value => {
+					width: 'calc(6.25em + 24px)', style: { textAlign: 'right' }, format: value => {
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },
