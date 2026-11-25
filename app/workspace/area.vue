@@ -97,13 +97,11 @@ const WorkspaceArea = Vue.defineComponent({
 		outletFor(id) { return this.outlets.get(this.placements.get(id)?.target ?? ''); },
 		/** @param {WorkspaceBounds} bounds */
 		boundWindow(bounds) { return boundWorkspaceWindow(bounds, this.areaSize); },
-		/** @param {WorkspaceFloatingWindow} floating @param {WorkspaceBounds} bounds @param {'move' | 'resize'} action */
-		updateBounds(floating, bounds, action) {
-			if (action === 'resize') {
-				bounds.width = Math.min(bounds.width, this.areaSize.width - bounds.x);
-				bounds.height = Math.min(bounds.height, this.areaSize.height - bounds.y);
-			}
-			floating.bounds = this.boundWindow(bounds);
+		/** @param {WorkspaceFloatingWindow} floating @param {WorkspaceBounds} start @param {WorkspaceWindowAction} action @param {number} dx @param {number} dy */
+		updateBounds(floating, start, action, dx, dy) {
+			floating.bounds = action === 'move'
+				? this.boundWindow({ ...start, x: start.x + dx, y: start.y + dy })
+				: resizeWorkspaceWindow(start, this.areaSize, action, dx, dy);
 		},
 		focusControl() {
 			this.$nextTick(() => {
@@ -163,7 +161,7 @@ const WorkspaceArea = Vue.defineComponent({
 		<workspace-window v-for="floating in layout.windows" :key="floating.viewId" :id="prefix + '-window-' + floating.viewId"
 			:title="viewsById.get(floating.viewId)?.title ?? ''" :layer="floating.layer" :bounds="boundWindow(floating.bounds)"
 			:focused="layout.focused.type === 'window' && layout.focused.id === floating.viewId"
-			@focus-window="layout.focusWindow(floating)" @bounds="(bounds, action) => updateBounds(floating, bounds, action)"
+			@focus-window="layout.focusWindow(floating)" @bounds="(start, action, dx, dy) => updateBounds(floating, start, action, dx, dy)"
 			@dock="dockView(floating.viewId)" @close="requestClose(floating.viewId)">
 			<workspace-outlet :target="'window-' + floating.viewId" @register="registerOutlet" @unregister="unregisterOutlet"></workspace-outlet>
 		</workspace-window>

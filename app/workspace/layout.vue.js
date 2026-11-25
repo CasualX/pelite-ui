@@ -5,6 +5,10 @@
 /** @typedef {{ width: number, height: number }} WorkspaceSize */
 /** @typedef {WorkspaceSize & { x: number, y: number }} WorkspaceBounds */
 /** @typedef {{ viewId: number, bounds: WorkspaceBounds, layer: number }} WorkspaceFloatingWindow */
+/** @typedef {'n' | 'ne' | 'e' | 'se' | 's' | 'sw' | 'w' | 'nw'} WorkspaceResizeEdge */
+/** @typedef {'move' | WorkspaceResizeEdge} WorkspaceWindowAction */
+
+const workspaceMinimumWindowSize = { width: 240, height: 160 };
 
 /** Workspace placement and focus. The host owns view IDs and their content. */
 class WorkspaceLayout {
@@ -203,11 +207,25 @@ function clampWorkspaceValue(value, min, max) {
 
 /** @param {WorkspaceBounds} bounds @param {WorkspaceSize} area @returns {WorkspaceBounds} */
 function boundWorkspaceWindow(bounds, area) {
-	const width = clampWorkspaceValue(bounds.width, Math.min(240, area.width), area.width);
-	const height = clampWorkspaceValue(bounds.height, Math.min(160, area.height), area.height);
+	const width = clampWorkspaceValue(bounds.width, Math.min(workspaceMinimumWindowSize.width, area.width), area.width);
+	const height = clampWorkspaceValue(bounds.height, Math.min(workspaceMinimumWindowSize.height, area.height), area.height);
 	return {
 		x: clampWorkspaceValue(bounds.x, 0, area.width - width),
 		y: clampWorkspaceValue(bounds.y, 0, area.height - height),
 		width, height,
 	};
+}
+
+/** @param {WorkspaceBounds} bounds @param {WorkspaceSize} area @param {WorkspaceResizeEdge} edge @param {number} dx @param {number} dy */
+function resizeWorkspaceWindow(bounds, area, edge, dx, dy) {
+	const { x, y, width, height } = boundWorkspaceWindow(bounds, area);
+	const right = x + width;
+	const bottom = y + height;
+	const minWidth = Math.min(workspaceMinimumWindowSize.width, area.width);
+	const minHeight = Math.min(workspaceMinimumWindowSize.height, area.height);
+	const left = edge.includes('w') ? clampWorkspaceValue(x + dx, 0, right - minWidth) : x;
+	const top = edge.includes('n') ? clampWorkspaceValue(y + dy, 0, bottom - minHeight) : y;
+	const nextRight = edge.includes('e') ? clampWorkspaceValue(right + dx, x + minWidth, area.width) : right;
+	const nextBottom = edge.includes('s') ? clampWorkspaceValue(bottom + dy, y + minHeight, area.height) : bottom;
+	return { x: left, y: top, width: nextRight - left, height: nextBottom - top };
 }
