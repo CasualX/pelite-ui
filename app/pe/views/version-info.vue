@@ -32,50 +32,38 @@ const ViewVersionInfo = Vue.defineComponent({
 	template: '#view-version-info',
 	props: { data: { type: Object, required: true } },
 	data() {
+		const firstColumnWidth = 'max(10.5rem, 26.5cqi)';
 		return {
+			selectedLanguageIndex: 0,
 			stringInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', width: 'max(10.5rem, 26.5cqi)', format: (value, name) => String(name) },
+				{ title: 'Field', width: firstColumnWidth, format: (value, name) => String(name) },
 				{ title: 'Value', format: value => String(value) },
 			]),
 			fixedInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', width: 'clamp(10.5rem, 26.5cqi, 16rem)', format: (value, name) => String(name) },
-				{ title: 'Value', width: '8rem', style: { textAlign: 'right' }, format: value =>
-					typeof value === 'number' && value !== 0 ? `0x${value.toString(16)}` : String(value) },
+				{ title: 'Field', width: firstColumnWidth, format: (value, name) => String(name) },
+				{ title: 'Value', format: formatPropertyGridHex },
 			]),
-			translationInterpretations: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Language ID', width: '10rem', style: { textAlign: 'right' }, format: value => formatVersionLanguage(String(value)) },
-				{ title: 'Code page', width: '8rem', style: { textAlign: 'right' }, format: value => formatVersionCodePage(String(value)) },
+			languageInterpretations: /** @type {PropertyGridColumn[]} */ ([
+				{ title: 'Language ID', width: firstColumnWidth, format: value => formatVersionLanguage(String(value)) },
+				{ title: 'Code page', format: value => formatVersionCodePage(String(value)) },
 			]),
 		};
 	},
 	computed: {
 		version() { return /** @type {PeLite.PeVersionInfo} */ (/** @type {unknown} */ (this.data.version)); },
+		languages() { return [...new Set([...this.version.langs, ...Object.keys(this.version.strings)])]; },
+		selectedLanguage() { return this.languages.at(this.selectedLanguageIndex); },
+		selectedStrings() { return this.selectedLanguage === undefined ? undefined : this.version.strings[this.selectedLanguage]; },
 	},
-	methods: { formatVersionLanguage, formatVersionCodePage },
 });
 </script>
 
 <template id="view-version-info">
 	<section class="view-version-info">
-		<section v-for="(strings, language) in version.strings" :key="language" class="view-version-info__strings">
-			<h2>Language {{ formatVersionLanguage(language) }} · Code page {{ formatVersionCodePage(language) }}</h2>
-			<property-grid :list="strings" :interpretations="stringInterpretations" :label="'Version strings ' + language"></property-grid>
-		</section>
-		<details v-if="version.fixed" class="view-version-info__fixed">
-			<summary>Fixed file information</summary>
-			<property-grid :list="version.fixed" :interpretations="fixedInterpretations" label="Fixed file information" spacer></property-grid>
-		</details>
-		<section v-if="version.langs.length" class="view-version-info__translations">
-			<h2>Translations</h2>
-			<property-grid :list="version.langs" :interpretations="translationInterpretations" label="Version translations" spacer></property-grid>
-		</section>
+		<property-grid v-if="languages.length" :list="languages" :interpretations="languageInterpretations"
+			v-model:selected-index="selectedLanguageIndex" label="Version languages" selectable></property-grid>
+		<property-grid v-if="selectedStrings" :list="selectedStrings" :interpretations="stringInterpretations"
+			:label="'Version strings ' + selectedLanguage"></property-grid>
+		<property-grid v-if="version.fixed" :list="version.fixed" :interpretations="fixedInterpretations" label="Fixed file information"></property-grid>
 	</section>
 </template>
-
-<style>
-.view-version-info { padding-bottom: 24px; }
-.view-version-info__strings, .view-version-info__fixed { margin-bottom: 24px; }
-.view-version-info h2 { margin: 0 var(--workspace-gutter) 12px; font-size: 13px; font-weight: 600; }
-.view-version-info__fixed summary { width: max-content; margin: 0 var(--workspace-gutter) 12px; font-size: 12px; font-weight: 600; cursor: pointer; user-select: none; }
-.view-version-info__fixed summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-</style>

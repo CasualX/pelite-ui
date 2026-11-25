@@ -17,6 +17,7 @@ function formatPropertyGridHex(value) {
 // Set spacer when all data columns have widths and the remaining space should stay empty.
 // A named cell slot receives value and index. A format callback can supply fallback text.
 // style is applied to both the header and cells of the column.
+// Set selectable to bind v-model:selected-index to the array index or object key.
 const PropertyGrid = Vue.defineComponent({
 	template: '#property-grid',
 	props: {
@@ -27,10 +28,39 @@ const PropertyGrid = Vue.defineComponent({
 		autoLayout: Boolean,
 		rowKey: Function,
 		spacer: Boolean,
+		selectable: Boolean,
+		selectedIndex: [String, Number],
+	},
+	emits: ['update:selectedIndex'],
+	data() {
+		return {
+			rowIdPrefix: Vue.useId(),
+			pointerStart: /** @type {{ x: number, y: number } | null} */ (null),
+		};
 	},
 	computed: {
 		columns() {
 			return /** @type {PropertyGridColumn[]} */ (this.interpretations);
+		},
+	},
+	methods: {
+		/** @param {PointerEvent} event */
+		startRowClick(event) {
+			this.pointerStart = { x: event.clientX, y: event.clientY };
+		},
+		/** @param {MouseEvent} event @param {string | number} index */
+		selectRow(event, index) {
+			const row = /** @type {HTMLTableRowElement} */ (event.currentTarget);
+			const start = this.pointerStart;
+			this.pointerStart = null;
+			// A text drag can still dispatch a click on the row.
+			if (event.detail && start && (event.clientX !== start.x || event.clientY !== start.y)) {
+				const selection = row.ownerDocument.getSelection();
+				if (selection && !selection.isCollapsed && selection.containsNode(row, true)) return;
+			}
+			const button = /** @type {HTMLButtonElement | null} */ (row.querySelector('.property-grid__row-button'));
+			button?.focus({ preventScroll: true });
+			this.$emit('update:selectedIndex', index);
 		},
 	},
 });
@@ -50,9 +80,17 @@ const PropertyGrid = Vue.defineComponent({
 				</tr>
 			</thead>
 			<tbody>
-				<tr v-for="(value, index) in list" :key="rowKey ? rowKey(value, index) : index">
+				<tr v-for="(value, index, rowNumber) in list" :key="rowKey ? rowKey(value, index) : index"
+					:id="selectable ? rowIdPrefix + '-' + (rowNumber ?? index) : undefined" :class="{ 'property-grid__selectable-row': selectable }"
+					@pointerdown="selectable && startRowClick($event)" @click="selectable && selectRow($event, index)">
 					<td v-for="(column, columnIndex) in columns" :key="columnIndex" :style="column.style" :data-kind="typeof column.kind === 'function' ? column.kind(value, index) : column.kind">
-						<slot v-if="column.slot" :name="column.slot" :value="value" :index="index">{{ column.format?.(value, index) }}</slot>
+						<button v-if="selectable && columnIndex === 0" type="button" class="property-grid__row-button"
+							:aria-labelledby="rowIdPrefix + '-' + (rowNumber ?? index)" :aria-pressed="selectedIndex === index"></button>
+						<span v-if="selectable" class="property-grid__row-text">
+							<slot v-if="column.slot" :name="column.slot" :value="value" :index="index">{{ column.format?.(value, index) }}</slot>
+							<template v-else>{{ column.format(value, index) }}</template>
+						</span>
+						<slot v-else-if="column.slot" :name="column.slot" :value="value" :index="index">{{ column.format?.(value, index) }}</slot>
 						<template v-else>{{ column.format(value, index) }}</template>
 					</td>
 					<td v-if="spacer" class="property-grid__spacer" aria-hidden="true"></td>
@@ -77,5 +115,10 @@ const PropertyGrid = Vue.defineComponent({
 .property-grid__table th { padding-top: 7px; padding-bottom: 7px; border-bottom-color: var(--color-border); background: var(--color-surface); color: var(--color-muted); font-weight: 500; text-align: left; }
 .property-grid__table td { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; }
 .property-grid__table tbody tr:hover { background: var(--color-surface); }
+.property-grid__selectable-row { position: relative; cursor: pointer; }
+.property-grid__row-button { position: absolute; inset: 0; width: 100%; padding: 0; border: 0; background: transparent; pointer-events: none; }
+.property-grid__row-button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.property-grid__row-text { cursor: text; user-select: text; }
+.property-grid__table tbody tr:has(.property-grid__row-button[aria-pressed="true"]) { background: color-mix(in srgb, var(--color-accent) 13%, var(--color-background)); }
 .property-grid__table .property-grid__spacer:last-child { padding: 0; }
 </style>

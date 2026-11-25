@@ -1,6 +1,8 @@
 <link rel="component" href="../../components/property-grid.vue">
 
 <script>
+/** @typedef {PeLite.PeDebugDirectoryImage & { type: string, image: PeLite.PeDebugDirectoryImage, payload: ReturnType<typeof debugEntryDetails> }} DebugDirectoryRow */
+
 /** @param {unknown} row @param {string} field @returns {string} */
 function formatDebugField(row, field) {
 	return formatPropertyGridHex((/** @type {Record<string, unknown>} */ (row))[field]);
@@ -40,14 +42,15 @@ const ViewDebugDirectory = Vue.defineComponent({
 	template: '#view-debug-directory',
 	props: { data: { type: Object, required: true } },
 	data() {
+		const firstColumnWidth = 'clamp(9rem, 26.5cqi, 12rem)';
 		const payloadColumns = /** @type {PropertyGridColumn[]} */ ([
-			{ title: 'Field', width: 'clamp(9rem, 26.5cqi, 12rem)', format: (value, field) => String(field) },
+			{ title: 'Field', width: firstColumnWidth, format: (value, field) => String(field) },
 			{ title: 'Value', format: formatPropertyGridHex },
 		]);
 		return {
-			openedEntries: /** @type {Set<number>} */ (new Set()),
+			selectedEntryIndex: 0,
 			entryColumns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Type', width: 'clamp(8rem, 27cqi, 13rem)', format: row => formatDebugField(row, 'type') },
+				{ title: 'Type', width: firstColumnWidth, format: row => formatDebugField(row, 'type') },
 				{ title: 'Data RVA', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).AddressOfRawData ? 'rva' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'AddressOfRawData') },
 				{ title: 'File offset', width: '7rem', kind: row => (/** @type {PeLite.PeDebugDirectoryImage} */ (row)).PointerToRawData ? 'fo' : undefined,
@@ -56,14 +59,14 @@ const ViewDebugDirectory = Vue.defineComponent({
 			]),
 			headerColumns: /** @type {PropertyGridColumn[]} */ ([
 				payloadColumns[0],
-				{ ...payloadColumns[1], width: '9rem', style: { textAlign: 'right' }, kind: (value, field) => {
+				{ ...payloadColumns[1], kind: (value, field) => {
 					if (!value) return undefined;
 					return field === 'AddressOfRawData' ? 'rva' : field === 'PointerToRawData' ? 'fo' : undefined;
 				} },
 			]),
 			payloadColumns,
 			sectionColumns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Name', format: row => formatDebugField(row, 'name') },
+				{ title: 'Name', width: firstColumnWidth, format: row => formatDebugField(row, 'name') },
 				{ title: 'RVA', width: '7rem', kind: row => typeof (/** @type {PeLite.PePgoSection} */ (row)).rva === 'number' ? 'rva' : undefined,
 					style: { textAlign: 'right' }, format: row => formatDebugField(row, 'rva') },
 				{ title: 'Size', width: '7rem', style: { textAlign: 'right' }, format: row => formatDebugField(row, 'size') },
@@ -71,47 +74,35 @@ const ViewDebugDirectory = Vue.defineComponent({
 			]),
 		};
 	},
-	methods: {
-		/** @param {number} index @param {Event} event */
-		showEntry(index, event) {
-			if (event.currentTarget instanceof HTMLDetailsElement && event.currentTarget.open) this.openedEntries.add(index);
-		},
+	computed: {
+		rows() { return /** @type {DebugDirectoryRow[]} */ (this.data.rows); },
+		selectedEntry() { return this.rows.at(this.selectedEntryIndex); },
 	},
 });
 </script>
 
 <template id="view-debug-directory">
 	<section class="view-debug-directory">
-		<property-grid v-if="data.rows.length" :list="data.rows" :interpretations="entryColumns" min-width="29rem" label="Debug directory entries" spacer></property-grid>
+		<property-grid v-if="rows.length" :list="rows" :interpretations="entryColumns" v-model:selected-index="selectedEntryIndex"
+			min-width="29rem" label="Debug directory entries" selectable spacer></property-grid>
 		<p v-else class="view-debug-directory__note">No debug entries.</p>
-		<div v-if="data.rows.length" class="view-debug-directory__entries">
-			<details v-for="(entry, index) in data.rows" :key="index" class="view-debug-directory__entry" @toggle="showEntry(index, $event)">
-				<summary>Debug entry {{ index + 1 }} · {{ entry.type }}</summary>
-				<div v-if="openedEntries.has(index)" class="view-debug-directory__details">
-					<property-grid :list="entry.image" :interpretations="headerColumns" :label="'Debug entry ' + (index + 1) + ' header'" spacer></property-grid>
-					<h2 class="view-debug-directory__title">Debug data</h2>
-					<template v-if="entry.payload">
-						<property-grid :list="entry.payload.fields" :interpretations="payloadColumns" :label="'Debug entry ' + (index + 1) + ' data'"></property-grid>
-						<template v-if="entry.payload.sections">
-							<h2 class="view-debug-directory__title">PGO sections</h2>
-							<property-grid v-if="entry.payload.sections.length" :list="entry.payload.sections" :interpretations="sectionColumns" min-width="24rem" label="PGO sections"></property-grid>
-							<p v-else class="view-debug-directory__note">No PGO sections.</p>
-						</template>
-					</template>
-					<p v-else class="view-debug-directory__note">Debug data is unavailable or uses an unsupported format.</p>
-				</div>
-			</details>
-		</div>
+		<template v-if="selectedEntry">
+			<property-grid :list="selectedEntry.image" :interpretations="headerColumns"
+				:label="'Debug entry ' + (selectedEntryIndex + 1) + ' header'"></property-grid>
+			<template v-if="selectedEntry.payload">
+				<property-grid :list="selectedEntry.payload.fields" :interpretations="payloadColumns"
+					:label="'Debug entry ' + (selectedEntryIndex + 1) + ' data'"></property-grid>
+				<template v-if="selectedEntry.payload.sections">
+					<property-grid v-if="selectedEntry.payload.sections.length" :list="selectedEntry.payload.sections"
+						:interpretations="sectionColumns" min-width="24rem" label="PGO sections"></property-grid>
+					<p v-else class="view-debug-directory__note">No PGO sections.</p>
+				</template>
+			</template>
+			<p v-else class="view-debug-directory__note">Debug data is unavailable or uses an unsupported format.</p>
+		</template>
 	</section>
 </template>
 
 <style>
-.view-debug-directory { padding-bottom: 24px; }
-.view-debug-directory__title { margin: 24px var(--workspace-gutter) 12px; font-size: 14px; font-weight: 600; }
-.view-debug-directory__note { margin: 0 var(--workspace-gutter) 12px; color: var(--color-muted); font-size: 13px; }
-.view-debug-directory__entries { margin-top: 20px; }
-.view-debug-directory__entry { border-bottom: 1px solid var(--color-border); }
-.view-debug-directory__entry > summary { padding: 10px var(--workspace-gutter); font-size: 13px; font-weight: 600; cursor: pointer; }
-.view-debug-directory__entry > summary:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
-.view-debug-directory__details { padding-bottom: 12px; }
+.view-debug-directory__note { margin: 12px var(--workspace-gutter) 0; color: var(--color-muted); font-size: 13px; }
 </style>
