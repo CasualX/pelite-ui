@@ -49,7 +49,6 @@ const ViewRichStructure = Vue.defineComponent({
 	data() {
 		return {
 			descriptions: /** @type {Map<string, string> | null} */ (null),
-			loadingDescriptions: false,
 			descriptionError: '',
 			databaseUrl: richprintDatabaseUrl,
 			recordInterpretations: /** @type {PropertyGridColumn[]} */ ([
@@ -64,6 +63,7 @@ const ViewRichStructure = Vue.defineComponent({
 		};
 	},
 	computed: {
+		rich() { return /** @type {PeLite.PeRichStructure | null} */ (this.data.rich); },
 		/** @returns {PropertyGridColumn[]} */
 		recordColumns() {
 			const descriptions = this.descriptions;
@@ -80,45 +80,34 @@ const ViewRichStructure = Vue.defineComponent({
 		},
 		/** @returns {PropertyGridColumn[]} */
 		summaryInterpretations() {
-			const rich = /** @type {PeLite.PeRichStructure} */ (/** @type {unknown} */ (this.data.rich));
+			const rich = this.rich;
 			return [
 				{ title: 'Field', width: '9rem', format: (value, name) => name === 'xor_key' ? 'XOR key' : 'Checksum' },
 				{ title: 'Value', width: '7rem', style: { textAlign: 'right' }, format: value => value === 0 ? '0' : `0x${Number(value).toString(16)}` },
 				{ title: 'Interpretation', format: (value, name) =>
-					name === 'checksum' ? (rich.checksum === rich.xor_key ? 'Matches XOR key' : 'Does not match XOR key') : '' },
+					name === 'checksum' && rich ? (rich.checksum === rich.xor_key ? 'Matches XOR key' : 'Does not match XOR key') : '' },
 			];
 		},
 	},
-	methods: {
-		async loadDescriptions() {
-			this.loadingDescriptions = true;
-			this.descriptionError = '';
-			try {
-				this.descriptions = await loadRichprintDatabase();
-			} catch {
-				this.descriptionError = 'Could not load the richprint database. Try again.';
-			} finally {
-				this.loadingDescriptions = false;
-			}
-		},
+	async mounted() {
+		if (!this.rich?.records.length) return;
+		try {
+			this.descriptions = await loadRichprintDatabase();
+		} catch {
+			this.descriptionError = 'Could not load the richprint database.';
+		}
 	},
 });
 </script>
 
 <template id="view-rich-structure">
 	<section class="view-rich-structure">
-		<template v-if="data.rich">
-			<property-grid :list="{ xor_key: data.rich.xor_key, checksum: data.rich.checksum }" :interpretations="summaryInterpretations" label="Rich structure summary"></property-grid>
-			<div class="view-rich-structure__records-header">
-				<h2>Records</h2>
-				<template v-if="data.rich.records.length">
-					<a v-if="descriptions" :href="databaseUrl" target="_blank" rel="noopener noreferrer">richprint database</a>
-					<button v-else type="button" :disabled="loadingDescriptions" @click="loadDescriptions">{{ loadingDescriptions ? 'Loading interpretations…' : 'Load interpretations' }}</button>
-				</template>
-			</div>
-			<p v-if="descriptionError" class="view-rich-structure__error" role="alert">{{ descriptionError }}</p>
-			<property-grid v-if="data.rich.records.length" :list="data.rich.records" :interpretations="recordColumns" :min-width="descriptions ? '32rem' : undefined" :spacer="!descriptions" label="Rich records"></property-grid>
+		<template v-if="rich">
+			<property-grid :list="{ xor_key: rich.xor_key, checksum: rich.checksum }" :interpretations="summaryInterpretations" label="Rich structure summary"></property-grid>
+			<property-grid v-if="rich.records.length" :list="rich.records" :interpretations="recordColumns" :min-width="descriptions ? '32rem' : undefined" :spacer="!descriptions" label="Rich records"></property-grid>
 			<p v-else class="view-rich-structure__description">No Rich records.</p>
+			<p v-if="descriptionError" class="view-rich-structure__error" role="alert">{{ descriptionError }}</p>
+			<p class="view-rich-structure__source"><a :href="databaseUrl" target="_blank" rel="noopener noreferrer">richprint database</a></p>
 		</template>
 		<p v-else class="view-rich-structure__description">No Rich structure.</p>
 	</section>
@@ -126,13 +115,9 @@ const ViewRichStructure = Vue.defineComponent({
 
 <style>
 .view-rich-structure { padding-bottom: 24px; }
-.view-rich-structure__description, .view-rich-structure__records-header, .view-rich-structure__error { margin-left: var(--workspace-gutter); margin-right: var(--workspace-gutter); }
-.view-rich-structure__description { margin-top: 0; margin-bottom: 26px; color: var(--color-muted); font-size: 13px; }
-.view-rich-structure__records-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin-top: 26px; margin-bottom: 12px; }
-.view-rich-structure__records-header h2 { margin: 0; font-size: 14px; font-weight: 600; }
-.view-rich-structure__records-header button { padding: 5px 9px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-surface); color: var(--color-text); font-size: 12px; cursor: pointer; }
-.view-rich-structure__records-header button:disabled { color: var(--color-muted); cursor: wait; }
-.view-rich-structure__records-header a { color: var(--color-accent-hover); font-size: 12px; }
-.view-rich-structure__records-header button:focus-visible, .view-rich-structure__records-header a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.view-rich-structure__error { margin-top: 0; margin-bottom: 12px; color: var(--color-danger); font-size: 13px; }
+.view-rich-structure__description, .view-rich-structure__error, .view-rich-structure__source { margin: 12px var(--workspace-gutter) 0; font-size: 13px; }
+.view-rich-structure__description { color: var(--color-muted); }
+.view-rich-structure__error { color: var(--color-danger); }
+.view-rich-structure__source a { color: var(--color-accent-hover); font-size: 12px; }
+.view-rich-structure__source a:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
 </style>
