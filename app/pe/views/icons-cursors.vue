@@ -79,7 +79,7 @@ const ViewIconsCursors = Vue.defineComponent({
 </template>
 
 <style>
-.view-icons-cursors { padding: 0 var(--workspace-gutter) 24px; }
+.view-icons-cursors { padding: 24px var(--workspace-gutter); }
 .view-icons-cursors__intro { margin: 0 0 24px; color: var(--color-muted); font-size: 13px; line-height: 1.6; }
 .view-icons-cursors__group + .view-icons-cursors__group { margin-top: 28px; }
 .view-icons-cursors__group h2 { margin: 0 0 16px; padding-bottom: 10px; border-bottom: 1px solid var(--color-border); font-size: 13px; font-weight: 600; }
