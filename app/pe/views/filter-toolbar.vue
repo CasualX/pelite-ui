@@ -6,13 +6,19 @@ const PeFilterToolbar = Vue.defineComponent({
 		query: { type: String, required: true },
 		fields: { type: Array, required: true },
 		matchFields: { type: Array, required: true },
+		demangleNames: { type: Boolean, required: true },
 	},
-	emits: ['update:query', 'update:matchFields'],
+	emits: ['update:query', 'update:matchFields', 'update:demangleNames'],
 	computed: {
 		queryModel: {
 			get() { return this.query; },
 			/** @param {string} value */
 			set(value) { this.$emit('update:query', value); },
+		},
+		demangleNamesModel: {
+			get() { return this.demangleNames; },
+			/** @param {boolean} value */
+			set(value) { this.$emit('update:demangleNames', value); },
 		},
 	},
 	methods: {
@@ -39,6 +45,10 @@ const PeFilterToolbar = Vue.defineComponent({
 			<button v-for="field in fields" :key="field" type="button" :aria-pressed="matchFields.includes(field)"
 				:disabled="matchFields.length === 1 && matchFields.includes(field)" @click="toggleField(field)">{{ field }}</button>
 		</div>
+		<label class="pe-filter-toolbar__demangle"
+			title="When enabled, symbol names are automatically demangled where possible.">
+			<input v-model="demangleNamesModel" type="checkbox">Demangle
+		</label>
 		<slot></slot>
 	</div>
 </template>
@@ -57,5 +67,7 @@ const PeFilterToolbar = Vue.defineComponent({
 .pe-filter-toolbar__fields button[aria-pressed="true"] { border-color: var(--color-border); background: var(--workspace-surface); color: var(--color-text); }
 .pe-filter-toolbar__fields button:hover:enabled { border-color: var(--color-accent); color: var(--color-accent-hover); }
 .pe-filter-toolbar__fields button:disabled { cursor: default; }
+.pe-filter-toolbar__demangle { display: inline-flex; align-items: center; gap: 6px; color: var(--color-muted); font-size: 12px; cursor: pointer; }
+.pe-filter-toolbar__demangle input { margin: 0; accent-color: var(--color-accent); }
 .pe-filter-toolbar__search input:focus-visible, .pe-filter-toolbar__fields button:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 1px; }
 </style>

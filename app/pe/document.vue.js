@@ -1,11 +1,16 @@
 /** One open binary and its analysis database. Passed through the UI as a unit. */
 class PeDocument {
-	/** @param {File} file @param {Uint8Array} bytes @param {typeof PeLite} pelite */
+	/**
+	 * @param {File} file
+	 * @param {Uint8Array} bytes
+	 * @param {typeof PeLite} pelite
+	 */
 	constructor(file, bytes, pelite) {
 		this.file = file;
 		/** @type {PeLite.PeFile} */
 		this.peFile = Vue.markRaw(new pelite.PeFile(bytes));
 		/** @private @type {typeof PeLite.Facts} */ this.FactsClass = Vue.markRaw(pelite.Facts);
+		this.demangle = pelite.demangle;
 		/** @private @type {FactsDatabase | null} */ this.factsDatabase = null;
 		this.disposed = false;
 	}

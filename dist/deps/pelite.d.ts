@@ -1,4 +1,10 @@
 /**
+ * Demangle an MSVC or Itanium C++ symbol. Return the original name if it cannot be demangled.
+ * @param {string} name
+ * @returns {string}
+ */
+export function demangle(name: string): string;
+/**
  * Read-only access to a PE image backed by WebAssembly memory.
  *
  * Parsing methods return an `Error` value when the image cannot satisfy a request.
@@ -15,17 +21,17 @@ export class PeFile {
     private p;
     /** Releases the PE image from WebAssembly memory. */
     dispose(): void;
-    /** @returns {Result<PeDosHeader>} Parsed DOS header JSON. */
+    /** @returns {Result<PeDosHeader>} Parsed DOS header. */
     dosHeader(): Result<PeDosHeader>;
-    /** @returns {Result<PeNtHeaders>} Parsed NT headers JSON. */
+    /** @returns {Result<PeNtHeaders>} Parsed NT headers. */
     ntHeaders(): Result<PeNtHeaders>;
-    /** @returns {Result<PeFileHeader>} Parsed COFF file header JSON. */
+    /** @returns {Result<PeFileHeader>} Parsed COFF file header. */
     fileHeader(): Result<PeFileHeader>;
-    /** @returns {Result<PeOptionalHeader>} Parsed optional header JSON. */
+    /** @returns {Result<PeOptionalHeader>} Parsed optional header. */
     optionalHeader(): Result<PeOptionalHeader>;
-    /** @returns {Result<PeSectionHeader[]>} Parsed section headers JSON. */
+    /** @returns {Result<PeSectionHeader[]>} Parsed section headers. */
     sectionHeaders(): Result<PeSectionHeader[]>;
-    /** @returns {Result<PeHeaders>} Parsed PE headers JSON. */
+    /** @returns {Result<PeHeaders>} Parsed PE headers. */
     headers(): Result<PeHeaders>;
     /**
      * Converts a virtual address to an RVA.
@@ -157,7 +163,7 @@ export class PeFile {
      * Reading code, fn, or unk directly returns an error.
      * Syntax/options errors and failed root reads return Error. Failed nested
      * reads return inline {$error, $rva} objects alongside successful values.
-     * Integers return JS numbers; u64/i64 can lose precision beyond 53 bits.
+     * The u64 and i64 types return bigint. Smaller integers return number.
      * String previews end with … when truncated and require file-backed bytes.
      *
      * @param {number} rva Relative virtual address.
@@ -217,27 +223,27 @@ export class PeFile {
     hashes(): Result<PeHashes>;
     /** @returns {Result<SectionEntropy[]>} Entropy entries in sectionHeaders() order, including empty/unreadable sections. */
     sectionEntropy(): Result<SectionEntropy[]>;
-    /** @returns {Result<PeRichStructure | null>} Parsed Rich structure JSON. */
+    /** @returns {Result<PeRichStructure | null>} Parsed Rich structure. */
     richStructure(): Result<PeRichStructure | null>;
-    /** @returns {Result<PeImportDescriptor[] | null>} Parsed imports JSON. */
+    /** @returns {Result<PeImportDescriptor[] | null>} Parsed imports. */
     imports(): Result<PeImportDescriptor[] | null>;
-    /** @returns {Result<PeExportDirectory | null>} Parsed exports JSON. */
+    /** @returns {Result<PeExportDirectory | null>} Parsed exports. */
     exports(): Result<PeExportDirectory | null>;
-    /** @returns {Result<PeBaseRelocations | null>} Parsed base relocations JSON. */
+    /** @returns {Result<PeBaseRelocations | null>} Parsed base relocations. */
     baseRelocations(): Result<PeBaseRelocations | null>;
-    /** @returns {Result<PeLoadConfig | null>} Parsed load configuration JSON. */
+    /** @returns {Result<PeLoadConfig | null>} Parsed load configuration. */
     loadConfig(): Result<PeLoadConfig | null>;
     /** @returns {Result<PeTls | null>} Parsed TLS directory, or null if absent. */
     tls(): Result<PeTls | null>;
-    /** @returns {Result<PeRuntimeFunction[] | null>} Parsed x64 exception directory JSON, or `null` for PE32. */
+    /** @returns {Result<PeRuntimeFunction[] | null>} Parsed x64 exception directory, or `null` for PE32. */
     exceptionsX64(): Result<PeRuntimeFunction[] | null>;
     /** @returns {Result<string | null>} Embedded PDB file name/path, or null if absent. Malformed debug data or invalid UTF-8 returns an Error. */
     pdbFileName(): Result<string | null>;
-    /** @returns {Result<PeDebugDirectoryEntry[] | null>} Parsed debug directory JSON. */
+    /** @returns {Result<PeDebugDirectoryEntry[] | null>} Parsed debug directory. */
     debug(): Result<PeDebugDirectoryEntry[] | null>;
     /** @returns {Result<PeSecurityDirectory | null>} Certificates in file order, or null if the security directory is absent. */
     security(): Result<PeSecurityDirectory | null>;
-    /** @returns {Result<PeResourceTreeEntry[] | null>} Parsed resource tree JSON. */
+    /** @returns {Result<PeResourceTreeEntry[] | null>} Parsed resource tree. */
     resourcesTree(): Result<PeResourceTreeEntry[] | null>;
     /**
      * Reads resource data by its slash-separated resource path.
@@ -248,7 +254,7 @@ export class PeFile {
     resourcesGetResource(path: string): Result<Uint8Array | null>;
     /** @returns {Result<string | null>} The manifest text, or `null` if not found. */
     resourcesManifest(): Result<string | null>;
-    /** @returns {Result<PeVersionInfo | null>} Parsed version information JSON. */
+    /** @returns {Result<PeVersionInfo | null>} Parsed version information. */
     resourcesVersionInfo(): Result<PeVersionInfo | null>;
     /** @returns {Result<Array<ResourceName> | null>} Available icon names, or `null` if absent. */
     resourcesListIcons(): Result<Array<ResourceName> | null>;
@@ -307,8 +313,8 @@ export class Facts {
     private p;
     /** Releases the layers from WebAssembly memory. */
     dispose(): void;
-    /** @returns {Result<number>} Number of stored facts layers; initially zero. */
-    getNumLayers(): Result<number>;
+    /** @returns {number} Number of stored facts layers; initially zero. */
+    getNumLayers(): number;
     /**
      * Exports a layer as canonical #factmap text, preserving record order and duplicates.
      * Source whitespace and file comments are discarded; the label is stored separately.
@@ -441,7 +447,7 @@ export type ReadError = {
     $error: string;
     $rva: number | null;
 };
-export type ReadValue = number | string | null | ReadError | ReadValue[] | {
+export type ReadValue = number | bigint | string | null | ReadError | ReadValue[] | {
     [field: string]: ReadValue;
 };
 export type PeFileHeader = {
@@ -465,7 +471,10 @@ export type PeOptionalHeader = {
      */
     BaseOfData?: number | undefined;
     BaseOfCode: number;
-    ImageBase: number;
+    /**
+     * PE32+ uses bigint.
+     */
+    ImageBase: number | bigint;
     SectionAlignment: number;
     FileAlignment: number;
     OperatingSystemVersion: string;
@@ -477,15 +486,15 @@ export type PeOptionalHeader = {
     CheckSum: number;
     Subsystem: number;
     DllCharacteristics: number;
-    SizeOfStackReserve: number;
-    SizeOfStackCommit: number;
-    SizeOfHeapReserve: number;
-    SizeOfHeapCommit: number;
+    SizeOfStackReserve: number | bigint;
+    SizeOfStackCommit: number | bigint;
+    SizeOfHeapReserve: number | bigint;
+    SizeOfHeapCommit: number | bigint;
     LoaderFlags: number;
     NumberOfRvaAndSizes: number;
 };
 export type PeSectionHeader = {
-    Name: string;
+    Name: string | Uint8Array;
     VirtualAddress: number;
     VirtualSize: number;
     SizeOfRawData: number;
@@ -617,49 +626,49 @@ export type PeLoadConfigImage = {
     GlobalFlagsClear: number;
     GlobalFlagsSet: number;
     CriticalSectionDefaultTimeout: number;
-    DeCommitFreeBlockThreshold: number;
-    DeCommitTotalFreeThreshold: number;
-    LockPrefixTable: number;
-    MaximumAllocationSize: number;
-    VirtualMemoryThreshold: number;
-    ProcessAffinityMask: number;
+    DeCommitFreeBlockThreshold: number | bigint;
+    DeCommitTotalFreeThreshold: number | bigint;
+    LockPrefixTable: number | bigint;
+    MaximumAllocationSize: number | bigint;
+    VirtualMemoryThreshold: number | bigint;
+    ProcessAffinityMask: number | bigint;
     ProcessHeapFlags: number;
     CSDVersion: number;
     DependentLoadFlags: number;
-    EditList: number;
-    SecurityCookie: number;
-    SEHandlerTable: number;
-    SEHandlerCount: number;
-    GuardCFCheckFunctionPointer: number;
-    GuardCFDispatchFunctionPointer: number;
-    GuardCFFunctionTable: number;
-    GuardCFFunctionCount: number;
+    EditList: number | bigint;
+    SecurityCookie: number | bigint;
+    SEHandlerTable: number | bigint;
+    SEHandlerCount: number | bigint;
+    GuardCFCheckFunctionPointer: number | bigint;
+    GuardCFDispatchFunctionPointer: number | bigint;
+    GuardCFFunctionTable: number | bigint;
+    GuardCFFunctionCount: number | bigint;
     GuardFlags: number;
     CodeIntegrity: PeLoadConfigCodeIntegrity;
-    GuardAddressTakenIatEntryTable: number;
-    GuardAddressTakenIatEntryCount: number;
-    GuardLongJumpTargetTable: number;
-    GuardLongJumpTargetCount: number;
-    DynamicValueRelocTable: number;
-    CHPEMetadataPointer: number;
-    GuardRFFailureRoutine: number;
-    GuardRFFailureRoutineFunctionPointer: number;
+    GuardAddressTakenIatEntryTable: number | bigint;
+    GuardAddressTakenIatEntryCount: number | bigint;
+    GuardLongJumpTargetTable: number | bigint;
+    GuardLongJumpTargetCount: number | bigint;
+    DynamicValueRelocTable: number | bigint;
+    CHPEMetadataPointer: number | bigint;
+    GuardRFFailureRoutine: number | bigint;
+    GuardRFFailureRoutineFunctionPointer: number | bigint;
     DynamicValueRelocTableOffset: number;
     DynamicValueRelocTableSection: number;
     Reserved2: number;
-    GuardRFVerifyStackPointerFunctionPointer: number;
+    GuardRFVerifyStackPointerFunctionPointer: number | bigint;
     HotPatchTableOffset: number;
     Reserved3: number;
-    EnclaveConfigurationPointer: number;
-    VolatileMetadataPointer: number;
-    GuardEHContinuationTable: number;
-    GuardEHContinuationCount: number;
-    GuardXFGCheckFunctionPointer: number;
-    GuardXFGDispatchFunctionPointer: number;
-    GuardXFGTableDispatchFunctionPointer: number;
-    CastGuardOsDeterminedFailureMode: number;
-    GuardMemcpyFunctionPointer: number;
-    UmaFunctionPointers: number;
+    EnclaveConfigurationPointer: number | bigint;
+    VolatileMetadataPointer: number | bigint;
+    GuardEHContinuationTable: number | bigint;
+    GuardEHContinuationCount: number | bigint;
+    GuardXFGCheckFunctionPointer: number | bigint;
+    GuardXFGDispatchFunctionPointer: number | bigint;
+    GuardXFGTableDispatchFunctionPointer: number | bigint;
+    CastGuardOsDeterminedFailureMode: number | bigint;
+    GuardMemcpyFunctionPointer: number | bigint;
+    UmaFunctionPointers: number | bigint;
 };
 /**
  * Missing fields in older load-config revisions are zero-filled in image.
@@ -796,12 +805,12 @@ export type PeHashes = {
  * image.AddressOfCallBacks distinguishes the absent pointer (zero).
  */
 export type PeTls = {
-    image: Record<string, number> & {
-        AddressOfCallBacks: number;
+    image: Record<string, number | bigint> & {
+        AddressOfCallBacks: number | bigint;
     };
     raw_data: string | null;
     slot: number | null;
-    callbacks: number[] | null;
+    callbacks: number[] | bigint[] | null;
 };
 /**
  * Shannon entropy (0–8 bits per byte) of a section's raw data and up to 16 evenly sized samples.

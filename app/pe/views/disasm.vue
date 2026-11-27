@@ -25,8 +25,9 @@ function readDisasmWindow(openedDocument, headers, rva) {
 	return instructions.map(instruction => {
 		const rva = address;
 		address += instruction.bytes.length;
-		const section = headers.SectionHeaders.find(section => rva >= section.VirtualAddress && rva < section.VirtualAddress + section.VirtualSize);
-		return { rva, section: section?.Name ?? (rva < headers.NtHeaders.OptionalHeader.SizeOfHeaders ? 'Headers' : '—'), bytes: instruction.bytes.map(byte => byte.toString(16).padStart(2, '0').toUpperCase()).join(' '), instruction: instruction.instruction };
+		const name = headers.SectionHeaders.find(section => rva >= section.VirtualAddress && rva < section.VirtualAddress + section.VirtualSize)?.Name;
+		const section = name === undefined ? (rva < headers.NtHeaders.OptionalHeader.SizeOfHeaders ? 'Headers' : '—') : String(name);
+		return { rva, section, bytes: instruction.bytes.map(byte => byte.toString(16).padStart(2, '0').toUpperCase()).join(' '), instruction: instruction.instruction };
 	});
 }
 

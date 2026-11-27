@@ -1,5 +1,3 @@
-<link rel="component" href="../../components/property-grid.vue">
-
 <script>
 /** @typedef {import('./deps/asn1js/asn1.js').ASN1} CertificateNode */
 
@@ -100,14 +98,7 @@ const SecurityCertificate = Vue.defineComponent({
 		entryNumber: { type: Number, required: true },
 	},
 	data() {
-		return {
-			columns: /** @type {PropertyGridColumn[]} */ ([
-				{ title: 'Field', width: 'clamp(9rem, 26cqi, 11.25rem)', format: (value, field) => String(field) },
-				{ title: 'Value', format: formatPropertyGridHex },
-			]),
-			presentation: '',
-			copyStatus: '',
-		};
+		return { presentation: '', copyStatus: '' };
 	},
 	computed: {
 		entry() { return /** @type {PeLite.PeCertificate} */ (/** @type {unknown} */ (this.certificate)); },
@@ -171,39 +162,52 @@ const SecurityCertificate = Vue.defineComponent({
 </script>
 
 <template id="security-certificate">
-	<div>
-		<property-grid :list="entry.image" :interpretations="columns" :label="'Certificate ' + entryNumber + ' WIN_CERTIFICATE header'"></property-grid>
-		<div class="security-certificate__body">
-			<div class="security-certificate__payload-header">
-				<h3>{{ format?.title ?? 'Certificate payload' }} <span v-if="format" class="security-certificate__encoding">ASN.1</span></h3>
-				<div class="security-certificate__actions">
-					<button type="button" :aria-label="'Copy text for certificate ' + entryNumber" :disabled="!presentation" @click="copyPayload">Copy text</button>
-					<button type="button" :aria-label="'Save certificate ' + entryNumber" :disabled="!entry.payload" @click="saveCertificate">Save certificate</button>
-				</div>
+	<div class="security-certificate">
+		<header class="security-certificate__payload-header">
+			<h2>{{ format?.title ?? 'Certificate payload' }} <span v-if="format" class="security-certificate__encoding">ASN.1</span></h2>
+			<div class="security-certificate__actions">
+				<button type="button" :aria-label="'Copy text for certificate ' + entryNumber" :disabled="!presentation" @click="copyPayload">Copy text</button>
+				<button type="button" :aria-label="'Save certificate ' + entryNumber" :disabled="!entry.payload" @click="saveCertificate">Save certificate</button>
 			</div>
-			<template v-if="presentation">
-				<textarea ref="payload" class="security-certificate__payload" :aria-label="'Certificate ' + entryNumber + ' text'"
-					readonly spellcheck="false" :value="presentation"></textarea>
-				<p class="security-certificate__copy-status" role="status">{{ copyStatus }}</p>
-			</template>
-			<p v-else-if="entry.payload" class="security-certificate__note" role="status">Decoding certificate…</p>
-			<p v-else class="security-certificate__note">The certificate payload is empty.</p>
-		</div>
+			<p class="security-certificate__copy-status" role="status">{{ copyStatus }}</p>
+		</header>
+		<textarea v-if="presentation" ref="payload" class="security-certificate__payload"
+			:aria-label="'Certificate ' + entryNumber + ' text'" readonly spellcheck="false" :value="presentation"></textarea>
+		<p v-else-if="entry.payload" class="security-certificate__note" role="status">Decoding certificate…</p>
+		<p v-else class="security-certificate__note">The certificate payload is empty.</p>
 	</div>
 </template>
 
 <style>
-.security-certificate__body { padding: 12px var(--workspace-gutter, 12px); }
-.security-certificate__payload-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 12px; margin-bottom: 8px; }
-.security-certificate__payload-header h3 { margin: 0; font-size: 13px; font-weight: 600; }
+.security-certificate { display: flex; flex: 1; flex-direction: column; min-height: 0; }
+.security-certificate__payload-header { display: flex; flex: none; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 4px var(--workspace-gutter, 12px); border-bottom: 1px solid var(--color-border); background: var(--color-surface); color: var(--color-muted); font-size: 12px; line-height: 16px; }
+.security-certificate__payload-header h2 { margin: 0; font-size: inherit; font-weight: 500; overflow-wrap: anywhere; }
 .security-certificate__encoding { display: inline-block; margin-left: 4px; padding: 0 5px; border: 1px solid color-mix(in srgb, var(--color-accent) 55%, var(--color-border)); border-radius: 3px; color: var(--color-accent); font: 11px ui-monospace, SFMono-Regular, Consolas, monospace; }
-.security-certificate__actions { display: flex; flex-wrap: wrap; gap: 4px; }
-.security-certificate__actions button { padding: 4px 8px; border: 0; border-radius: 4px; background: transparent; color: var(--color-muted); font-size: 12px; }
-.security-certificate__actions button:hover:enabled { background: var(--color-surface); color: var(--color-text); cursor: pointer; }
+.security-certificate__actions { display: flex; flex-wrap: wrap; gap: 4px; margin-inline-start: auto; }
+.security-certificate__actions button { padding: 3px 8px; border: 0; border-radius: 4px; background: transparent; color: inherit; font: inherit; }
+.security-certificate__actions button:hover:enabled { background: var(--color-background); color: var(--color-text); cursor: pointer; }
 .security-certificate__actions button:disabled { opacity: 0.55; }
-.security-certificate__actions button:focus-visible, .security-certificate__payload:focus-visible { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.security-certificate__payload { display: block; width: 100%; height: min(38dvh, 20rem); min-height: 12rem; padding: 12px; border: 1px solid var(--color-border); border-radius: 4px; background: var(--color-background); color: var(--color-text); font: 12px/1.55 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre-wrap; overflow-wrap: anywhere; resize: vertical; }
-.security-certificate__note { margin: 0; color: var(--color-muted); font-size: 13px; }
-.security-certificate__copy-status { margin: 8px 0 0; color: var(--color-muted); font-size: 13px; }
-.security-certificate__copy-status:empty { margin: 0; }
+.security-certificate__actions button:focus-visible, .security-certificate > .security-certificate__payload:focus-visible { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.security-certificate__payload {
+	display: block;
+	flex: 1;
+	width: 100%;
+	min-height: 0;
+	margin: 0;
+	padding: 12px;
+	border: 0;
+	border-radius: 0;
+	background: transparent;
+	color: inherit;
+	font: 12px/1.7 ui-monospace, SFMono-Regular, Consolas, monospace;
+	tab-size: 4;
+	overflow: auto;
+	overflow-wrap: anywhere;
+	overscroll-behavior: contain;
+	resize: none;
+}
+.security-certificate__payload:focus { outline: none; }
+.security-certificate__note { margin: 12px var(--workspace-gutter, 12px); color: var(--color-muted); font-size: 13px; }
+.security-certificate__copy-status { flex-basis: 100%; margin: 0; }
+.security-certificate__copy-status:empty { position: absolute; }
 </style>

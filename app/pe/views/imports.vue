@@ -2,9 +2,9 @@
 <link rel="component" href="filter-toolbar.vue">
 
 <script>
-const importSearchFields = /** @type {const} */ (['DLL', 'Name', 'Ordinal', 'Hint', 'IAT RVA']);
+const importSearchFields = /** @type {const} */ (['DLL', 'Name', 'Hint', 'IAT RVA']);
 /** @typedef {(typeof importSearchFields)[number]} ImportSearchField */
-/** @typedef {{ descriptors: PeLite.PeImportDescriptor[], state: { query: string, matchFields: ImportSearchField[], selectedIndex: number | null } }} ImportsViewData */
+/** @typedef {{ descriptors: PeLite.PeImportDescriptor[], demangle: PeDocument['demangle'], state: { query: string, matchFields: ImportSearchField[], selectedIndex: number | null, demangleNames: boolean } }} ImportsViewData */
 /** @typedef {{ descriptor: PeLite.PeImportDescriptor, index: number, rows: PeLite.PeImportEntry[] | null }} ImportModule */
 
 /** @param {number} value @returns {string} */
@@ -12,10 +12,8 @@ function formatImportHex(value) {
 	return value === 0 ? '0' : `0x${value.toString(16)}`;
 }
 
-/** @type {Record<Exclude<ImportSearchField, 'DLL'>, (row: PeLite.PeImportEntry) => string>} */
+/** @type {Record<Exclude<ImportSearchField, 'DLL' | 'Name'>, (row: PeLite.PeImportEntry) => string>} */
 const importSearchValues = {
-	Name: row => row.import?.ByName?.name ?? '',
-	Ordinal: row => String(row.import?.ByOrdinal?.ord ?? ''),
 	Hint: row => String(row.import?.ByName?.hint ?? ''),
 	'IAT RVA': row => formatImportHex(row.address),
 };
@@ -25,7 +23,13 @@ function prepareImportsView(context) {
 	const result = context.peFile.imports();
 	if (result instanceof Error) throw result;
 	if (result === null) throw new Error('The import directory is unavailable.');
-	return { component: 'view-imports', data: { descriptors: result, state: { query: '', matchFields: ['DLL', 'Name'], selectedIndex: null } } };
+	return {
+		component: 'view-imports',
+		data: {
+			descriptors: result, demangle: context.demangle,
+			state: { query: '', matchFields: ['DLL', 'Name'], selectedIndex: null, demangleNames: false },
+		},
+	};
 }
 
 const ViewImports = Vue.defineComponent({
@@ -42,25 +46,21 @@ const ViewImports = Vue.defineComponent({
 					return rows?.length.toLocaleString() ?? '—';
 				} },
 			]),
-			interpretations: /** @type {PropertyGridColumn[]} */ ([
+		};
+	},
+	computed: {
+		/** @returns {PropertyGridColumn[]} */
+		interpretations() {
+			return [
 				{ title: 'IAT RVA', width: 'calc(5.5rem + var(--workspace-gutter))', kind: 'rva',
 					format: value => formatImportHex((/** @type {PeLite.PeImportEntry} */ (value)).address) },
-				{ title: 'Name', format: value => {
-					const symbol = (/** @type {PeLite.PeImportEntry} */ (value)).import;
-					return symbol === null ? 'Unavailable' : symbol.ByName?.name ?? '—';
-				} },
-				{ title: 'Ordinal', width: '5.5rem', style: { textAlign: 'right' }, format: value => {
-					const ordinal = (/** @type {PeLite.PeImportEntry} */ (value)).import?.ByOrdinal?.ord;
-					return ordinal === undefined ? '' : String(ordinal);
-				} },
+				{ title: 'Name', format: value => this.displayName((/** @type {PeLite.PeImportEntry} */ (value)).import) ?? 'Unavailable' },
 				{ title: 'Hint', width: '5rem', style: { textAlign: 'right' }, format: value => {
 					const hint = (/** @type {PeLite.PeImportEntry} */ (value)).import?.ByName?.hint;
 					return hint === undefined ? '' : String(hint);
 				} },
-			]),
-		};
-	},
-	computed: {
+			];
+		},
 		/** @returns {PropertyGridColumn[]} */
 		headerInterpretations() {
 			return [
@@ -86,14 +86,24 @@ const ViewImports = Vue.defineComponent({
 			const rowFields = this.state.matchFields.filter(field => field !== 'DLL');
 			return this.importsData.descriptors.map((descriptor, index) => {
 				const dllMatches = !query || (matchDll && (descriptor.dll_name ?? '').toLowerCase().includes(query));
-				const rows = dllMatches ? descriptor.imports : descriptor.imports?.filter(row =>
-					rowFields.some(field => importSearchValues[field](row).toLowerCase().includes(query))
-				) ?? null;
+				const rows = dllMatches ? descriptor.imports : descriptor.imports?.filter(row => rowFields.some(field => {
+					const value = field === 'Name' ? this.displayName(row.import) : importSearchValues[field](row);
+					return value?.toLowerCase().includes(query);
+				})) ?? null;
 				return { descriptor, index, rows, visible: dllMatches || !!rows?.length };
 			}).filter(group => group.visible);
 		},
 		selectedModule() {
 			return this.filteredDescriptors.find(group => group.index === this.state.selectedIndex) ?? this.filteredDescriptors[0];
+		},
+	},
+	methods: {
+		/** @param {PeLite.PeImportedSymbol | null} symbol */
+		displayName(symbol) {
+			if (symbol === null) return undefined;
+			if (symbol.ByOrdinal) return `#${symbol.ByOrdinal.ord}`;
+			const { name } = symbol.ByName;
+			return this.state.demangleNames ? this.importsData.demangle(name) : name;
 		},
 	},
 });
@@ -102,7 +112,7 @@ const ViewImports = Vue.defineComponent({
 <template id="view-imports">
 	<section class="view-imports">
 		<pe-filter-toolbar label="Filter imports" :fields="searchFields" v-model:query="state.query"
-			v-model:match-fields="state.matchFields"></pe-filter-toolbar>
+			v-model:match-fields="state.matchFields" v-model:demangle-names="state.demangleNames"></pe-filter-toolbar>
 		<div v-if="selectedModule" class="view-imports__layout">
 			<property-grid class="view-imports__libraries" :list="filteredDescriptors" :interpretations="libraryColumns" :row-key="library => library.index" label="Imported libraries">
 				<template #library="{ value: library }">

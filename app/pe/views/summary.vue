@@ -60,9 +60,6 @@ function prepareSummaryView(context) {
 }
 
 /** @param {number} value @returns {string} */
-function formatSummaryHex(value) { return value === 0 ? '0' : `0x${value.toString(16)}`; }
-
-/** @param {number} value @returns {string} */
 function formatSummarySize(value) { return `${value.toLocaleString()} bytes`; }
 
 const ViewSummary = Vue.defineComponent({
@@ -93,7 +90,7 @@ const ViewSummary = Vue.defineComponent({
 		tlsCallbacks() {
 			const tls = this.summaryData.tls;
 			if (tls instanceof Error) return null;
-			if (tls === null || tls.image.AddressOfCallBacks === 0) return 0;
+			if (tls === null || !tls.image.AddressOfCallBacks) return 0;
 			return tls.callbacks === null ? null : tls.callbacks.length;
 		},
 		overlay() {
@@ -152,8 +149,8 @@ const ViewSummary = Vue.defineComponent({
 		identity() {
 			const file = this.headers.NtHeaders.FileHeader;
 			const kind = (file.Characteristics & 0x1000) || (this.optional.DllCharacteristics & 0x2000) ? 'Driver' : file.Characteristics & 0x2000 ? 'DLL' : 'Executable';
-			const machine = String(this.headers.details['FileHeader.Machine'] ?? formatSummaryHex(file.Machine)).replace('IMAGE_FILE_MACHINE_', '');
-			const subsystem = String(this.headers.details['OptionalHeader.Subsystem'] ?? formatSummaryHex(this.optional.Subsystem)).replace('IMAGE_SUBSYSTEM_', '').replaceAll('_', ' ');
+			const machine = String(this.headers.details['FileHeader.Machine'] ?? formatPropertyGridHex(file.Machine)).replace('IMAGE_FILE_MACHINE_', '');
+			const subsystem = String(this.headers.details['OptionalHeader.Subsystem'] ?? formatPropertyGridHex(this.optional.Subsystem)).replace('IMAGE_SUBSYSTEM_', '').replaceAll('_', ' ');
 			return `${this.optional.Magic === 0x20b ? 'PE32+' : 'PE32'} · ${machine} · ${kind} · ${subsystem}`;
 		},
 		imageFields() {
@@ -166,16 +163,16 @@ const ViewSummary = Vue.defineComponent({
 			return [
 				{ label: 'File size', value: formatSummarySize(this.summaryData.fileSize) },
 				{ label: 'Image size', value: formatSummarySize(this.optional.SizeOfImage) },
-				{ label: 'Entry point', value: formatSummaryHex(this.optional.AddressOfEntryPoint), kind: this.optional.AddressOfEntryPoint ? 'rva' : undefined,
+				{ label: 'Entry point', value: formatPropertyGridHex(this.optional.AddressOfEntryPoint), kind: this.optional.AddressOfEntryPoint ? 'rva' : undefined,
 					prefix: entrySection?.Name ? `${entrySection.Name}:` : '', suffix: entrySection ? '' : ' · No section' },
-				{ label: 'Image base', value: formatSummaryHex(this.optional.ImageBase), kind: 'va' },
+				{ label: 'Image base', value: formatPropertyGridHex(this.optional.ImageBase), kind: 'va' },
 				{ label: 'Timestamp (self-reported)', value: timestamp === 0 || timestamp === 0xffffffff ? 'Unspecified' : new Date(timestamp * 1000).toISOString().replace('T', ' ').replace('.000Z', ' UTC') },
-				{ label: 'Checksum', value: `${formatSummaryHex(checksum)} · ${checksumState}` },
+				{ label: 'Checksum', value: `${formatPropertyGridHex(checksum)} · ${checksumState}` },
 				{ label: 'Certificate table', value: certificate?.VirtualAddress && certificate.Size ? 'Present (not validated)' : 'Not present' },
 				{ label: 'CLR (.NET)', value: clr?.VirtualAddress && clr.Size ? 'Present' : 'Not present' },
 				{ label: 'TLS callbacks', value: this.tlsCallbacks === null ? 'Unavailable' : String(this.tlsCallbacks) },
 				{ label: 'Overlay', prefix: `${formatSummarySize(this.overlay.size)} at file offset `,
-					value: formatSummaryHex(this.overlay.offset), kind: this.overlay.size ? 'fo' : undefined },
+					value: formatPropertyGridHex(this.overlay.offset), kind: this.overlay.size ? 'fo' : undefined },
 				...(this.summaryData.pdbFileName === null ? [] : [{ label: 'PDB path', value: this.summaryData.pdbFileName instanceof Error ? 'Unavailable' : this.summaryData.pdbFileName }]),
 			];
 		},

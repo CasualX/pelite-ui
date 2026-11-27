@@ -1,11 +1,11 @@
 {
   "repository": "https://github.com/CasualX/pelite",
-  "revision": "4586395ebce9b6c42b43b11de74bc895aa8c0e95",
+  "revision": "0f14c502ea297fa89297594a8ede8960683d57a1",
   "sourceModified": false,
   "sha256": {
-    "pelite.js": "2aea2d37821596b80954db14b252988f1f65764a33ff2b06a4f43035048223f5",
-    "pelite.wasm": "28d1cbe272bd693594a2a62193709b80f68e1dbd03d8b778c4ba65f515159018",
-    "pelite.d.ts": "2f142359e7073626cc215635bf4890c4b5c34f7cc5c1643ae54f8db56be2845c",
+    "pelite.js": "75923aea13cffec1303443beaa25143a72438b8291f73d827dfd8bbdfb44b6c4",
+    "pelite.wasm": "a04dcf31ac88613368a9ee55d2298819d35a79eab5901f39d664117024d8f676",
+    "pelite.d.ts": "f12a0c0787c7b7e3f7c5e976375f8b06ff3341153511697280767542da2f694a",
     "pelite-license.txt": "0af1600996700ecb4c80f2a15385e841c3f38dfaef958222cc6449d194f6b678"
   }
 }

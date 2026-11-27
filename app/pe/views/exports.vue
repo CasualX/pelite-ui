@@ -5,7 +5,7 @@
 const exportSearchFields = /** @type {const} */ (['Name', 'Forwarder', 'Ord', 'RVA']);
 /** @typedef {(typeof exportSearchFields)[number]} ExportSearchField */
 /** @typedef {{ ordinal: number, target: number | null | string, names: string[] }} ExportRow */
-/** @typedef {{ directory: PeLite.PeExportDirectory, rows: ExportRow[], state: { query: string, matchFields: ExportSearchField[] } }} ExportsViewData */
+/** @typedef {{ directory: PeLite.PeExportDirectory, rows: ExportRow[], demangle: PeDocument['demangle'], state: { query: string, matchFields: ExportSearchField[], demangleNames: boolean } }} ExportsViewData */
 
 /** @param {number} value @returns {string} */
 function formatExportHex(value) {
@@ -26,7 +26,10 @@ function prepareExportsView(context) {
 	for (const [name, index] of Object.entries(directory.names)) rows[index].names.push(name);
 	return {
 		component: 'view-exports',
-		data: { directory, rows, state: { query: '', matchFields: ['Name', 'Forwarder'] } },
+		data: {
+			directory, rows, demangle: context.demangle,
+			state: { query: '', matchFields: ['Name', 'Forwarder'], demangleNames: false },
+		},
 	};
 }
 
@@ -62,7 +65,10 @@ const ViewExports = Vue.defineComponent({
 					const row = /** @type {ExportRow} */ (value);
 					return row.target === null ? 'null' : typeof row.target === 'number' ? formatExportHex(row.target) : '';
 				} },
-				{ title: 'Name', format: value => (/** @type {ExportRow} */ (value)).names.join('\n') || '—' },
+				{ title: 'Name', format: value => {
+					const { names } = /** @type {ExportRow} */ (value);
+					return names.map(this.displayName).join('\n') || '—';
+				} },
 			]);
 			if (this.exportsData.rows.some(row => typeof row.target === 'string')) {
 				columns.push({ title: 'Forwarded to', format: value => {
@@ -81,19 +87,24 @@ const ViewExports = Vue.defineComponent({
 			if (!query) return this.exportsData.rows;
 			const fields = this.state.matchFields;
 			return this.exportsData.rows.filter(({ ordinal, names, target }) => (
-				(fields.includes('Name') && names.some(name => name.toLowerCase().includes(query))) ||
+				(fields.includes('Name') && names.some(name => this.displayName(name).toLowerCase().includes(query))) ||
 				(fields.includes('Ord') && String(ordinal).includes(query)) ||
 				(fields.includes('RVA') && typeof target !== 'string' && (target === null ? 'null' : formatExportHex(target)).includes(query)) ||
 				(fields.includes('Forwarder') && typeof target === 'string' && target.toLowerCase().includes(query))
 			));
 		},
 	},
+	methods: {
+		/** @param {string} name */
+		displayName(name) { return this.state.demangleNames ? this.exportsData.demangle(name) : name; },
+	},
 });
 </script>
 
 <template id="view-exports">
 	<section class="view-exports" :class="{ 'view-exports--directory-open': directoryOpen }">
-		<pe-filter-toolbar label="Filter exports" :fields="searchFields" v-model:query="state.query" v-model:match-fields="state.matchFields">
+		<pe-filter-toolbar label="Filter exports" :fields="searchFields" v-model:query="state.query"
+			v-model:match-fields="state.matchFields" v-model:demangle-names="state.demangleNames">
 			<div class="view-exports__toolbar-end">
 				<span class="view-exports__count" role="status">{{ filteredRows.length.toLocaleString() }} {{ filteredRows.length === 1 ? 'export' : 'exports' }}</span>
 				<button class="view-exports__header" type="button" :aria-expanded="directoryOpen"

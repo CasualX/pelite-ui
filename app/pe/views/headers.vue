@@ -5,7 +5,7 @@
 /** @param {unknown} value @returns {string} */
 function formatNtHeaderValue(value) {
 	if (value == null) return '';
-	if (typeof value === 'number') return value === 0 ? '0' : `0x${value.toString(16)}`;
+	if (typeof value === 'number' || typeof value === 'bigint') return formatPropertyGridHex(value);
 	if (Array.isArray(value)) return value.map(formatNtHeaderValue).join('\n');
 	return typeof value === 'object' ? JSON.stringify(value) : String(value);
 }

@@ -40,7 +40,7 @@ const PeAddressMenu = Vue.defineComponent({
 			if (value <= (kind === 'va' ? 0xffffffffffffffffn : 0xffffffffn)
 				&& (kind !== 'fo' || value < BigInt(openedDocument.file.size))) {
 				try {
-					const resolved = kind === 'va' && value === 0n && OptionalHeader.ImageBase === 0
+					const resolved = kind === 'va' && value === 0n && !OptionalHeader.ImageBase
 						? 0 : workspaceAddressToRva(openedDocument, { kind, value });
 					if (resolved >= 0 && resolved < OptionalHeader.SizeOfImage) rva = resolved;
 				} catch { /* The address has no location in the virtual image. */ }

@@ -6,7 +6,7 @@
 /** @param {unknown} value @returns {string} */
 function formatPropertyGridHex(value) {
 	if (value == null) return '—';
-	return typeof value === 'number' && value !== 0 ? `0x${value.toString(16)}` : String(value);
+	return (typeof value === 'number' || typeof value === 'bigint') && value ? `0x${value.toString(16)}` : String(value);
 }
 
 // Each column interprets the original value and its array index or object key.
