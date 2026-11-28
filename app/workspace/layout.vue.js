@@ -1,5 +1,5 @@
 /** @typedef {'row' | 'column'} WorkspaceDirection */
-/** @typedef {{ type: 'pane', id: number, tabs: number[], selected: number | undefined }} WorkspacePaneNode */
+/** @typedef {{ type: 'pane', id: number, tabs: number[], selected: number | undefined, tabHistory: number[] }} WorkspacePaneNode */
 /** @typedef {{ type: 'split', id: number, direction: WorkspaceDirection, ratio: number, first: WorkspaceNode, second: WorkspaceNode }} WorkspaceSplitNode */
 /** @typedef {WorkspacePaneNode | WorkspaceSplitNode} WorkspaceNode */
 /** @typedef {{ width: number, height: number }} WorkspaceSize */
@@ -37,7 +37,7 @@ class WorkspaceLayout {
 
 	/** @returns {WorkspacePaneNode} */
 	createPane() {
-		return { type: 'pane', id: this.nextNodeId++, tabs: [], selected: undefined };
+		return { type: 'pane', id: this.nextNodeId++, tabs: [], selected: undefined, tabHistory: [] };
 	}
 
 	/** @param {number} paneId */
@@ -53,6 +53,13 @@ class WorkspaceLayout {
 		this.focused = { type: 'window', id: floating.viewId };
 	}
 
+	/** @param {WorkspacePaneNode} pane @param {number} viewId */
+	selectTab(pane, viewId) {
+		pane.tabHistory = [viewId, ...pane.tabHistory.filter(previous => previous !== viewId)];
+		pane.selected = viewId;
+		this.focusPane(pane.id);
+	}
+
 	/** @param {number} viewId @param {number} [afterViewId] */
 	open(viewId, afterViewId) {
 		if (this.activate(viewId)) return;
@@ -61,8 +68,7 @@ class WorkspaceLayout {
 		const pane = source ?? panes.find(item => item.id === this.lastPaneId) ?? panes[0];
 		if (source && afterViewId !== undefined) pane.tabs.splice(pane.tabs.indexOf(afterViewId) + 1, 0, viewId);
 		else pane.tabs.push(viewId);
-		pane.selected = viewId;
-		this.focusPane(pane.id);
+		this.selectTab(pane, viewId);
 	}
 
 	/** @param {number} viewId @param {WorkspaceSize} [size] */
@@ -77,8 +83,7 @@ class WorkspaceLayout {
 	activate(viewId) {
 		const pane = this.panes.find(item => item.tabs.includes(viewId));
 		if (pane) {
-			pane.selected = viewId;
-			this.focusPane(pane.id);
+			this.selectTab(pane, viewId);
 			return true;
 		}
 		const floating = this.windows.find(item => item.viewId === viewId);
@@ -104,8 +109,7 @@ class WorkspaceLayout {
 		} else {
 			this.removeTab(source, viewId);
 			target.tabs.splice(index, 0, viewId);
-			target.selected = viewId;
-			this.focusPane(target.id);
+			this.selectTab(target, viewId);
 			this.closeEmptyPane(source.id);
 		}
 		return true;
@@ -117,11 +121,10 @@ class WorkspaceLayout {
 		viewId ??= pane?.selected;
 		if (!pane || viewId === undefined || !pane.tabs.includes(viewId)) return false;
 		const second = this.createPane();
-		second.selected = viewId;
 		second.tabs.push(viewId);
 		this.removeTab(pane, viewId);
 		this.replaceNode(paneId, { type: 'split', id: this.nextNodeId++, direction, ratio: 0.5, first: pane, second });
-		this.focusPane(second.id);
+		this.selectTab(second, viewId);
 		return true;
 	}
 
@@ -182,7 +185,8 @@ class WorkspaceLayout {
 	removeTab(pane, viewId) {
 		const index = pane.tabs.indexOf(viewId);
 		pane.tabs.splice(index, 1);
-		if (pane.selected === viewId) pane.selected = pane.tabs[Math.min(index, pane.tabs.length - 1)];
+		pane.tabHistory = pane.tabHistory.filter(previous => previous !== viewId);
+		if (pane.selected === viewId) pane.selected = pane.tabHistory[0];
 	}
 
 	/** @param {number} id @param {WorkspaceNode} [replacement] */
